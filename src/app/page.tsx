@@ -4,6 +4,8 @@ import { SectionHeader } from "@/components/layout/SectionHeader";
 import { StoryRow } from "@/components/list/StoryRow";
 import { Pagination } from "@/components/list/Pagination";
 
+export const dynamic = 'force-dynamic';
+
 const ITEMS_PER_PAGE = 30;
 
 export default async function Home() {
