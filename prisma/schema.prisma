@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int       @id @default(autoincrement())
+  username      String    @unique
+  passwordHash  String
+  about         String?
+  karma         Int       @default(0)
+  shadowBanned  Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  items         Item[]
+  votes         Vote[]
+
+  @@index([karma])
+  @@index([createdAt])
+}
+
+model Item {
+  id            Int       @id @default(autoincrement())
+  type          String    // 'story' | 'comment' | 'ask' | 'show' | 'job'
+  title         String?
+  url           String?
+  text          String?
+  authorId      Int
+  author        User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  parentId      Int?
+  parent        Item?     @relation("Comments", fields: [parentId], references: [id], onDelete: Cascade)
+  children      Item[]    @relation("Comments")
+  path          String    @default("")
+  depth         Int       @default(0)
+
+  points        Int       @default(1)
+  rankScore     Float     @default(0)
+  rankedAt      DateTime  @default(now())
+  votes         Vote[]
+
+  flagCount     Int       @default(0)
+  deleted       Boolean   @default(false)
+
+  commentCount  Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([type, createdAt])
+  @@index([parentId])
+  @@index([rankScore])
+  @@index([authorId])
+  @@index([deleted])
+}
+
+model Vote {
+  id        Int   @id @default(autoincrement())
+  userId    Int
+  user      User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  itemId    Int
+  item      Item  @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, itemId])
+  @@index([userId])
+  @@index([itemId])
+}
