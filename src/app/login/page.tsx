@@ -1,21 +1,18 @@
-import Link from "next/link";
-import { LoginForm } from "@/components/forms/LoginForm";
+import { Suspense } from "react";
+import type { Metadata } from "next";
 import { Header } from "@/components/layout/Header";
+import { AuthShell } from "@/components/auth/AuthShell";
+import { SITE } from "@/lib/site";
+
+export const metadata: Metadata = { title: `Sign in · ${SITE.name}` };
 
 export default function LoginPage() {
   return (
     <>
       <Header />
-      <div className="max-w-md mx-auto px-4 py-12">
-        <h1 className="text-2xl font-bold text-text mb-8">Login</h1>
-        <LoginForm />
-        <p className="text-sm text-text-secondary mt-6">
-          Don't have an account?{" "}
-          <Link href="/register" className="text-accent hover:underline">
-            Create one
-          </Link>
-        </p>
-      </div>
+      <Suspense>
+        <AuthShell intent="signin" />
+      </Suspense>
     </>
   );
 }

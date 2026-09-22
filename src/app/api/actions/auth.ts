@@ -20,7 +20,7 @@ export async function loginAction(
     },
   });
 
-  if (!user) {
+  if (!user || !user.passwordHash) {
     return { error: "Invalid credentials" };
   }
 
