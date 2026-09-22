@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/db";
 import { ContentActions } from "@/components/admin/ContentActions";
 
+export const dynamic = "force-dynamic";
+
 export default async function ContentPage() {
   const [flaggedItems, deletedItems] = await Promise.all([
     prisma.item.findMany({
