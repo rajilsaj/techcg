@@ -38,6 +38,12 @@ export async function POST(request: NextRequest) {
       // Create vote
       const vote = await prisma.vote.create({
         data: { userId, itemId },
+        select: {
+          id: true,
+          userId: true,
+          itemId: true,
+          createdAt: true,
+        },
       });
 
       // Increase points
