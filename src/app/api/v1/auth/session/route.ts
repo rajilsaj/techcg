@@ -50,6 +50,15 @@ export async function POST(request: NextRequest) {
         { status: 503 }
       );
     }
+    const code = (error as { code?: string })?.code ?? "";
+    if (!code.startsWith("auth/")) {
+      // Anything outside auth/* means the Admin SDK itself failed (e.g. malformed private key).
+      console.error("Firebase Admin initialization failed:", error);
+      return NextResponse.json(
+        { error: "Server sign-in credentials are invalid. Please try again later." },
+        { status: 500 }
+      );
+    }
     return NextResponse.json({ error: "Invalid or expired sign-in token." }, { status: 401 });
   }
 
