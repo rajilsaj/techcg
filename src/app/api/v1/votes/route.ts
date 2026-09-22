@@ -38,12 +38,6 @@ export async function POST(request: NextRequest) {
       // Create vote
       const vote = await prisma.vote.create({
         data: { userId, itemId },
-        select: {
-          id: true,
-          userId: true,
-          itemId: true,
-          createdAt: true,
-        },
       });
 
       // Increase points
@@ -52,12 +46,15 @@ export async function POST(request: NextRequest) {
         data: { points: { increment: 1 } },
       });
 
-      const response: VoteResponse = {
-        ...vote,
-        createdAt: vote.createdAt.toISOString(),
-      };
-
-      return createSuccessResponse({ ...response, voted: true }, 201);
+      return createSuccessResponse(
+        {
+          id: vote.id,
+          itemId: vote.itemId,
+          userId: vote.userId,
+          voted: true,
+        },
+        201
+      );
     }
   } catch (error) {
     return handleApiError(error);

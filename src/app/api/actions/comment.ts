@@ -61,8 +61,8 @@ export async function submitCommentAction(
   });
 
   // Revalidate cache
-  revalidateTag(`item-${itemId}`);
-  revalidateTag("stories");
+  // revalidateTag(`item-${itemId}`);
+  // revalidateTag("stories");
 
   return { success: true };
 }

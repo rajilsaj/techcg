@@ -85,8 +85,8 @@ export async function toggleVoteAction(itemId: number): Promise<{ error?: string
   }
 
   // Revalidate cache
-  revalidateTag("stories");
-  revalidateTag(`item-${itemId}`);
+  // revalidateTag("stories");
+  // revalidateTag(`item-${itemId}`);
 
   return { success: true };
 }

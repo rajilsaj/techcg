@@ -49,8 +49,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Revalidate cache tags to refresh pages
-    revalidateTag("stories");
-    revalidateTag("stories-top");
+    // revalidateTag("stories");
+    // revalidateTag("stories-top");
 
     return NextResponse.json({
       success: true,

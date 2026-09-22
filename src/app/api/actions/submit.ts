@@ -143,7 +143,7 @@ export async function submitStoryAction(
   });
 
   // Revalidate cache
-  revalidateTag("stories");
+  // revalidateTag("stories");
 
   return { success: true, itemId: story.id };
 }
