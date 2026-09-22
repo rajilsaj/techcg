@@ -25,12 +25,14 @@ jobs:
       - name: Generate Prisma Client
         run: npx prisma generate
         env:
-          DATABASE_URL: "postgresql://test:test@localhost:5432/test"
+          DATABASE_URL: "postgresql://test:test@localhost:6543/test?pgbouncer=true"
+          DIRECT_URL: "postgresql://test:test@localhost:5432/test"
 
       - name: Run build
         run: npm run build
         env:
-          DATABASE_URL: "postgresql://test:test@localhost:5432/test"
+          DATABASE_URL: "postgresql://test:test@localhost:6543/test?pgbouncer=true"
+          DIRECT_URL: "postgresql://test:test@localhost:5432/test"
 
       - name: Check build output
         run: |
