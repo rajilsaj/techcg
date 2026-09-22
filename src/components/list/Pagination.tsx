@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getT } from "@/i18n/server";
 
 export interface PaginationProps {
   currentPage: number;
@@ -8,13 +9,15 @@ export interface PaginationProps {
   pathname: string;
 }
 
-export function Pagination({
+export async function Pagination({
   currentPage,
   hasNext,
   nextCursor,
   prevCursor,
   pathname,
 }: PaginationProps) {
+  const t = await getT();
+
   const buildUrl = (cursor?: string) => {
     const params = new URLSearchParams();
     if (cursor) params.set("cursor", cursor);
@@ -25,7 +28,7 @@ export function Pagination({
   return (
     <div className="border-t border-border px-4 py-4 flex items-center justify-between">
       <div className="text-sm text-text-secondary">
-        Page {currentPage}
+        {t("pagination.page", { page: currentPage })}
       </div>
 
       <div className="flex gap-2">
@@ -34,7 +37,7 @@ export function Pagination({
             href={buildUrl(prevCursor)}
             className="px-3 py-1.5 border border-border rounded hover:border-accent hover:text-accent transition-colors text-sm"
           >
-            ← Précédent
+            {t("pagination.prev")}
           </Link>
         )}
 
@@ -43,7 +46,7 @@ export function Pagination({
             href={buildUrl(nextCursor)}
             className="px-3 py-1.5 border border-accent text-accent rounded hover:bg-accent/10 transition-colors text-sm"
           >
-            Suivant →
+            {t("pagination.next")}
           </Link>
         )}
       </div>

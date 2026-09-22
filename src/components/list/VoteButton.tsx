@@ -4,6 +4,7 @@ import { ChevronUp } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toggleVoteAction } from "@/app/api/actions/vote";
+import { useT } from "@/i18n/client";
 
 export interface VoteButtonProps {
   itemId: number;
@@ -16,6 +17,7 @@ export function VoteButton({ itemId, isVoted = false, isLoggedIn = false }: Vote
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
   const router = useRouter();
+  const t = useT();
 
   const handleVote = useCallback(async () => {
     if (loading) return;
@@ -51,7 +53,7 @@ export function VoteButton({ itemId, isVoted = false, isLoggedIn = false }: Vote
             ? "text-accent bg-accent/10"
             : "text-text-secondary hover:text-accent hover:bg-accent/5"
         }`}
-        aria-label={voted ? "Retirer le vote" : "Voter"}
+        aria-label={voted ? t("vote.unvote") : t("vote.upvote")}
         title={error || ""}
       >
         <ChevronUp

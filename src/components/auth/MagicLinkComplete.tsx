@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Mail } from "lucide-react";
 import { completeMagicLink, describeAuthError } from "@/lib/firebase-auth";
 import { establishSession } from "@/lib/session-client";
+import { useT } from "@/i18n/client";
 import { Alert } from "./Alert";
 import { AuthFrame } from "./AuthFrame";
 import { PrimaryButton, Spinner } from "./Button";
@@ -13,6 +14,7 @@ import { PrimaryButton, Spinner } from "./Button";
 type State = "working" | "need-email" | "error" | "done";
 
 export function MagicLinkComplete() {
+  const t = useT();
   const router = useRouter();
   const [state, setState] = useState<State>("working");
   const [email, setEmail] = useState("");
@@ -25,7 +27,7 @@ export function MagicLinkComplete() {
       try {
         const user = await completeMagicLink(emailOverride);
         if (!user) {
-          setError("Cette page ne fonctionne qu'en ouvrant le lien de connexion que nous vous avons envoyé par e-mail.");
+          setError(t("auth.magic.invalidPage"));
           setState("error");
           return;
         }
@@ -38,11 +40,11 @@ export function MagicLinkComplete() {
           setState("need-email");
           return;
         }
-        setError(describeAuthError(e));
+        setError(describeAuthError(e, t));
         setState(emailOverride ? "need-email" : "error");
       }
     },
-    [router]
+    [router, t]
   );
 
   useEffect(() => {
@@ -60,7 +62,7 @@ export function MagicLinkComplete() {
       footer={
         state === "error" ? (
           <Link href="/recover" className="font-medium">
-            Demander un nouveau lien
+            {t("auth.magic.requestNew")}
           </Link>
         ) : null
       }
@@ -69,21 +71,20 @@ export function MagicLinkComplete() {
         <div className="flex flex-col items-center py-6 text-center" role="status" aria-live="polite">
           <Spinner className="h-6 w-6 text-accent" />
           <p className="mt-4 text-[15px] text-text-secondary">
-            {state === "done" ? "Connecté. Redirection vers l'accueil…" : "Vérification de votre lien de connexion…"}
+            {state === "done" ? t("auth.magic.done") : t("auth.magic.working")}
           </p>
         </div>
       ) : state === "need-email" ? (
         <>
-          <h1 className="text-2xl font-bold tracking-tight text-text">Confirmez votre e-mail</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-text">{t("auth.magic.confirmTitle")}</h1>
           <p className="mt-1.5 text-[15px] leading-relaxed text-text-secondary">
-            Il semble que vous ayez ouvert ce lien sur un autre appareil. Saisissez l&apos;adresse
-            e-mail utilisée pour le demander afin de finaliser la connexion.
+            {t("auth.magic.confirmBody")}
           </p>
           <form onSubmit={submitEmail} className="mt-6 space-y-4">
             {error && <Alert tone="error">{error}</Alert>}
             <div>
               <label htmlFor="ml-email" className="mb-1.5 block text-sm font-medium text-text">
-                Adresse e-mail
+                {t("auth.recovery.emailLabel")}
               </label>
               <input
                 id="ml-email"
@@ -93,7 +94,7 @@ export function MagicLinkComplete() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="vous@exemple.com"
+                placeholder={t("auth.recovery.emailPlaceholder")}
                 className="w-full rounded-xl border border-border bg-bg px-3.5 py-3 text-[15px] text-text placeholder:text-text-secondary/60"
               />
             </div>
@@ -102,13 +103,13 @@ export function MagicLinkComplete() {
               disabled={!email.includes("@")}
               icon={<Mail size={16} aria-hidden="true" />}
             >
-              Finaliser la connexion
+              {t("auth.magic.finish")}
             </PrimaryButton>
           </form>
         </>
       ) : (
         <>
-          <h1 className="text-2xl font-bold tracking-tight text-text">Le lien n&apos;a pas fonctionné</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-text">{t("auth.magic.failedTitle")}</h1>
           <div className="mt-5">
             <Alert tone="error">{error}</Alert>
           </div>

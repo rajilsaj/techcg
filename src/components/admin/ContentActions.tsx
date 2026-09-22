@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useT } from "@/i18n/client";
 
 export function ContentActions({ itemId }: { itemId: number }) {
+  const t = useT();
   const [loading, setLoading] = useState(false);
 
   const handleDelete = async () => {
-    if (!confirm("Voulez-vous vraiment supprimer cet élément ?")) return;
+    if (!confirm(t("admin.content.confirmDelete"))) return;
 
     setLoading(true);
     try {
@@ -19,10 +21,10 @@ export function ContentActions({ itemId }: { itemId: number }) {
       if (response.ok) {
         window.location.reload();
       } else {
-        alert("Échec de la suppression");
+        alert(t("admin.content.deleteFailed"));
       }
     } catch (error) {
-      alert("Erreur lors de la suppression");
+      alert(t("admin.content.deleteError"));
     } finally {
       setLoading(false);
     }
@@ -40,10 +42,10 @@ export function ContentActions({ itemId }: { itemId: number }) {
       if (response.ok) {
         window.location.reload();
       } else {
-        alert("Échec de l'effacement des signalements");
+        alert(t("admin.content.clearFailed"));
       }
     } catch (error) {
-      alert("Erreur lors de l'effacement des signalements");
+      alert(t("admin.content.clearError"));
     } finally {
       setLoading(false);
     }
@@ -56,14 +58,14 @@ export function ContentActions({ itemId }: { itemId: number }) {
         disabled={loading}
         className="px-3 py-1 text-sm bg-gray-100 text-gray-800 rounded hover:bg-gray-200 transition disabled:opacity-50"
       >
-        {loading ? "…" : "Effacer les signalements"}
+        {loading ? "…" : t("admin.content.clearFlags")}
       </button>
       <button
         onClick={handleDelete}
         disabled={loading}
         className="px-3 py-1 text-sm bg-red-100 text-red-800 rounded hover:bg-red-200 transition disabled:opacity-50"
       >
-        {loading ? "…" : "Supprimer"}
+        {loading ? "…" : t("admin.content.delete")}
       </button>
     </div>
   );

@@ -2,32 +2,35 @@
 
 import { forwardRef } from "react";
 import { ChevronDown } from "lucide-react";
+import type { Key } from "@/i18n";
+import { useT } from "@/i18n/client";
 
 export interface Country {
   code: string;
-  name: string;
+  /** Dictionary key for the localised country name. */
+  name: Key;
   dial: string;
   flag: string;
 }
 
 export const COUNTRIES: Country[] = [
-  { code: "CG", name: "Congo-Brazzaville", dial: "242", flag: "🇨🇬" },
-  { code: "CD", name: "RD Congo", dial: "243", flag: "🇨🇩" },
-  { code: "CM", name: "Cameroun", dial: "237", flag: "🇨🇲" },
-  { code: "GA", name: "Gabon", dial: "241", flag: "🇬🇦" },
-  { code: "CF", name: "République centrafricaine", dial: "236", flag: "🇨🇫" },
-  { code: "TD", name: "Tchad", dial: "235", flag: "🇹🇩" },
-  { code: "GQ", name: "Guinée équatoriale", dial: "240", flag: "🇬🇶" },
-  { code: "ST", name: "Sao Tomé-et-Principe", dial: "239", flag: "🇸🇹" },
-  { code: "AO", name: "Angola", dial: "244", flag: "🇦🇴" },
-  { code: "RW", name: "Rwanda", dial: "250", flag: "🇷🇼" },
-  { code: "BI", name: "Burundi", dial: "257", flag: "🇧🇮" },
-  { code: "NG", name: "Nigeria", dial: "234", flag: "🇳🇬" },
-  { code: "FR", name: "France", dial: "33", flag: "🇫🇷" },
-  { code: "BE", name: "Belgique", dial: "32", flag: "🇧🇪" },
-  { code: "GB", name: "Royaume-Uni", dial: "44", flag: "🇬🇧" },
-  { code: "US", name: "États-Unis", dial: "1", flag: "🇺🇸" },
-  { code: "CA", name: "Canada", dial: "1", flag: "🇨🇦" },
+  { code: "CG", name: "country.CG", dial: "242", flag: "🇨🇬" },
+  { code: "CD", name: "country.CD", dial: "243", flag: "🇨🇩" },
+  { code: "CM", name: "country.CM", dial: "237", flag: "🇨🇲" },
+  { code: "GA", name: "country.GA", dial: "241", flag: "🇬🇦" },
+  { code: "CF", name: "country.CF", dial: "236", flag: "🇨🇫" },
+  { code: "TD", name: "country.TD", dial: "235", flag: "🇹🇩" },
+  { code: "GQ", name: "country.GQ", dial: "240", flag: "🇬🇶" },
+  { code: "ST", name: "country.ST", dial: "239", flag: "🇸🇹" },
+  { code: "AO", name: "country.AO", dial: "244", flag: "🇦🇴" },
+  { code: "RW", name: "country.RW", dial: "250", flag: "🇷🇼" },
+  { code: "BI", name: "country.BI", dial: "257", flag: "🇧🇮" },
+  { code: "NG", name: "country.NG", dial: "234", flag: "🇳🇬" },
+  { code: "FR", name: "country.FR", dial: "33", flag: "🇫🇷" },
+  { code: "BE", name: "country.BE", dial: "32", flag: "🇧🇪" },
+  { code: "GB", name: "country.GB", dial: "44", flag: "🇬🇧" },
+  { code: "US", name: "country.US", dial: "1", flag: "🇺🇸" },
+  { code: "CA", name: "country.CA", dial: "1", flag: "🇨🇦" },
 ];
 
 export function toE164(country: Country, national: string) {
@@ -53,10 +56,11 @@ export const PhoneField = forwardRef<HTMLInputElement, PhoneFieldProps>(function
   { id, country, onCountryChange, value, onChange, disabled, invalid, describedBy },
   ref
 ) {
+  const t = useT();
   return (
     <div>
       <label htmlFor={id} className="mb-1.5 block text-sm font-medium text-text">
-        Numéro de téléphone
+        {t("auth.phone.label")}
       </label>
 
       <div
@@ -66,7 +70,7 @@ export const PhoneField = forwardRef<HTMLInputElement, PhoneFieldProps>(function
       >
         <div className="relative flex items-center border-r border-border">
           <select
-            aria-label="Indicatif pays"
+            aria-label={t("auth.phone.countryCode")}
             value={country.code}
             disabled={disabled}
             onChange={(e) => {
@@ -76,7 +80,7 @@ export const PhoneField = forwardRef<HTMLInputElement, PhoneFieldProps>(function
             className="h-full cursor-pointer appearance-none rounded-l-xl bg-transparent py-3 pl-3 pr-8 text-sm text-text focus:outline-none focus-visible:bg-bg-secondary disabled:cursor-not-allowed"
           >
             {COUNTRIES.map((c) => (
-              <option key={c.code} value={c.code}>
+              <option key={c.code} value={c.code} title={t(c.name)}>
                 {c.flag} {c.code} +{c.dial}
               </option>
             ))}
@@ -99,13 +103,13 @@ export const PhoneField = forwardRef<HTMLInputElement, PhoneFieldProps>(function
           disabled={disabled}
           aria-invalid={invalid || undefined}
           aria-describedby={describedBy}
-          placeholder="06 123 4567"
+          placeholder={t("auth.phone.placeholder")}
           className="min-w-0 flex-1 rounded-r-xl border-0 bg-transparent px-3.5 py-3 text-[15px] text-text placeholder:text-text-secondary/60 focus:!border-transparent focus:!shadow-none focus:outline-none"
         />
       </div>
 
       <p id={`${id}-hint`} className="mt-1.5 text-xs text-text-secondary">
-        Nous vous enverrons un code à usage unique par SMS. Tarif SMS standard applicable.
+        {t("auth.phone.hint")}
       </p>
     </div>
   );

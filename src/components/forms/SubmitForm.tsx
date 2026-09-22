@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { submitStoryAction } from "@/app/api/actions/submit";
+import { useT } from "@/i18n/client";
 
 export interface SubmitFormProps {
   defaultType?: string;
 }
 
 export function SubmitForm({ defaultType = "story" }: SubmitFormProps) {
+  const t = useT();
   const router = useRouter();
   const [type, setType] = useState(defaultType);
   const [title, setTitle] = useState("");
@@ -34,9 +36,6 @@ export function SubmitForm({ defaultType = "story" }: SubmitFormProps) {
     }
   };
 
-  const hasUrl = url.trim().length > 0;
-  const hasText = text.trim().length > 0;
-
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
@@ -47,7 +46,7 @@ export function SubmitForm({ defaultType = "story" }: SubmitFormProps) {
 
       <div>
         <label className="block text-sm font-medium text-text mb-2">
-          Type
+          {t("submit.type")}
         </label>
         <select
           value={type}
@@ -55,16 +54,16 @@ export function SubmitForm({ defaultType = "story" }: SubmitFormProps) {
           disabled={loading}
           className="w-full px-3 py-2 border border-border rounded text-text bg-bg"
         >
-          <option value="story">Article</option>
-          <option value="ask">Question</option>
-          <option value="show">Vitrine</option>
-          <option value="job">Emploi</option>
+          <option value="story">{t("submit.typeStory")}</option>
+          <option value="ask">{t("submit.typeAsk")}</option>
+          <option value="show">{t("submit.typeShow")}</option>
+          <option value="job">{t("submit.typeJob")}</option>
         </select>
       </div>
 
       <div>
         <label className="block text-sm font-medium text-text mb-2">
-          Titre
+          {t("submit.title")}
         </label>
         <input
           type="text"
@@ -72,25 +71,25 @@ export function SubmitForm({ defaultType = "story" }: SubmitFormProps) {
           onChange={(e) => setTitle(e.target.value)}
           required
           className="w-full px-3 py-2 border border-border rounded text-text"
-          placeholder="De quoi s'agit-il ?"
+          placeholder={t("submit.titlePlaceholder")}
           disabled={loading}
         />
       </div>
 
       <div>
         <label className="block text-sm font-medium text-text mb-2">
-          URL
+          {t("submit.url")}
         </label>
         <input
           type="url"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           className="w-full px-3 py-2 border border-border rounded text-text"
-          placeholder="https://example.com"
+          placeholder={t("submit.urlPlaceholder")}
           disabled={loading}
         />
         <p className="text-xs text-text-secondary mt-1">
-          Laissez vide pour publier un texte
+          {t("submit.urlHint")}
         </p>
       </div>
 
@@ -98,18 +97,18 @@ export function SubmitForm({ defaultType = "story" }: SubmitFormProps) {
       {type === "story" && (
         <div className="border-t border-border pt-6">
           <label className="block text-sm font-medium text-text mb-2">
-            Texte
+            {t("submit.text")}
           </label>
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
             className="w-full px-3 py-2 border border-border rounded text-text resize-none"
-            placeholder="Racontez (facultatif si une URL est fournie)"
+            placeholder={t("submit.textPlaceholder")}
             rows={6}
             disabled={loading}
           />
           <p className="text-xs text-text-secondary mt-1">
-            Ajoutez un texte s&apos;il n&apos;y a pas d&apos;URL, ou les deux pour le contexte
+            {t("submit.textHint")}
           </p>
         </div>
       )}
@@ -121,14 +120,14 @@ export function SubmitForm({ defaultType = "story" }: SubmitFormProps) {
           disabled={loading}
           className="px-4 py-2 border border-border rounded font-medium hover:bg-bg-secondary transition-colors disabled:opacity-50"
         >
-          Annuler
+          {t("common.cancel")}
         </button>
         <button
           type="submit"
           disabled={loading}
           className="px-4 py-2 bg-accent text-white rounded font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
         >
-          {loading ? "Envoi…" : "Publier"}
+          {loading ? t("submit.submitting") : t("submit.submit")}
         </button>
       </div>
     </form>

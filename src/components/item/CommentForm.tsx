@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { submitCommentAction } from "@/app/api/actions/comment";
+import { useT } from "@/i18n/client";
 
 export interface CommentFormProps {
   itemId: number;
@@ -9,6 +10,7 @@ export interface CommentFormProps {
 }
 
 export function CommentForm({ itemId, isLoggedIn }: CommentFormProps) {
+  const t = useT();
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
@@ -39,7 +41,7 @@ export function CommentForm({ itemId, isLoggedIn }: CommentFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="border-t border-border p-4">
-      <h3 className="text-sm font-medium text-text mb-3">Ajouter un commentaire</h3>
+      <h3 className="text-sm font-medium text-text mb-3">{t("comment.add")}</h3>
 
       {error && (
         <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded text-sm mb-3">
@@ -50,7 +52,7 @@ export function CommentForm({ itemId, isLoggedIn }: CommentFormProps) {
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder="Partagez votre avis…"
+        placeholder={t("comment.placeholder")}
         className="w-full px-3 py-2 border border-border rounded text-text bg-bg resize-none"
         rows={4}
         disabled={loading}
@@ -62,7 +64,7 @@ export function CommentForm({ itemId, isLoggedIn }: CommentFormProps) {
           disabled={loading || !text.trim()}
           className="px-4 py-2 bg-accent text-white rounded font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
         >
-          {loading ? "Envoi…" : "Publier le commentaire"}
+          {loading ? t("comment.posting") : t("comment.post")}
         </button>
       </div>
     </form>

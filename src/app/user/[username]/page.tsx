@@ -3,7 +3,8 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { Header } from "@/components/layout/Header";
 import { StoryRow } from "@/components/list/StoryRow";
-import { formatTime, pluralize } from "@/lib/utils";
+import { formatRelativeTime, pluralize } from "@/i18n";
+import { getLocale, getT } from "@/i18n/server";
 
 interface PageProps {
   params: Promise<{ username: string }>;
@@ -13,6 +14,7 @@ export default async function UserPage({ params }: PageProps) {
   const { username } = await params;
 
   const session = await getSession();
+  const [t, locale] = await Promise.all([getT(), getLocale()]);
 
   // Fetch user
   const user = await prisma.user.findUnique({
@@ -96,7 +98,7 @@ export default async function UserPage({ params }: PageProps) {
         <div className="border-b border-border pb-8 mb-8">
           <h1 className="text-3xl font-bold text-text mb-2">{user.username}</h1>
           <p className="text-sm text-text-secondary mb-4">
-            {user.karma} karma · inscription {formatTime(user.createdAt)}
+            {t("user.karmaJoined", { karma: user.karma, time: formatRelativeTime(user.createdAt, locale) })}
           </p>
 
           {user.about && (
@@ -109,10 +111,10 @@ export default async function UserPage({ params }: PageProps) {
             <button
               type="button"
               disabled
-              title="Bientôt disponible"
+              title={t("user.editSoonTitle")}
               className="px-3 py-1.5 border border-border text-text-secondary rounded text-sm cursor-not-allowed"
             >
-              Modifier le profil · bientôt
+              {t("user.editSoon")}
             </button>
           )}
         </div>
@@ -121,7 +123,7 @@ export default async function UserPage({ params }: PageProps) {
         {stories.length > 0 && (
           <div className="mb-8">
             <h2 className="text-xl font-bold text-text mb-4">
-              {stories.length} {pluralize(stories.length, "publication")}
+              {stories.length} {pluralize(stories.length, locale, t("unit.story"), t("unit.stories"))}
             </h2>
             <div className="border border-border rounded">
               {stories.map((story, i) => (
@@ -129,7 +131,7 @@ export default async function UserPage({ params }: PageProps) {
                   key={story.id}
                   rank={i + 1}
                   id={story.id}
-                  title={story.title || "Sans titre"}
+                  title={story.title || t("common.untitled")}
                   url={story.url || undefined}
                   author={story.author.username}
                   points={story.points}
@@ -146,7 +148,7 @@ export default async function UserPage({ params }: PageProps) {
         {comments.length > 0 && (
           <div>
             <h2 className="text-xl font-bold text-text mb-4">
-              {comments.length} {pluralize(comments.length, "commentaire")}
+              {comments.length} {pluralize(comments.length, locale, t("unit.comment"), t("unit.comments"))}
             </h2>
             <div className="space-y-4">
               {comments.map((comment) => (
@@ -160,10 +162,10 @@ export default async function UserPage({ params }: PageProps) {
                         {comment.author.username}
                       </span>
                       <span className="text-text-secondary">
-                        {comment.points} {pluralize(comment.points, "point")}
+                        {comment.points} {pluralize(comment.points, locale, t("unit.point"), t("unit.points"))}
                       </span>
                       <span className="text-text-secondary">
-                        {formatTime(comment.createdAt)}
+                        {formatRelativeTime(comment.createdAt, locale)}
                       </span>
                     </div>
                   </div>
@@ -175,7 +177,7 @@ export default async function UserPage({ params }: PageProps) {
 
                   {comment.parent && (
                     <p className="text-xs text-text-secondary">
-                      sur{" "}
+                      {t("user.on")}{" "}
                       <a
                         href={`/item/${comment.parent.id}`}
                         className="text-accent hover:underline"
@@ -192,7 +194,7 @@ export default async function UserPage({ params }: PageProps) {
 
         {stories.length === 0 && comments.length === 0 && (
           <p className="text-center text-text-secondary">
-            Aucune publication ni commentaire pour le moment
+            {t("user.empty")}
           </p>
         )}
       </div>

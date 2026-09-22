@@ -3,6 +3,7 @@ import { Header } from "@/components/layout/Header";
 import { SectionHeader } from "@/components/layout/SectionHeader";
 import { StoryRow } from "@/components/list/StoryRow";
 import { Pagination } from "@/components/list/Pagination";
+import { getT } from "@/i18n/server";
 import { encodeCursor, estimatePageNumber } from "@/lib/list-pagination";
 
 const ITEMS_PER_PAGE = 30;
@@ -12,6 +13,7 @@ interface PageProps {
 }
 
 export default async function CommentsPage({ searchParams }: PageProps) {
+  const t = await getT();
   const params = await searchParams;
   const cursorParam = params.cursor;
 
@@ -60,7 +62,7 @@ export default async function CommentsPage({ searchParams }: PageProps) {
     <>
       <Header />
       <div className="max-w-5xl mx-auto">
-        <SectionHeader title="Commentaires récents" showSubmit={false} />
+        <SectionHeader title={t("section.recentComments")} showSubmit={false} />
 
         <div>
           {displayComments.map((comment, i) => (
@@ -68,7 +70,7 @@ export default async function CommentsPage({ searchParams }: PageProps) {
               key={comment.id}
               rank={i + 1}
               id={comment.id}
-              title={comment.text ? comment.text.slice(0, 100) + (comment.text.length > 100 ? "…" : "") : "Commentaire"}
+              title={comment.text ? comment.text.slice(0, 100) + (comment.text.length > 100 ? "…" : "") : t("common.comment")}
               author={comment.author.username}
               points={comment.points}
               commentCount={0}

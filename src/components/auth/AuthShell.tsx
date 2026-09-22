@@ -13,6 +13,7 @@ import {
   startPhoneSignIn,
 } from "@/lib/firebase-auth";
 import { establishSession } from "@/lib/session-client";
+import { useT } from "@/i18n/client";
 import { Alert } from "./Alert";
 import { AuthFrame } from "./AuthFrame";
 import { LinkButton, PrimaryButton, SecondaryButton } from "./Button";
@@ -41,6 +42,7 @@ export function AuthShell({
   /** Relative path to return to after sign-in (from `?next=`). */
   next?: string | null;
 }) {
+  const t = useT();
   const router = useRouter();
   const nextPath = safeNext(next);
 
@@ -90,11 +92,11 @@ export function AuthShell({
         router.replace(nextPath);
         router.refresh();
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Impossible de finaliser la connexion.");
+        setError((e instanceof Error && e.message) || t("auth.finishFailed"));
         setPhase("idle");
       }
     },
-    [router, nextPath]
+    [router, nextPath, t]
   );
 
   const handleGoogle = async () => {
@@ -103,7 +105,7 @@ export function AuthShell({
     try {
       await finish(await signInWithGoogle());
     } catch (e) {
-      setError(describeAuthError(e));
+      setError(describeAuthError(e, t));
       setPhase("idle");
     }
   };
@@ -112,7 +114,7 @@ export function AuthShell({
     e?.preventDefault();
     setPhoneTouched(true);
     if (!phoneValid) {
-      setError("Saisissez un numéro de téléphone valide, avec le bon indicatif pays.");
+      setError(t("auth.invalidPhone"));
       phoneRef.current?.focus();
       return;
     }
@@ -125,7 +127,7 @@ export function AuthShell({
       setResendIn(RESEND_SECONDS);
       setView("otp");
     } catch (err) {
-      setError(describeAuthError(err));
+      setError(describeAuthError(err, t));
     } finally {
       setPhase("idle");
     }
@@ -139,7 +141,7 @@ export function AuthShell({
     try {
       await finish(await confirmPhoneCode(confirmationRef.current, code));
     } catch (err) {
-      setError(describeAuthError(err));
+      setError(describeAuthError(err, t));
       setOtpInvalid(true);
       setOtpKey((k) => k + 1);
       setPhase("idle");
@@ -155,7 +157,7 @@ export function AuthShell({
       await sendMagicLink(target);
       setEmailSentTo(target);
     } catch (err) {
-      setError(describeAuthError(err));
+      setError(describeAuthError(err, t));
     } finally {
       setPhase("idle");
     }
@@ -172,12 +174,12 @@ export function AuthShell({
           view === "recovery" ? (
             <LinkButton onClick={() => go("landing")}>
               <ArrowLeft size={14} className="mr-1 inline" aria-hidden="true" />
-              Retour à la connexion
+              {t("auth.backToSignin")}
             </LinkButton>
           ) : view === "landing" ? (
             <>
-              Un problème pour vous connecter ?{" "}
-              <LinkButton onClick={() => go("recovery")}>Obtenir de l&apos;aide</LinkButton>
+              {t("auth.trouble")}{" "}
+              <LinkButton onClick={() => go("recovery")}>{t("auth.getHelp")}</LinkButton>
             </>
           ) : null
         }
@@ -186,11 +188,11 @@ export function AuthShell({
         {view === "landing" && (
           <>
             <h1 ref={headingRef} tabIndex={-1} className={heading}>
-              {intent === "signup" ? `Rejoindre ${SITE.name}` : "Bon retour"}
+              {intent === "signup"
+                ? t("auth.landing.titleSignup", { site: SITE.name })
+                : t("auth.landing.titleSignin")}
             </h1>
-            <p className={sub}>
-              Pas de mot de passe ici. Continuez avec Google, ou recevez un code par SMS.
-            </p>
+            <p className={sub}>{t("auth.landing.subtitle")}</p>
 
             <div className="mt-7 space-y-5">
               {error && <Alert tone="error">{error}</Alert>}
@@ -199,7 +201,7 @@ export function AuthShell({
 
               <div className="flex items-center gap-3 text-xs uppercase tracking-wider text-text-secondary">
                 <span className="h-px flex-1 bg-border" aria-hidden="true" />
-                ou
+                {t("auth.or")}
                 <span className="h-px flex-1 bg-border" aria-hidden="true" />
               </div>
 
@@ -221,17 +223,17 @@ export function AuthShell({
                 <PrimaryButton
                   type="submit"
                   loading={phase === "sending"}
-                  loadingLabel="Envoi du code…"
+                  loadingLabel={t("auth.landing.sendingCode")}
                   disabled={busy}
                   icon={<Smartphone size={16} aria-hidden="true" />}
                 >
-                  Recevoir un code par SMS
+                  {t("auth.landing.sendCode")}
                 </PrimaryButton>
               </form>
             </div>
 
             <p className="mt-6 text-xs leading-relaxed text-text-secondary">
-              Nouveau ici ? La connexion crée votre compte automatiquement.
+              {t("auth.landing.autoCreate")}
             </p>
           </>
         )}
@@ -240,10 +242,10 @@ export function AuthShell({
         {view === "otp" && (
           <>
             <h1 ref={headingRef} tabIndex={-1} id="otp-heading" className={heading}>
-              Vérifiez votre téléphone
+              {t("auth.otp.title")}
             </h1>
             <p id="otp-description" className={sub}>
-              Saisissez le code à 6 chiffres envoyé au{" "}
+              {t("auth.otp.sentTo")}{" "}
               <span className="font-medium text-text tabular-nums">{phoneDisplay}</span>.
             </p>
 
@@ -262,27 +264,29 @@ export function AuthShell({
               <PrimaryButton
                 onClick={() => {
                   const code = Array.from(
-                    document.querySelectorAll<HTMLInputElement>('[aria-label^="Chiffre "]')
+                    document.querySelectorAll<HTMLInputElement>("[data-otp-cell]")
                   )
                     .map((el) => el.value)
                     .join("");
                   verifyCode(code);
                 }}
                 loading={phase === "verifying" || phase === "finishing"}
-                loadingLabel={phase === "finishing" ? "Connexion…" : "Vérification…"}
+                loadingLabel={phase === "finishing" ? t("auth.otp.signingIn") : t("auth.otp.verifying")}
                 disabled={busy}
                 icon={<ArrowRight size={16} aria-hidden="true" />}
               >
-                Vérifier
+                {t("auth.otp.verify")}
               </PrimaryButton>
 
               <div className="flex items-center justify-between text-sm">
                 <LinkButton onClick={() => sendCode()} disabled={busy || resendIn > 0}>
                   <RefreshCw size={13} className="mr-1 inline" aria-hidden="true" />
-                  {resendIn > 0 ? `Renvoyer dans 0:${String(resendIn).padStart(2, "0")}` : "Renvoyer le code"}
+                  {resendIn > 0
+                    ? t("auth.otp.resendIn", { time: `0:${String(resendIn).padStart(2, "0")}` })
+                    : t("auth.otp.resend")}
                 </LinkButton>
                 <LinkButton onClick={() => go("landing")} disabled={busy}>
-                  Changer de numéro
+                  {t("auth.otp.changeNumber")}
                 </LinkButton>
               </div>
             </div>
@@ -293,19 +297,16 @@ export function AuthShell({
         {view === "recovery" && (
           <>
             <h1 ref={headingRef} tabIndex={-1} className={heading}>
-              Impossible de vous connecter ?
+              {t("auth.recovery.title")}
             </h1>
-            <p className={sub}>
-              Les comptes {SITE.name} n&apos;ont pas de mot de passe, il n&apos;y a donc rien à
-              réinitialiser. Choisissez l&apos;option qui correspond à votre inscription.
-            </p>
+            <p className={sub}>{t("auth.recovery.subtitle", { site: SITE.name })}</p>
 
             <div className="mt-7 space-y-6">
               {error && <Alert tone="error">{error}</Alert>}
 
               <section aria-labelledby="rec-google">
                 <h2 id="rec-google" className="mb-2 text-sm font-semibold text-text">
-                  Je me suis inscrit avec Gmail
+                  {t("auth.recovery.google")}
                 </h2>
                 <GoogleButton
                   onClick={handleGoogle}
@@ -316,12 +317,12 @@ export function AuthShell({
 
               <section aria-labelledby="rec-email">
                 <h2 id="rec-email" className="mb-2 text-sm font-semibold text-text">
-                  Je n&apos;ai plus accès à mon numéro de téléphone
+                  {t("auth.recovery.lostPhone")}
                 </h2>
                 {emailSentTo ? (
                   <Alert tone="success">
-                    Nous avons envoyé un lien de connexion à <strong>{emailSentTo}</strong>. Il
-                    expire dans environ une heure.{" "}
+                    {t("auth.recovery.linkSentBefore")} <strong>{emailSentTo}</strong>
+                    {t("auth.recovery.linkSentAfter")}{" "}
                     <LinkButton
                       className="!text-inherit underline"
                       onClick={() => {
@@ -329,13 +330,13 @@ export function AuthShell({
                         setEmail("");
                       }}
                     >
-                      Utiliser une autre adresse
+                      {t("auth.recovery.useOtherEmail")}
                     </LinkButton>
                   </Alert>
                 ) : (
                   <form onSubmit={sendEmailLink} className="space-y-3">
                     <label htmlFor="rec-email-input" className="sr-only">
-                      Adresse e-mail
+                      {t("auth.recovery.emailLabel")}
                     </label>
                     <input
                       id="rec-email-input"
@@ -345,17 +346,17 @@ export function AuthShell({
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       disabled={busy}
-                      placeholder="vous@exemple.com"
+                      placeholder={t("auth.recovery.emailPlaceholder")}
                       className="w-full rounded-xl border border-border bg-bg px-3.5 py-3 text-[15px] text-text placeholder:text-text-secondary/60 disabled:opacity-60"
                     />
                     <SecondaryButton
                       type="submit"
                       loading={phase === "emailing"}
-                      loadingLabel="Envoi du lien…"
+                      loadingLabel={t("auth.recovery.sendingLink")}
                       disabled={busy || !email.includes("@")}
                       icon={<Mail size={16} aria-hidden="true" />}
                     >
-                      M&apos;envoyer un lien de connexion
+                      {t("auth.recovery.sendLink")}
                     </SecondaryButton>
                   </form>
                 )}
@@ -363,27 +364,24 @@ export function AuthShell({
 
               <section aria-labelledby="rec-phone">
                 <h2 id="rec-phone" className="mb-2 text-sm font-semibold text-text">
-                  J&apos;ai un nouveau numéro de téléphone
+                  {t("auth.recovery.newPhone")}
                 </h2>
                 <SecondaryButton
                   onClick={() => go("landing")}
                   disabled={busy}
                   icon={<Smartphone size={16} aria-hidden="true" />}
                 >
-                  Se connecter avec un autre numéro
+                  {t("auth.recovery.otherNumber")}
                 </SecondaryButton>
               </section>
 
               <details className="group rounded-lg border border-border bg-bg-secondary/60 px-3.5 py-3 text-sm">
                 <summary className="flex cursor-pointer list-none items-center gap-2 font-medium text-text">
                   <LifeBuoy size={15} className="text-accent" aria-hidden="true" />
-                  Pourquoi n&apos;y a-t-il pas de mot de passe ?
+                  {t("auth.recovery.whyTitle")}
                 </summary>
                 <p className="mt-2 leading-relaxed text-text-secondary">
-                  Votre compte Google ou votre numéro de téléphone prouve déjà votre identité,
-                  nous ne stockons donc jamais de mot de passe susceptible de fuiter ou
-                  d&apos;être oublié. Si aucune des options ci-dessus ne fonctionne,
-                  connectez-vous avec Google pour repartir de zéro.
+                  {t("auth.recovery.whyBody")}
                 </p>
               </details>
             </div>

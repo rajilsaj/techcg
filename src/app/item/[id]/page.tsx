@@ -2,7 +2,9 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { Header } from "@/components/layout/Header";
-import { getDomain, formatTime, pluralize } from "@/lib/utils";
+import { getDomain } from "@/lib/utils";
+import { formatRelativeTime, pluralize } from "@/i18n";
+import { getLocale, getT } from "@/i18n/server";
 import { CommentThread } from "@/components/item/CommentThread";
 import { CommentForm } from "@/components/item/CommentForm";
 import { buildCommentTree, CommentData } from "@/lib/thread";
@@ -21,6 +23,7 @@ export default async function ItemPage({ params }: PageProps) {
 
   // Get session
   const session = await getSession();
+  const [t, locale] = await Promise.all([getT(), getLocale()]);
 
   // Fetch story
   const story = await prisma.item.findUnique({
@@ -127,12 +130,12 @@ export default async function ItemPage({ params }: PageProps) {
           )}
 
           <div className="flex items-center gap-4 text-xs text-text-secondary">
-            <span>{story.points} {pluralize(story.points, "point")}</span>
+            <span>{story.points} {pluralize(story.points, locale, t("unit.point"), t("unit.points"))}</span>
             <a href={`/user/${story.author.username}`} className="text-accent hover:underline">
               {story.author.username}
             </a>
-            <span>{formatTime(story.createdAt)}</span>
-            <span>{story.commentCount} {pluralize(story.commentCount, "commentaire")}</span>
+            <span>{formatRelativeTime(story.createdAt, locale)}</span>
+            <span>{story.commentCount} {pluralize(story.commentCount, locale, t("unit.comment"), t("unit.comments"))}</span>
           </div>
         </div>
 
@@ -144,7 +147,7 @@ export default async function ItemPage({ params }: PageProps) {
           <CommentThread comments={commentTree} depth={0} />
         ) : (
           <div className="p-4 text-center text-text-secondary">
-            Pas encore de commentaires. Soyez le premier à réagir !
+            {t("item.noComments")}
           </div>
         )}
       </div>

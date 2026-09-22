@@ -1,16 +1,18 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { getT } from "@/i18n/server";
 import { getSession } from "@/lib/auth";
 import { revalidateTag } from "next/cache";
 
 const FLAG_THRESHOLD = 5; // Auto-hide after 5 flags
 
 export async function flagItemAction(itemId: number): Promise<{ error?: string; success?: boolean }> {
+  const t = await getT();
   const session = await getSession();
 
   if (!session) {
-    return { error: "Vous devez être connecté" };
+    return { error: t("action.notAuthenticated") };
   }
 
   // Can only flag if karma > 0
@@ -20,7 +22,7 @@ export async function flagItemAction(itemId: number): Promise<{ error?: string; 
   });
 
   if (!user || user.karma === 0) {
-    return { error: "Karma insuffisant pour signaler" };
+    return { error: t("action.insufficientKarma") };
   }
 
   // Check if item exists
@@ -34,12 +36,12 @@ export async function flagItemAction(itemId: number): Promise<{ error?: string; 
   });
 
   if (!item) {
-    return { error: "Élément introuvable" };
+    return { error: t("action.itemNotFound") };
   }
 
   // Can't flag own items
   if (item.authorId === session.userId) {
-    return { error: "Vous ne pouvez pas signaler vos propres publications" };
+    return { error: t("action.cannotFlagOwn") };
   }
 
   // Increment flag count

@@ -2,7 +2,8 @@
 
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
-import { formatTime, pluralize } from "@/lib/utils";
+import { formatRelativeTime, pluralize } from "@/i18n";
+import { useLocale, useT } from "@/i18n/client";
 import { CommentNode } from "@/lib/thread";
 import { CommentThread } from "./CommentThread";
 
@@ -12,8 +13,11 @@ export interface CommentItemProps {
 }
 
 export function CommentItem({ comment, depth }: CommentItemProps) {
+  const t = useT();
+  const locale = useLocale();
   const [collapsed, setCollapsed] = useState(false);
   const hasChildren = comment.children.length > 0;
+  const childCount = comment.children.length;
   const indentLevel = Math.min(depth, 8);
   const indentPx = indentLevel * 24; // 24px per level
 
@@ -26,8 +30,8 @@ export function CommentItem({ comment, depth }: CommentItemProps) {
             <button
               onClick={() => setCollapsed(!collapsed)}
               className="flex-shrink-0 p-0.5 hover:bg-border rounded transition-colors"
-              aria-label={collapsed ? "Déplier le fil" : "Replier le fil"}
-              title={`${comment.children.length} ${pluralize(comment.children.length, "réponse")}`}
+              aria-label={collapsed ? t("comment.expand") : t("comment.collapse")}
+              title={`${childCount} ${pluralize(childCount, locale, t("unit.reply"), t("unit.replies"))}`}
             >
               {collapsed ? (
                 <svg
@@ -58,8 +62,10 @@ export function CommentItem({ comment, depth }: CommentItemProps) {
               >
                 {comment.authorUsername}
               </a>
-              <span className="text-text-secondary">{comment.points} {pluralize(comment.points, "point")}</span>
-              <span className="text-text-secondary">{formatTime(comment.createdAt)}</span>
+              <span className="text-text-secondary">
+                {comment.points} {pluralize(comment.points, locale, t("unit.point"), t("unit.points"))}
+              </span>
+              <span className="text-text-secondary">{formatRelativeTime(comment.createdAt, locale)}</span>
             </div>
 
             <div className="text-sm text-text break-words whitespace-pre-wrap">
@@ -70,14 +76,14 @@ export function CommentItem({ comment, depth }: CommentItemProps) {
       </div>
 
       {/* Children */}
-      {!collapsed && comment.children.length > 0 && (
+      {!collapsed && hasChildren && (
         <CommentThread comments={comment.children} depth={depth + 1} />
       )}
 
       {/* Collapse indicator */}
-      {collapsed && comment.children.length > 0 && (
+      {collapsed && hasChildren && (
         <div className="px-4 py-2 text-xs text-text-secondary border-b border-border">
-          {comment.children.length} {pluralize(comment.children.length, "réponse masquée", "réponses masquées")}
+          {t(childCount > 1 ? "comment.hiddenMany" : "comment.hiddenOne", { count: childCount })}
         </div>
       )}
     </div>

@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { getT } from "@/i18n/server";
 import { getSession } from "@/lib/auth";
 import { revalidateTag } from "next/cache";
 
@@ -8,18 +9,19 @@ export async function submitCommentAction(
   itemId: number,
   text: string
 ): Promise<{ error?: string; success?: boolean }> {
+  const t = await getT();
   const session = await getSession();
 
   if (!session) {
-    return { error: "Vous devez être connecté" };
+    return { error: t("action.notAuthenticated") };
   }
 
   if (!text || !text.trim()) {
-    return { error: "Le commentaire ne peut pas être vide" };
+    return { error: t("action.commentRequired") };
   }
 
   if (text.length > 10000) {
-    return { error: "Commentaire trop long (10 000 caractères maximum)" };
+    return { error: t("action.commentTooLong") };
   }
 
   // Check if parent item exists
@@ -33,7 +35,7 @@ export async function submitCommentAction(
   });
 
   if (!parent) {
-    return { error: "Élément introuvable" };
+    return { error: t("action.itemNotFound") };
   }
 
   // Create comment

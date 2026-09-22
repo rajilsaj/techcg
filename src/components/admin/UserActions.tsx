@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useT } from "@/i18n/client";
 
 export function UserActions({
   userId,
@@ -9,6 +10,7 @@ export function UserActions({
   userId: number;
   isShadowBanned: boolean;
 }) {
+  const t = useT();
   const [loading, setLoading] = useState(false);
 
   const handleToggleShadowBan = async () => {
@@ -23,10 +25,10 @@ export function UserActions({
       if (response.ok) {
         window.location.reload();
       } else {
-        alert("Échec de la mise à jour du statut");
+        alert(t("admin.users.updateFailed"));
       }
     } catch (error) {
-      alert("Erreur lors de la mise à jour du statut");
+      alert(t("admin.users.updateError"));
     } finally {
       setLoading(false);
     }
@@ -43,7 +45,7 @@ export function UserActions({
             : "bg-red-100 text-red-800 hover:bg-red-200"
         } disabled:opacity-50`}
       >
-        {loading ? "…" : isShadowBanned ? "Réhabiliter" : "Shadow ban"}
+        {loading ? "…" : isShadowBanned ? t("admin.users.unban") : t("admin.users.shadowBan")}
       </button>
     </div>
   );

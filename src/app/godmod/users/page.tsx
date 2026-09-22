@@ -1,9 +1,11 @@
 import { prisma } from "@/lib/db";
 import { UserActions } from "@/components/admin/UserActions";
+import { getLocale, getT } from "@/i18n/server";
 
 export const dynamic = "force-dynamic";
 
 export default async function UsersPage() {
+  const [t, locale] = await Promise.all([getT(), getLocale()]);
   const users = await prisma.user.findMany({
     orderBy: { createdAt: "desc" },
     select: {
@@ -19,18 +21,18 @@ export default async function UsersPage() {
 
   return (
     <div className="p-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Utilisateurs</h1>
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">{t("admin.users.heading")}</h1>
 
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
         <table className="w-full">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Nom d&apos;utilisateur</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Karma</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Publications</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Statut</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Inscription</th>
-              <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900">Actions</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">{t("admin.users.username")}</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">{t("admin.users.karma")}</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">{t("admin.users.stories")}</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">{t("admin.users.status")}</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">{t("admin.users.joined")}</th>
+              <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900">{t("admin.users.actions")}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -43,18 +45,18 @@ export default async function UsersPage() {
                   <div className="flex gap-2">
                     {user.isAdmin && (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                        Admin
+                        {t("admin.users.badgeAdmin")}
                       </span>
                     )}
                     {user.shadowBanned && (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                        Shadow ban
+                        {t("admin.users.badgeShadowBanned")}
                       </span>
                     )}
                   </div>
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-600">
-                  {new Date(user.createdAt).toLocaleDateString("fr-FR")}
+                  {new Date(user.createdAt).toLocaleDateString(locale)}
                 </td>
                 <td className="px-6 py-4 text-right">
                   <UserActions userId={user.id} isShadowBanned={user.shadowBanned} />

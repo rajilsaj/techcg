@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { getT } from "@/i18n/server";
 import { getSession } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { revalidateTag } from "next/cache";
@@ -12,24 +13,25 @@ export async function submitStoryAction(
   url: string,
   text: string
 ): Promise<{ error?: string; success?: boolean; itemId?: number }> {
+  const t = await getT();
   const session = await getSession();
 
   if (!session) {
-    return { error: "Vous devez être connecté" };
+    return { error: t("action.notAuthenticated") };
   }
 
   // Validate type
   if (!["story", "ask", "show", "job"].includes(type)) {
-    return { error: "Type invalide" };
+    return { error: t("action.invalidType") };
   }
 
   // Validate title
   if (!title || !title.trim()) {
-    return { error: "Le titre est requis" };
+    return { error: t("action.titleRequired") };
   }
 
   if (title.length > 500) {
-    return { error: "Titre trop long (500 caractères maximum)" };
+    return { error: t("action.titleTooLong") };
   }
 
   // Validate URL vs text
@@ -37,11 +39,11 @@ export async function submitStoryAction(
   const hasText = text && text.trim();
 
   if (type === "story" && !hasUrl && !hasText) {
-    return { error: "Une URL ou un texte est requis" };
+    return { error: t("action.urlOrTextRequired") };
   }
 
   if (hasUrl && hasText && type !== "ask" && type !== "show") {
-    return { error: "Indiquez une URL ou un texte, pas les deux" };
+    return { error: t("action.urlOrTextNotBoth") };
   }
 
   // Validate URL format if provided
@@ -49,7 +51,7 @@ export async function submitStoryAction(
     try {
       new URL(url);
     } catch {
-      return { error: "URL invalide" };
+      return { error: t("action.invalidUrl") };
     }
   }
 
@@ -57,7 +59,7 @@ export async function submitStoryAction(
   const rateLimitResult = await checkRateLimit(session.userId, "submit");
   if (!rateLimitResult.allowed) {
     return {
-      error: `Trop de publications. Réessayez dans ${rateLimitResult.retryAfter} secondes`,
+      error: t("action.rateLimited", { seconds: rateLimitResult.retryAfter ?? 0 }),
     };
   }
 

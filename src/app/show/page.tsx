@@ -3,6 +3,7 @@ import { Header } from "@/components/layout/Header";
 import { SectionHeader } from "@/components/layout/SectionHeader";
 import { StoryRow } from "@/components/list/StoryRow";
 import { Pagination } from "@/components/list/Pagination";
+import { getT } from "@/i18n/server";
 import { encodeCursor, estimatePageNumber } from "@/lib/list-pagination";
 
 const ITEMS_PER_PAGE = 30;
@@ -12,6 +13,7 @@ interface PageProps {
 }
 
 export default async function ShowPage({ searchParams }: PageProps) {
+  const t = await getT();
   const params = await searchParams;
   const cursorParam = params.cursor;
 
@@ -56,7 +58,7 @@ export default async function ShowPage({ searchParams }: PageProps) {
     <>
       <Header />
       <div className="max-w-5xl mx-auto">
-        <SectionHeader title="Vitrine" />
+        <SectionHeader title={t("section.show")} />
 
         <div>
           {displayStories.map((story, i) => (
@@ -64,7 +66,7 @@ export default async function ShowPage({ searchParams }: PageProps) {
               key={story.id}
               rank={i + 1}
               id={story.id}
-              title={story.title || "Sans titre"}
+              title={story.title || t("common.untitled")}
               url={story.url || undefined}
               author={story.author.username}
               points={story.points}

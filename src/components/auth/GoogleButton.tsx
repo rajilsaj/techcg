@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/i18n/client";
 import { SecondaryButton } from "./Button";
 
 function GoogleGlyph() {
@@ -29,22 +30,23 @@ export function GoogleButton({
   onClick,
   loading,
   disabled,
-  label = "Continuer avec Google",
+  label,
 }: {
   onClick: () => void;
   loading?: boolean;
   disabled?: boolean;
   label?: string;
 }) {
+  const t = useT();
   return (
     <SecondaryButton
       onClick={onClick}
       loading={loading}
-      loadingLabel="Ouverture de Google…"
+      loadingLabel={t("auth.googleOpening")}
       disabled={disabled}
       icon={<GoogleGlyph />}
     >
-      {label}
+      {label ?? t("auth.google")}
     </SecondaryButton>
   );
 }

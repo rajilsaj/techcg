@@ -3,12 +3,14 @@ import { Header } from "@/components/layout/Header";
 import { SectionHeader } from "@/components/layout/SectionHeader";
 import { StoryRow } from "@/components/list/StoryRow";
 import { Pagination } from "@/components/list/Pagination";
+import { getT } from "@/i18n/server";
 
 export const dynamic = 'force-dynamic';
 
 const ITEMS_PER_PAGE = 30;
 
 export default async function Home() {
+  const t = await getT();
   // Fetch top stories by rankScore (exclude deleted and shadowbanned authors)
   const stories = await prisma.item.findMany({
     where: {
@@ -54,7 +56,7 @@ export default async function Home() {
     <>
       <Header />
       <div className="max-w-5xl mx-auto">
-        <SectionHeader title="À la une" />
+        <SectionHeader title={t("section.top")} />
 
         <div>
           {displayStories.map((story, i) => (
@@ -62,7 +64,7 @@ export default async function Home() {
               key={story.id}
               rank={i + 1}
               id={story.id}
-              title={story.title || "Sans titre"}
+              title={story.title || t("common.untitled")}
               url={story.url || undefined}
               author={story.author.username}
               points={story.points}

@@ -1,19 +1,20 @@
 import type { Metadata } from "next";
 import { SITE } from "@/lib/site";
+import { getLocale, getT } from "@/i18n/server";
+import { LocaleProvider } from "@/i18n/client";
 import "@/styles/globals.css";
 
-export const metadata: Metadata = {
-  title: SITE.name,
-  description: SITE.tagline,
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: SITE.name, description: t("site.description") };
+}
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const locale = await getLocale();
+  const t = await getT();
+
   return (
-    <html lang="fr" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
         <script
@@ -31,12 +32,12 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <a href="#main" className="sr-only focus:not-sr-only">
-          Aller au contenu principal
-        </a>
-        <main id="main">
-          {children}
-        </main>
+        <LocaleProvider locale={locale}>
+          <a href="#main" className="sr-only focus:not-sr-only">
+            {t("site.skipToContent")}
+          </a>
+          <main id="main">{children}</main>
+        </LocaleProvider>
       </body>
     </html>
   );

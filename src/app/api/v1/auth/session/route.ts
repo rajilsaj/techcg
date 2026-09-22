@@ -3,6 +3,7 @@ import type { DecodedIdToken } from "firebase-admin/auth";
 import { prisma } from "@/lib/db";
 import { createSession, clearSession } from "@/lib/auth";
 import { getFirebaseAdminAuth, FirebaseAdminNotConfiguredError } from "@/lib/firebase-admin";
+import { getT } from "@/i18n/server";
 
 const USERNAME_MAX = 20;
 
@@ -33,6 +34,7 @@ async function uniqueUsername(base: string) {
  * session cookie. New users are registered automatically.
  */
 export async function POST(request: NextRequest) {
+  const t = await getT();
   const { idToken } = await request.json().catch(() => ({}));
 
   if (!idToken || typeof idToken !== "string") {
@@ -46,7 +48,7 @@ export async function POST(request: NextRequest) {
     if (error instanceof FirebaseAdminNotConfiguredError) {
       console.error(error.message);
       return NextResponse.json(
-        { error: "La connexion n'est pas encore configurée sur le serveur. Veuillez réessayer plus tard." },
+        { error: t("authApi.notConfigured") },
         { status: 503 }
       );
     }
@@ -55,11 +57,11 @@ export async function POST(request: NextRequest) {
       // Anything outside auth/* means the Admin SDK itself failed (e.g. malformed private key).
       console.error("Firebase Admin initialization failed:", error);
       return NextResponse.json(
-        { error: "Les identifiants de connexion du serveur sont invalides. Veuillez réessayer plus tard." },
+        { error: t("authApi.invalidCredentials") },
         { status: 500 }
       );
     }
-    return NextResponse.json({ error: "Jeton de connexion invalide ou expiré." }, { status: 401 });
+    return NextResponse.json({ error: t("authApi.invalidToken") }, { status: 401 });
   }
 
   const email = token.email ?? null;

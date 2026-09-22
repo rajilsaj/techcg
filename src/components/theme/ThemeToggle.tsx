@@ -2,8 +2,10 @@
 
 import { Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useT } from "@/i18n/client";
 
 export function ThemeToggle() {
+  const t = useT();
   const [isDark, setIsDark] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -29,7 +31,7 @@ export function ThemeToggle() {
     <button
       onClick={toggleTheme}
       className="p-1 rounded hover:bg-bg-secondary transition-colors"
-      aria-label="Changer de thème"
+      aria-label={t("theme.toggle")}
     >
       {isDark ? (
         <Sun size={18} className="text-text" />

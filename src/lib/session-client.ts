@@ -15,7 +15,8 @@ export async function establishSession(user: User): Promise<EstablishedSession> 
 
   const body = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(body.error || "Impossible de finaliser la connexion. Veuillez réessayer.");
+    // Empty message: callers substitute a localised fallback.
+    throw new Error(body.error || "");
   }
   return body as EstablishedSession;
 }

@@ -17,6 +17,7 @@ import {
   type User,
 } from "firebase/auth";
 import { getFirebaseAuth } from "./firebase";
+import type { Key, T } from "@/i18n";
 
 const MAGIC_LINK_EMAIL_KEY = "techcg:magicLinkEmail";
 
@@ -116,36 +117,35 @@ export async function completeMagicLink(emailOverride?: string): Promise<User | 
 
 /* ---------- Error copy ---------- */
 
-const ERROR_COPY: Record<string, string> = {
-  "auth/popup-closed-by-user": "La fenêtre Google a été fermée avant la fin. Réessayez quand vous êtes prêt.",
-  "auth/cancelled-popup-request": "Une seule fenêtre de connexion peut être ouverte à la fois.",
-  "auth/popup-blocked": "Votre navigateur a bloqué la fenêtre de connexion. Autorisez les pop-ups pour ce site et réessayez.",
-  "auth/invalid-phone-number": "Ce numéro de téléphone semble incorrect. Vérifiez l'indicatif pays et les chiffres.",
-  "auth/missing-phone-number": "Saisissez votre numéro de téléphone pour continuer.",
-  "auth/too-many-requests": "Trop de tentatives. Patientez quelques minutes avant de réessayer.",
-  "auth/invalid-verification-code": "Ce code est incorrect. Vérifiez le SMS et réessayez.",
-  "auth/code-expired": "Ce code a expiré. Demandez-en un nouveau.",
-  "auth/network-request-failed": "Erreur réseau. Vérifiez votre connexion et réessayez.",
-  "auth/operation-not-allowed": "Cette méthode de connexion n'est pas encore activée. Veuillez contacter le support.",
-  "auth/invalid-email": "Cette adresse e-mail semble incorrecte.",
-  "auth/invalid-action-code": "Ce lien de connexion est invalide ou a déjà été utilisé. Demandez-en un nouveau.",
-  "auth/expired-action-code": "Ce lien de connexion a expiré. Demandez-en un nouveau.",
-  "auth/account-exists-with-different-credential":
-    "Un compte existe déjà pour cette adresse e-mail avec une autre méthode de connexion.",
-  "auth/unauthorized-domain": "Ce domaine n'est pas autorisé pour la connexion. Ajoutez-le dans la console Firebase.",
-  "auth/captcha-check-failed": "La vérification a échoué. Rechargez la page et réessayez.",
-  "auth/missing-email": "Saisissez l'adresse e-mail utilisée pour demander le lien.",
+const ERROR_KEYS: Record<string, Key> = {
+  "auth/popup-closed-by-user": "authError.popupClosed",
+  "auth/cancelled-popup-request": "authError.popupCancelled",
+  "auth/popup-blocked": "authError.popupBlocked",
+  "auth/invalid-phone-number": "authError.invalidPhone",
+  "auth/missing-phone-number": "authError.missingPhone",
+  "auth/too-many-requests": "authError.tooManyRequests",
+  "auth/invalid-verification-code": "authError.invalidCode",
+  "auth/code-expired": "authError.codeExpired",
+  "auth/network-request-failed": "authError.network",
+  "auth/operation-not-allowed": "authError.notAllowed",
+  "auth/invalid-email": "authError.invalidEmail",
+  "auth/invalid-action-code": "authError.invalidLink",
+  "auth/expired-action-code": "authError.expiredLink",
+  "auth/account-exists-with-different-credential": "authError.accountExists",
+  "auth/unauthorized-domain": "authError.unauthorizedDomain",
+  "auth/captcha-check-failed": "authError.captcha",
+  "auth/missing-email": "authError.missingEmail",
 };
 
-export function describeAuthError(error: unknown): string {
+export function describeAuthError(error: unknown, t: T): string {
   const code = (error as { code?: string } | null)?.code;
-  if (code && ERROR_COPY[code]) return ERROR_COPY[code];
+  if (code && ERROR_KEYS[code]) return t(ERROR_KEYS[code]);
 
   const message = (error as { message?: string } | null)?.message;
   if (message) {
     return message.replace(/^Firebase:\s*/, "").replace(/\s*\(auth\/[^)]+\)\.?$/, "");
   }
-  return "Une erreur est survenue. Veuillez réessayer.";
+  return t("authError.generic");
 }
 
 /* ---------- Email/password (legacy helpers, still used by hooks) ---------- */

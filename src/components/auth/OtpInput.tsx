@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ClipboardEvent, type KeyboardEvent } from "react";
+import { useT } from "@/i18n/client";
 
 interface OtpInputProps {
   length?: number;
@@ -27,6 +28,7 @@ export function OtpInput({
   labelledBy,
   describedBy,
 }: OtpInputProps) {
+  const t = useT();
   const [cells, setCells] = useState<string[]>(() => Array(length).fill(""));
   const refs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -126,7 +128,8 @@ export function OtpInput({
           inputMode="numeric"
           pattern="[0-9]*"
           autoComplete={i === 0 ? "one-time-code" : "off"}
-          aria-label={`Chiffre ${i + 1} sur ${length}`}
+          aria-label={t("auth.otp.digit", { n: i + 1, total: length })}
+          data-otp-cell=""
           aria-invalid={invalid || undefined}
           disabled={disabled}
           onChange={(e) => handleChange(i, e.target.value)}

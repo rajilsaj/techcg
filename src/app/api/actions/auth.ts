@@ -3,13 +3,15 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { hashPassword, verifyPassword, createSession, clearSession } from "@/lib/auth";
+import { getT } from "@/i18n/server";
 
 export async function loginAction(
   username: string,
   password: string
 ): Promise<{ error?: string }> {
+  const t = await getT();
   if (!username || !password) {
-    return { error: "Nom d'utilisateur et mot de passe requis" };
+    return { error: t("action.credentialsRequired") };
   }
 
   const user = await prisma.user.findUnique({
@@ -21,12 +23,12 @@ export async function loginAction(
   });
 
   if (!user || !user.passwordHash) {
-    return { error: "Identifiants invalides" };
+    return { error: t("action.invalidCredentials") };
   }
 
   const isValid = await verifyPassword(password, user.passwordHash);
   if (!isValid) {
-    return { error: "Identifiants invalides" };
+    return { error: t("action.invalidCredentials") };
   }
 
   await createSession(user.id);
@@ -38,24 +40,25 @@ export async function registerAction(
   password: string,
   confirmPassword: string
 ): Promise<{ error?: string }> {
+  const t = await getT();
   if (!username || !password || !confirmPassword) {
-    return { error: "Tous les champs sont requis" };
+    return { error: t("action.allFieldsRequired") };
   }
 
   if (password !== confirmPassword) {
-    return { error: "Les mots de passe ne correspondent pas" };
+    return { error: t("action.passwordMismatch") };
   }
 
   if (password.length < 6) {
-    return { error: "Le mot de passe doit contenir au moins 6 caractères" };
+    return { error: t("action.passwordTooShort") };
   }
 
   if (username.length < 3 || username.length > 20) {
-    return { error: "Le nom d'utilisateur doit contenir entre 3 et 20 caractères" };
+    return { error: t("action.usernameLength") };
   }
 
   if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
-    return { error: "Le nom d'utilisateur ne peut contenir que des lettres, des chiffres, _ et -" };
+    return { error: t("action.usernameChars") };
   }
 
   // Check if user exists
@@ -64,7 +67,7 @@ export async function registerAction(
   });
 
   if (existing) {
-    return { error: "Ce nom d'utilisateur est déjà pris" };
+    return { error: t("action.usernameTaken") };
   }
 
   const passwordHash = await hashPassword(password);

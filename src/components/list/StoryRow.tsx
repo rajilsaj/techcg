@@ -1,5 +1,7 @@
 import { MessageCircle, User, Globe } from "lucide-react";
-import { formatTime, getDomain, pluralize } from "@/lib/utils";
+import { getDomain } from "@/lib/utils";
+import { formatRelativeTime, pluralize } from "@/i18n";
+import { getLocale, getT } from "@/i18n/server";
 import { MetaItem } from "./MetaItem";
 import { VoteButton } from "./VoteButton";
 
@@ -16,7 +18,7 @@ export interface StoryRowProps {
   isLoggedIn?: boolean;
 }
 
-export function StoryRow({
+export async function StoryRow({
   rank,
   id,
   title,
@@ -28,9 +30,11 @@ export function StoryRow({
   isVoted,
   isLoggedIn,
 }: StoryRowProps) {
+  const [t, locale] = await Promise.all([getT(), getLocale()]);
   const domain = url ? getDomain(url) : "";
-  const domain_label = domain || "texte";
-  const timeAgo = formatTime(createdAt);
+  const domain_label = domain || t("common.textPost");
+  const timeAgo = formatRelativeTime(createdAt, locale);
+  const displayTitle = title || t("common.untitled");
 
   return (
     <div className="border-b border-border px-4 py-3 hover:bg-bg-secondary transition-colors">
@@ -51,10 +55,10 @@ export function StoryRow({
               rel="noopener noreferrer"
               className="text-base font-medium text-text hover:underline block"
             >
-              {title || "Sans titre"}
+              {displayTitle}
             </a>
           ) : (
-            <div className="text-base font-medium text-text">{title || "Sans titre"}</div>
+            <div className="text-base font-medium text-text">{displayTitle}</div>
           )}
         </div>
       </div>
@@ -79,7 +83,7 @@ export function StoryRow({
 
         <MetaItem
           icon={MessageCircle}
-          label={`${commentCount} ${pluralize(commentCount, "commentaire")}`}
+          label={`${commentCount} ${pluralize(commentCount, locale, t("unit.comment"), t("unit.comments"))}`}
           href={`/item/${id}`}
         />
       </div>

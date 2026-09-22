@@ -3,6 +3,7 @@ import { Header } from "@/components/layout/Header";
 import { SectionHeader } from "@/components/layout/SectionHeader";
 import { StoryRow } from "@/components/list/StoryRow";
 import { Pagination } from "@/components/list/Pagination";
+import { getT } from "@/i18n/server";
 import { decodeCursor, encodeCursor, estimatePageNumber } from "@/lib/list-pagination";
 
 const ITEMS_PER_PAGE = 30;
@@ -12,6 +13,7 @@ interface PageProps {
 }
 
 export default async function NewestPage({ searchParams }: PageProps) {
+  const t = await getT();
   const params = await searchParams;
   const cursorParam = params.cursor;
   const cursor = cursorParam ? decodeCursor(cursorParam) : null;
@@ -60,7 +62,7 @@ export default async function NewestPage({ searchParams }: PageProps) {
     <>
       <Header />
       <div className="max-w-5xl mx-auto">
-        <SectionHeader title="Récents" />
+        <SectionHeader title={t("section.newest")} />
 
         <div>
           {displayStories.map((story, i) => (
@@ -68,7 +70,7 @@ export default async function NewestPage({ searchParams }: PageProps) {
               key={story.id}
               rank={i + 1}
               id={story.id}
-              title={story.title || "Sans titre"}
+              title={story.title || t("common.untitled")}
               url={story.url || undefined}
               author={story.author.username}
               points={story.points}
