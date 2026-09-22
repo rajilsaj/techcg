@@ -1,6 +1,6 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { User as FirebaseUser } from "firebase/auth";
-import { getFirebaseAuth, getCurrentUser } from "./firebase-auth";
+import { getCurrentUser } from "./firebase-auth";
 
 let supabaseClient: SupabaseClient | null = null;
 let cachedJWT: string | null = null;

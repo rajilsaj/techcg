@@ -3,12 +3,24 @@ import * as admin from "firebase-admin";
 import { createClient } from "@supabase/supabase-js";
 import jwt from "jsonwebtoken";
 
-// Initialize Firebase Admin SDK (if not already done)
-if (!admin.apps.length) {
+// Lazy initialize Firebase Admin SDK (only when route is called)
+function initializeFirebaseAdmin() {
+  if (admin.apps.length > 0) return;
+
+  const projectId = process.env.FIREBASE_PROJECT_ID;
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+
+  if (!projectId || !privateKey || !clientEmail) {
+    throw new Error(
+      "Firebase Admin credentials not configured. Set FIREBASE_PROJECT_ID, FIREBASE_PRIVATE_KEY, and FIREBASE_CLIENT_EMAIL."
+    );
+  }
+
   const serviceAccount = {
-    projectId: process.env.FIREBASE_PROJECT_ID,
-    privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    projectId,
+    privateKey: privateKey.replace(/\\n/g, "\n"),
+    clientEmail,
   };
 
   admin.initializeApp({
@@ -16,11 +28,24 @@ if (!admin.apps.length) {
   });
 }
 
-// Initialize Supabase Admin Client (service role - bypasses RLS)
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy initialize Supabase Admin Client
+let supabaseAdmin: any = null;
+
+function initializeSupabaseAdmin() {
+  if (supabaseAdmin) return supabaseAdmin;
+
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !key) {
+    throw new Error(
+      "Supabase credentials not configured. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY."
+    );
+  }
+
+  supabaseAdmin = createClient(url, key);
+  return supabaseAdmin;
+}
 
 /**
  * POST /api/v1/auth/sync
@@ -33,6 +58,10 @@ const supabaseAdmin = createClient(
  */
 export async function POST(request: NextRequest) {
   try {
+    // Initialize Firebase Admin SDK and Supabase Admin Client
+    initializeFirebaseAdmin();
+    const sb = initializeSupabaseAdmin();
+
     const { firebaseToken } = await request.json();
 
     if (!firebaseToken) {
@@ -57,7 +86,7 @@ export async function POST(request: NextRequest) {
     const { uid, email, name, phone_number } = decodedToken;
 
     // Step 2: Upsert user to Supabase (service role - bypasses RLS)
-    const { data: user, error: upsertError } = await supabaseAdmin
+    const { data: user, error: upsertError } = await sb
       .from("users")
       .upsert(
         {

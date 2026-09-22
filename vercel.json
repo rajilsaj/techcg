@@ -1,0 +1,4 @@
+{
+  "buildCommand": "npm run build:migrate",
+  "installCommand": "npm ci"
+}
