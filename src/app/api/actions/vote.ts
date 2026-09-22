@@ -8,7 +8,7 @@ export async function toggleVoteAction(itemId: number): Promise<{ error?: string
   const session = await getSession();
 
   if (!session) {
-    return { error: "Not authenticated" };
+    return { error: "Vous devez être connecté" };
   }
 
   const user = await prisma.user.findUnique({
@@ -20,7 +20,7 @@ export async function toggleVoteAction(itemId: number): Promise<{ error?: string
   });
 
   if (!user) {
-    return { error: "User not found" };
+    return { error: "Utilisateur introuvable" };
   }
 
   // Check if account is old enough (24h) and has karma
@@ -28,7 +28,7 @@ export async function toggleVoteAction(itemId: number): Promise<{ error?: string
   const twentyFourHours = 24 * 60 * 60 * 1000;
 
   if (accountAge < twentyFourHours && user.karma === 0) {
-    return { error: "New accounts must wait 24 hours before voting" };
+    return { error: "Les nouveaux comptes doivent attendre 24 heures avant de voter" };
   }
 
   // Check if item exists
@@ -38,7 +38,7 @@ export async function toggleVoteAction(itemId: number): Promise<{ error?: string
   });
 
   if (!item) {
-    return { error: "Item not found" };
+    return { error: "Élément introuvable" };
   }
 
   // Check if user already voted

@@ -12,21 +12,21 @@ export interface Country {
 
 export const COUNTRIES: Country[] = [
   { code: "CG", name: "Congo-Brazzaville", dial: "242", flag: "🇨🇬" },
-  { code: "CD", name: "Congo-Kinshasa", dial: "243", flag: "🇨🇩" },
-  { code: "CM", name: "Cameroon", dial: "237", flag: "🇨🇲" },
+  { code: "CD", name: "RD Congo", dial: "243", flag: "🇨🇩" },
+  { code: "CM", name: "Cameroun", dial: "237", flag: "🇨🇲" },
   { code: "GA", name: "Gabon", dial: "241", flag: "🇬🇦" },
-  { code: "CF", name: "Central African Republic", dial: "236", flag: "🇨🇫" },
-  { code: "TD", name: "Chad", dial: "235", flag: "🇹🇩" },
-  { code: "GQ", name: "Equatorial Guinea", dial: "240", flag: "🇬🇶" },
-  { code: "ST", name: "São Tomé & Príncipe", dial: "239", flag: "🇸🇹" },
+  { code: "CF", name: "République centrafricaine", dial: "236", flag: "🇨🇫" },
+  { code: "TD", name: "Tchad", dial: "235", flag: "🇹🇩" },
+  { code: "GQ", name: "Guinée équatoriale", dial: "240", flag: "🇬🇶" },
+  { code: "ST", name: "Sao Tomé-et-Principe", dial: "239", flag: "🇸🇹" },
   { code: "AO", name: "Angola", dial: "244", flag: "🇦🇴" },
   { code: "RW", name: "Rwanda", dial: "250", flag: "🇷🇼" },
   { code: "BI", name: "Burundi", dial: "257", flag: "🇧🇮" },
   { code: "NG", name: "Nigeria", dial: "234", flag: "🇳🇬" },
   { code: "FR", name: "France", dial: "33", flag: "🇫🇷" },
-  { code: "BE", name: "Belgium", dial: "32", flag: "🇧🇪" },
-  { code: "GB", name: "United Kingdom", dial: "44", flag: "🇬🇧" },
-  { code: "US", name: "United States", dial: "1", flag: "🇺🇸" },
+  { code: "BE", name: "Belgique", dial: "32", flag: "🇧🇪" },
+  { code: "GB", name: "Royaume-Uni", dial: "44", flag: "🇬🇧" },
+  { code: "US", name: "États-Unis", dial: "1", flag: "🇺🇸" },
   { code: "CA", name: "Canada", dial: "1", flag: "🇨🇦" },
 ];
 
@@ -56,7 +56,7 @@ export const PhoneField = forwardRef<HTMLInputElement, PhoneFieldProps>(function
   return (
     <div>
       <label htmlFor={id} className="mb-1.5 block text-sm font-medium text-text">
-        Phone number
+        Numéro de téléphone
       </label>
 
       <div
@@ -66,7 +66,7 @@ export const PhoneField = forwardRef<HTMLInputElement, PhoneFieldProps>(function
       >
         <div className="relative flex items-center border-r border-border">
           <select
-            aria-label="Country code"
+            aria-label="Indicatif pays"
             value={country.code}
             disabled={disabled}
             onChange={(e) => {
@@ -105,7 +105,7 @@ export const PhoneField = forwardRef<HTMLInputElement, PhoneFieldProps>(function
       </div>
 
       <p id={`${id}-hint`} className="mt-1.5 text-xs text-text-secondary">
-        We&apos;ll text you a one-time code. Standard SMS rates may apply.
+        Nous vous enverrons un code à usage unique par SMS. Tarif SMS standard applicable.
       </p>
     </div>
   );

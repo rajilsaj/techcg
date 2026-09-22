@@ -29,7 +29,7 @@ export function StoryRow({
   isLoggedIn,
 }: StoryRowProps) {
   const domain = url ? getDomain(url) : "";
-  const domain_label = domain || "text post";
+  const domain_label = domain || "texte";
   const timeAgo = formatTime(createdAt);
 
   return (
@@ -51,10 +51,10 @@ export function StoryRow({
               rel="noopener noreferrer"
               className="text-base font-medium text-text hover:underline block"
             >
-              {title || "Untitled"}
+              {title || "Sans titre"}
             </a>
           ) : (
-            <div className="text-base font-medium text-text">{title || "Untitled"}</div>
+            <div className="text-base font-medium text-text">{title || "Sans titre"}</div>
           )}
         </div>
       </div>
@@ -79,7 +79,7 @@ export function StoryRow({
 
         <MetaItem
           icon={MessageCircle}
-          label={`${commentCount} ${pluralize(commentCount, "comment")}`}
+          label={`${commentCount} ${pluralize(commentCount, "commentaire")}`}
           href={`/item/${id}`}
         />
       </div>

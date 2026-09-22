@@ -29,7 +29,7 @@ export function GoogleButton({
   onClick,
   loading,
   disabled,
-  label = "Continue with Google",
+  label = "Continuer avec Google",
 }: {
   onClick: () => void;
   loading?: boolean;
@@ -40,7 +40,7 @@ export function GoogleButton({
     <SecondaryButton
       onClick={onClick}
       loading={loading}
-      loadingLabel="Opening Google…"
+      loadingLabel="Ouverture de Google…"
       disabled={disabled}
       icon={<GoogleGlyph />}
     >

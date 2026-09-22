@@ -9,7 +9,7 @@ export async function loginAction(
   password: string
 ): Promise<{ error?: string }> {
   if (!username || !password) {
-    return { error: "Username and password required" };
+    return { error: "Nom d'utilisateur et mot de passe requis" };
   }
 
   const user = await prisma.user.findUnique({
@@ -21,12 +21,12 @@ export async function loginAction(
   });
 
   if (!user || !user.passwordHash) {
-    return { error: "Invalid credentials" };
+    return { error: "Identifiants invalides" };
   }
 
   const isValid = await verifyPassword(password, user.passwordHash);
   if (!isValid) {
-    return { error: "Invalid credentials" };
+    return { error: "Identifiants invalides" };
   }
 
   await createSession(user.id);
@@ -39,23 +39,23 @@ export async function registerAction(
   confirmPassword: string
 ): Promise<{ error?: string }> {
   if (!username || !password || !confirmPassword) {
-    return { error: "All fields required" };
+    return { error: "Tous les champs sont requis" };
   }
 
   if (password !== confirmPassword) {
-    return { error: "Passwords do not match" };
+    return { error: "Les mots de passe ne correspondent pas" };
   }
 
   if (password.length < 6) {
-    return { error: "Password must be at least 6 characters" };
+    return { error: "Le mot de passe doit contenir au moins 6 caractères" };
   }
 
   if (username.length < 3 || username.length > 20) {
-    return { error: "Username must be 3-20 characters" };
+    return { error: "Le nom d'utilisateur doit contenir entre 3 et 20 caractères" };
   }
 
   if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
-    return { error: "Username can only contain letters, numbers, _, and -" };
+    return { error: "Le nom d'utilisateur ne peut contenir que des lettres, des chiffres, _ et -" };
   }
 
   // Check if user exists
@@ -64,7 +64,7 @@ export async function registerAction(
   });
 
   if (existing) {
-    return { error: "Username already taken" };
+    return { error: "Ce nom d'utilisateur est déjà pris" };
   }
 
   const passwordHash = await hashPassword(password);

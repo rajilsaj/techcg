@@ -10,7 +10,7 @@ export async function flagItemAction(itemId: number): Promise<{ error?: string; 
   const session = await getSession();
 
   if (!session) {
-    return { error: "Not authenticated" };
+    return { error: "Vous devez être connecté" };
   }
 
   // Can only flag if karma > 0
@@ -20,7 +20,7 @@ export async function flagItemAction(itemId: number): Promise<{ error?: string; 
   });
 
   if (!user || user.karma === 0) {
-    return { error: "Insufficient karma to flag" };
+    return { error: "Karma insuffisant pour signaler" };
   }
 
   // Check if item exists
@@ -34,12 +34,12 @@ export async function flagItemAction(itemId: number): Promise<{ error?: string; 
   });
 
   if (!item) {
-    return { error: "Item not found" };
+    return { error: "Élément introuvable" };
   }
 
   // Can't flag own items
   if (item.authorId === session.userId) {
-    return { error: "Cannot flag your own items" };
+    return { error: "Vous ne pouvez pas signaler vos propres publications" };
   }
 
   // Increment flag count

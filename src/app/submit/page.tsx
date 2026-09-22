@@ -21,7 +21,7 @@ export default async function SubmitPage({ searchParams }: PageProps) {
     <>
       <Header />
       <div className="max-w-2xl mx-auto px-4 py-12">
-        <h1 className="text-2xl font-bold text-text mb-8">Submit a Story</h1>
+        <h1 className="text-2xl font-bold text-text mb-8">Publier</h1>
         <SubmitForm defaultType={defaultType} />
       </div>
     </>

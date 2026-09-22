@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { Header } from "@/components/layout/Header";
 import { StoryRow } from "@/components/list/StoryRow";
-import { formatTime } from "@/lib/utils";
+import { formatTime, pluralize } from "@/lib/utils";
 
 interface PageProps {
   params: Promise<{ username: string }>;
@@ -96,7 +96,7 @@ export default async function UserPage({ params }: PageProps) {
         <div className="border-b border-border pb-8 mb-8">
           <h1 className="text-3xl font-bold text-text mb-2">{user.username}</h1>
           <p className="text-sm text-text-secondary mb-4">
-            {user.karma} karma · joined {formatTime(user.createdAt)}
+            {user.karma} karma · inscription {formatTime(user.createdAt)}
           </p>
 
           {user.about && (
@@ -107,10 +107,12 @@ export default async function UserPage({ params }: PageProps) {
 
           {isOwnProfile && (
             <button
-              className="px-3 py-1.5 border border-accent text-accent rounded text-sm hover:bg-accent/10 transition-colors"
-              onClick={() => alert("Edit profile not yet implemented")}
+              type="button"
+              disabled
+              title="Bientôt disponible"
+              className="px-3 py-1.5 border border-border text-text-secondary rounded text-sm cursor-not-allowed"
             >
-              Edit Profile
+              Modifier le profil · bientôt
             </button>
           )}
         </div>
@@ -119,7 +121,7 @@ export default async function UserPage({ params }: PageProps) {
         {stories.length > 0 && (
           <div className="mb-8">
             <h2 className="text-xl font-bold text-text mb-4">
-              {stories.length} Stories
+              {stories.length} {pluralize(stories.length, "publication")}
             </h2>
             <div className="border border-border rounded">
               {stories.map((story, i) => (
@@ -127,7 +129,7 @@ export default async function UserPage({ params }: PageProps) {
                   key={story.id}
                   rank={i + 1}
                   id={story.id}
-                  title={story.title || "Untitled"}
+                  title={story.title || "Sans titre"}
                   url={story.url || undefined}
                   author={story.author.username}
                   points={story.points}
@@ -144,7 +146,7 @@ export default async function UserPage({ params }: PageProps) {
         {comments.length > 0 && (
           <div>
             <h2 className="text-xl font-bold text-text mb-4">
-              {comments.length} Comments
+              {comments.length} {pluralize(comments.length, "commentaire")}
             </h2>
             <div className="space-y-4">
               {comments.map((comment) => (
@@ -158,8 +160,7 @@ export default async function UserPage({ params }: PageProps) {
                         {comment.author.username}
                       </span>
                       <span className="text-text-secondary">
-                        {comment.points} point
-                        {comment.points !== 1 ? "s" : ""}
+                        {comment.points} {pluralize(comment.points, "point")}
                       </span>
                       <span className="text-text-secondary">
                         {formatTime(comment.createdAt)}
@@ -169,12 +170,12 @@ export default async function UserPage({ params }: PageProps) {
 
                   <p className="text-sm text-text break-words whitespace-pre-wrap mb-2">
                     {comment.text ? comment.text.slice(0, 200) : ""}
-                    {comment.text && comment.text.length > 200 ? "..." : ""}
+                    {comment.text && comment.text.length > 200 ? "…" : ""}
                   </p>
 
                   {comment.parent && (
                     <p className="text-xs text-text-secondary">
-                      on{" "}
+                      sur{" "}
                       <a
                         href={`/item/${comment.parent.id}`}
                         className="text-accent hover:underline"
@@ -191,7 +192,7 @@ export default async function UserPage({ params }: PageProps) {
 
         {stories.length === 0 && comments.length === 0 && (
           <p className="text-center text-text-secondary">
-            No stories or comments yet
+            Aucune publication ni commentaire pour le moment
           </p>
         )}
       </div>

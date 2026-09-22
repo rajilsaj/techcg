@@ -117,24 +117,24 @@ export async function completeMagicLink(emailOverride?: string): Promise<User | 
 /* ---------- Error copy ---------- */
 
 const ERROR_COPY: Record<string, string> = {
-  "auth/popup-closed-by-user": "The Google window was closed before finishing. Try again when you're ready.",
-  "auth/cancelled-popup-request": "Only one sign-in window can be open at a time.",
-  "auth/popup-blocked": "Your browser blocked the sign-in window. Allow pop-ups for this site and try again.",
-  "auth/invalid-phone-number": "That phone number doesn't look right. Check the country code and digits.",
-  "auth/missing-phone-number": "Enter your phone number to continue.",
-  "auth/too-many-requests": "Too many attempts. Wait a few minutes before trying again.",
-  "auth/invalid-verification-code": "That code isn't right. Check the SMS and try again.",
-  "auth/code-expired": "That code has expired. Request a new one.",
-  "auth/network-request-failed": "Network error. Check your connection and try again.",
-  "auth/operation-not-allowed": "This sign-in method isn't enabled yet. Please contact support.",
-  "auth/invalid-email": "That email address doesn't look right.",
-  "auth/invalid-action-code": "This sign-in link is invalid or has already been used. Request a new one.",
-  "auth/expired-action-code": "This sign-in link has expired. Request a new one.",
+  "auth/popup-closed-by-user": "La fenêtre Google a été fermée avant la fin. Réessayez quand vous êtes prêt.",
+  "auth/cancelled-popup-request": "Une seule fenêtre de connexion peut être ouverte à la fois.",
+  "auth/popup-blocked": "Votre navigateur a bloqué la fenêtre de connexion. Autorisez les pop-ups pour ce site et réessayez.",
+  "auth/invalid-phone-number": "Ce numéro de téléphone semble incorrect. Vérifiez l'indicatif pays et les chiffres.",
+  "auth/missing-phone-number": "Saisissez votre numéro de téléphone pour continuer.",
+  "auth/too-many-requests": "Trop de tentatives. Patientez quelques minutes avant de réessayer.",
+  "auth/invalid-verification-code": "Ce code est incorrect. Vérifiez le SMS et réessayez.",
+  "auth/code-expired": "Ce code a expiré. Demandez-en un nouveau.",
+  "auth/network-request-failed": "Erreur réseau. Vérifiez votre connexion et réessayez.",
+  "auth/operation-not-allowed": "Cette méthode de connexion n'est pas encore activée. Veuillez contacter le support.",
+  "auth/invalid-email": "Cette adresse e-mail semble incorrecte.",
+  "auth/invalid-action-code": "Ce lien de connexion est invalide ou a déjà été utilisé. Demandez-en un nouveau.",
+  "auth/expired-action-code": "Ce lien de connexion a expiré. Demandez-en un nouveau.",
   "auth/account-exists-with-different-credential":
-    "An account already exists for this email with a different sign-in method.",
-  "auth/unauthorized-domain": "This domain isn't authorized for sign-in. Add it in the Firebase console.",
-  "auth/captcha-check-failed": "Verification failed. Reload the page and try again.",
-  "auth/missing-email": "Enter the email address you used to request the link.",
+    "Un compte existe déjà pour cette adresse e-mail avec une autre méthode de connexion.",
+  "auth/unauthorized-domain": "Ce domaine n'est pas autorisé pour la connexion. Ajoutez-le dans la console Firebase.",
+  "auth/captcha-check-failed": "La vérification a échoué. Rechargez la page et réessayez.",
+  "auth/missing-email": "Saisissez l'adresse e-mail utilisée pour demander le lien.",
 };
 
 export function describeAuthError(error: unknown): string {
@@ -145,7 +145,7 @@ export function describeAuthError(error: unknown): string {
   if (message) {
     return message.replace(/^Firebase:\s*/, "").replace(/\s*\(auth\/[^)]+\)\.?$/, "");
   }
-  return "Something went wrong. Please try again.";
+  return "Une erreur est survenue. Veuillez réessayer.";
 }
 
 /* ---------- Email/password (legacy helpers, still used by hooks) ---------- */

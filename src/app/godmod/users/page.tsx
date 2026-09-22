@@ -19,17 +19,17 @@ export default async function UsersPage() {
 
   return (
     <div className="p-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Users</h1>
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">Utilisateurs</h1>
 
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
         <table className="w-full">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Username</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Nom d&apos;utilisateur</th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Karma</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Stories</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Status</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Joined</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Publications</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Statut</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Inscription</th>
               <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900">Actions</th>
             </tr>
           </thead>
@@ -48,13 +48,13 @@ export default async function UsersPage() {
                     )}
                     {user.shadowBanned && (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                        Shadow Banned
+                        Shadow ban
                       </span>
                     )}
                   </div>
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-600">
-                  {new Date(user.createdAt).toLocaleDateString()}
+                  {new Date(user.createdAt).toLocaleDateString("fr-FR")}
                 </td>
                 <td className="px-6 py-4 text-right">
                   <UserActions userId={user.id} isShadowBanned={user.shadowBanned} />

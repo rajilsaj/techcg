@@ -2,7 +2,7 @@
 
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
-import { formatTime } from "@/lib/utils";
+import { formatTime, pluralize } from "@/lib/utils";
 import { CommentNode } from "@/lib/thread";
 import { CommentThread } from "./CommentThread";
 
@@ -26,8 +26,8 @@ export function CommentItem({ comment, depth }: CommentItemProps) {
             <button
               onClick={() => setCollapsed(!collapsed)}
               className="flex-shrink-0 p-0.5 hover:bg-border rounded transition-colors"
-              aria-label={collapsed ? "Expand thread" : "Collapse thread"}
-              title={`${comment.children.length} reply(ies)`}
+              aria-label={collapsed ? "Déplier le fil" : "Replier le fil"}
+              title={`${comment.children.length} ${pluralize(comment.children.length, "réponse")}`}
             >
               {collapsed ? (
                 <svg
@@ -58,7 +58,7 @@ export function CommentItem({ comment, depth }: CommentItemProps) {
               >
                 {comment.authorUsername}
               </a>
-              <span className="text-text-secondary">{comment.points} point{comment.points !== 1 ? 's' : ''}</span>
+              <span className="text-text-secondary">{comment.points} {pluralize(comment.points, "point")}</span>
               <span className="text-text-secondary">{formatTime(comment.createdAt)}</span>
             </div>
 
@@ -77,7 +77,7 @@ export function CommentItem({ comment, depth }: CommentItemProps) {
       {/* Collapse indicator */}
       {collapsed && comment.children.length > 0 && (
         <div className="px-4 py-2 text-xs text-text-secondary border-b border-border">
-          {comment.children.length} reply(ies) hidden
+          {comment.children.length} {pluralize(comment.children.length, "réponse masquée", "réponses masquées")}
         </div>
       )}
     </div>

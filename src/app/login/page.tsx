@@ -1,18 +1,20 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Header } from "@/components/layout/Header";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { SITE } from "@/lib/site";
 
-export const metadata: Metadata = { title: `Sign in · ${SITE.name}` };
+export const metadata: Metadata = { title: `Connexion · ${SITE.name}` };
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const { next } = await searchParams;
   return (
     <>
       <Header />
-      <Suspense>
-        <AuthShell intent="signin" />
-      </Suspense>
+      <AuthShell intent="signin" next={next ?? null} />
     </>
   );
 }

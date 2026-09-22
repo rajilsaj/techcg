@@ -126,7 +126,7 @@ export function OtpInput({
           inputMode="numeric"
           pattern="[0-9]*"
           autoComplete={i === 0 ? "one-time-code" : "off"}
-          aria-label={`Digit ${i + 1} of ${length}`}
+          aria-label={`Chiffre ${i + 1} sur ${length}`}
           aria-invalid={invalid || undefined}
           disabled={disabled}
           onChange={(e) => handleChange(i, e.target.value)}

@@ -1,18 +1,20 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Header } from "@/components/layout/Header";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { SITE } from "@/lib/site";
 
-export const metadata: Metadata = { title: `Account help · ${SITE.name}` };
+export const metadata: Metadata = { title: `Aide au compte · ${SITE.name}` };
 
-export default function RecoverPage() {
+export default async function RecoverPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const { next } = await searchParams;
   return (
     <>
       <Header />
-      <Suspense>
-        <AuthShell initialView="recovery" />
-      </Suspense>
+      <AuthShell initialView="recovery" next={next ?? null} />
     </>
   );
 }

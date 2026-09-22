@@ -15,21 +15,21 @@ export async function submitStoryAction(
   const session = await getSession();
 
   if (!session) {
-    return { error: "Not authenticated" };
+    return { error: "Vous devez être connecté" };
   }
 
   // Validate type
   if (!["story", "ask", "show", "job"].includes(type)) {
-    return { error: "Invalid type" };
+    return { error: "Type invalide" };
   }
 
   // Validate title
   if (!title || !title.trim()) {
-    return { error: "Title required" };
+    return { error: "Le titre est requis" };
   }
 
   if (title.length > 500) {
-    return { error: "Title too long (max 500 characters)" };
+    return { error: "Titre trop long (500 caractères maximum)" };
   }
 
   // Validate URL vs text
@@ -37,11 +37,11 @@ export async function submitStoryAction(
   const hasText = text && text.trim();
 
   if (type === "story" && !hasUrl && !hasText) {
-    return { error: "Either URL or text required" };
+    return { error: "Une URL ou un texte est requis" };
   }
 
   if (hasUrl && hasText && type !== "ask" && type !== "show") {
-    return { error: "Provide either URL or text, not both" };
+    return { error: "Indiquez une URL ou un texte, pas les deux" };
   }
 
   // Validate URL format if provided
@@ -49,7 +49,7 @@ export async function submitStoryAction(
     try {
       new URL(url);
     } catch {
-      return { error: "Invalid URL" };
+      return { error: "URL invalide" };
     }
   }
 
@@ -57,7 +57,7 @@ export async function submitStoryAction(
   const rateLimitResult = await checkRateLimit(session.userId, "submit");
   if (!rateLimitResult.allowed) {
     return {
-      error: `Rate limited. Try again in ${rateLimitResult.retryAfter} seconds`,
+      error: `Trop de publications. Réessayez dans ${rateLimitResult.retryAfter} secondes`,
     };
   }
 

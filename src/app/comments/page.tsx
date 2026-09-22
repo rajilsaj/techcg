@@ -60,7 +60,7 @@ export default async function CommentsPage({ searchParams }: PageProps) {
     <>
       <Header />
       <div className="max-w-5xl mx-auto">
-        <SectionHeader title="Recent Comments" showSubmit={false} />
+        <SectionHeader title="Commentaires récents" showSubmit={false} />
 
         <div>
           {displayComments.map((comment, i) => (
@@ -68,7 +68,7 @@ export default async function CommentsPage({ searchParams }: PageProps) {
               key={comment.id}
               rank={i + 1}
               id={comment.id}
-              title={comment.text ? comment.text.slice(0, 100) + (comment.text.length > 100 ? "..." : "") : "Comment"}
+              title={comment.text ? comment.text.slice(0, 100) + (comment.text.length > 100 ? "…" : "") : "Commentaire"}
               author={comment.author.username}
               points={comment.points}
               commentCount={0}

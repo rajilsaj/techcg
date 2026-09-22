@@ -55,16 +55,16 @@ export function SubmitForm({ defaultType = "story" }: SubmitFormProps) {
           disabled={loading}
           className="w-full px-3 py-2 border border-border rounded text-text bg-bg"
         >
-          <option value="story">Story</option>
-          <option value="ask">Ask</option>
-          <option value="show">Show</option>
-          <option value="job">Job</option>
+          <option value="story">Article</option>
+          <option value="ask">Question</option>
+          <option value="show">Vitrine</option>
+          <option value="job">Emploi</option>
         </select>
       </div>
 
       <div>
         <label className="block text-sm font-medium text-text mb-2">
-          Title
+          Titre
         </label>
         <input
           type="text"
@@ -72,7 +72,7 @@ export function SubmitForm({ defaultType = "story" }: SubmitFormProps) {
           onChange={(e) => setTitle(e.target.value)}
           required
           className="w-full px-3 py-2 border border-border rounded text-text"
-          placeholder="What's the story?"
+          placeholder="De quoi s'agit-il ?"
           disabled={loading}
         />
       </div>
@@ -90,7 +90,7 @@ export function SubmitForm({ defaultType = "story" }: SubmitFormProps) {
           disabled={loading}
         />
         <p className="text-xs text-text-secondary mt-1">
-          Leave blank to submit a text post
+          Laissez vide pour publier un texte
         </p>
       </div>
 
@@ -98,18 +98,18 @@ export function SubmitForm({ defaultType = "story" }: SubmitFormProps) {
       {type === "story" && (
         <div className="border-t border-border pt-6">
           <label className="block text-sm font-medium text-text mb-2">
-            Text
+            Texte
           </label>
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
             className="w-full px-3 py-2 border border-border rounded text-text resize-none"
-            placeholder="Tell the story (optional if URL provided)"
+            placeholder="Racontez (facultatif si une URL est fournie)"
             rows={6}
             disabled={loading}
           />
           <p className="text-xs text-text-secondary mt-1">
-            Provide text if there's no URL, or both for context
+            Ajoutez un texte s&apos;il n&apos;y a pas d&apos;URL, ou les deux pour le contexte
           </p>
         </div>
       )}
@@ -121,14 +121,14 @@ export function SubmitForm({ defaultType = "story" }: SubmitFormProps) {
           disabled={loading}
           className="px-4 py-2 border border-border rounded font-medium hover:bg-bg-secondary transition-colors disabled:opacity-50"
         >
-          Cancel
+          Annuler
         </button>
         <button
           type="submit"
           disabled={loading}
           className="px-4 py-2 bg-accent text-white rounded font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
         >
-          {loading ? "Submitting..." : "Submit"}
+          {loading ? "Envoi…" : "Publier"}
         </button>
       </div>
     </form>

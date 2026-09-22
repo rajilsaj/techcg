@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import type { ConfirmationResult, User } from "firebase/auth";
 import { ArrowLeft, ArrowRight, LifeBuoy, Mail, RefreshCw, Smartphone } from "lucide-react";
 import { SITE } from "@/lib/site";
@@ -34,13 +34,15 @@ function safeNext(value: string | null) {
 export function AuthShell({
   intent = "signin",
   initialView = "landing",
+  next = null,
 }: {
   intent?: Intent;
   initialView?: AuthView;
+  /** Relative path to return to after sign-in (from `?next=`). */
+  next?: string | null;
 }) {
   const router = useRouter();
-  const params = useSearchParams();
-  const nextPath = safeNext(params.get("next"));
+  const nextPath = safeNext(next);
 
   const [view, setView] = useState<AuthView>(initialView);
   const [phase, setPhase] = useState<Phase>("idle");
@@ -88,7 +90,7 @@ export function AuthShell({
         router.replace(nextPath);
         router.refresh();
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Couldn't complete sign-in.");
+        setError(e instanceof Error ? e.message : "Impossible de finaliser la connexion.");
         setPhase("idle");
       }
     },
@@ -110,7 +112,7 @@ export function AuthShell({
     e?.preventDefault();
     setPhoneTouched(true);
     if (!phoneValid) {
-      setError("Enter a valid phone number, including the right country code.");
+      setError("Saisissez un numéro de téléphone valide, avec le bon indicatif pays.");
       phoneRef.current?.focus();
       return;
     }
@@ -170,12 +172,12 @@ export function AuthShell({
           view === "recovery" ? (
             <LinkButton onClick={() => go("landing")}>
               <ArrowLeft size={14} className="mr-1 inline" aria-hidden="true" />
-              Back to sign in
+              Retour à la connexion
             </LinkButton>
           ) : view === "landing" ? (
             <>
-              Trouble signing in?{" "}
-              <LinkButton onClick={() => go("recovery")}>Get help</LinkButton>
+              Un problème pour vous connecter ?{" "}
+              <LinkButton onClick={() => go("recovery")}>Obtenir de l&apos;aide</LinkButton>
             </>
           ) : null
         }
@@ -184,10 +186,10 @@ export function AuthShell({
         {view === "landing" && (
           <>
             <h1 ref={headingRef} tabIndex={-1} className={heading}>
-              {intent === "signup" ? `Join ${SITE.name}` : "Welcome back"}
+              {intent === "signup" ? `Rejoindre ${SITE.name}` : "Bon retour"}
             </h1>
             <p className={sub}>
-              No passwords here. Continue with Google, or we&apos;ll text you a code.
+              Pas de mot de passe ici. Continuez avec Google, ou recevez un code par SMS.
             </p>
 
             <div className="mt-7 space-y-5">
@@ -197,7 +199,7 @@ export function AuthShell({
 
               <div className="flex items-center gap-3 text-xs uppercase tracking-wider text-text-secondary">
                 <span className="h-px flex-1 bg-border" aria-hidden="true" />
-                or
+                ou
                 <span className="h-px flex-1 bg-border" aria-hidden="true" />
               </div>
 
@@ -219,17 +221,17 @@ export function AuthShell({
                 <PrimaryButton
                   type="submit"
                   loading={phase === "sending"}
-                  loadingLabel="Sending code…"
+                  loadingLabel="Envoi du code…"
                   disabled={busy}
                   icon={<Smartphone size={16} aria-hidden="true" />}
                 >
-                  Text me a code
+                  Recevoir un code par SMS
                 </PrimaryButton>
               </form>
             </div>
 
             <p className="mt-6 text-xs leading-relaxed text-text-secondary">
-              New here? Signing in creates your account automatically.
+              Nouveau ici ? La connexion crée votre compte automatiquement.
             </p>
           </>
         )}
@@ -238,10 +240,10 @@ export function AuthShell({
         {view === "otp" && (
           <>
             <h1 ref={headingRef} tabIndex={-1} id="otp-heading" className={heading}>
-              Check your phone
+              Vérifiez votre téléphone
             </h1>
             <p id="otp-description" className={sub}>
-              Enter the 6-digit code we sent to{" "}
+              Saisissez le code à 6 chiffres envoyé au{" "}
               <span className="font-medium text-text tabular-nums">{phoneDisplay}</span>.
             </p>
 
@@ -260,27 +262,27 @@ export function AuthShell({
               <PrimaryButton
                 onClick={() => {
                   const code = Array.from(
-                    document.querySelectorAll<HTMLInputElement>('[aria-label^="Digit "]')
+                    document.querySelectorAll<HTMLInputElement>('[aria-label^="Chiffre "]')
                   )
                     .map((el) => el.value)
                     .join("");
                   verifyCode(code);
                 }}
                 loading={phase === "verifying" || phase === "finishing"}
-                loadingLabel={phase === "finishing" ? "Signing you in…" : "Verifying…"}
+                loadingLabel={phase === "finishing" ? "Connexion…" : "Vérification…"}
                 disabled={busy}
                 icon={<ArrowRight size={16} aria-hidden="true" />}
               >
-                Verify
+                Vérifier
               </PrimaryButton>
 
               <div className="flex items-center justify-between text-sm">
                 <LinkButton onClick={() => sendCode()} disabled={busy || resendIn > 0}>
                   <RefreshCw size={13} className="mr-1 inline" aria-hidden="true" />
-                  {resendIn > 0 ? `Resend in 0:${String(resendIn).padStart(2, "0")}` : "Resend code"}
+                  {resendIn > 0 ? `Renvoyer dans 0:${String(resendIn).padStart(2, "0")}` : "Renvoyer le code"}
                 </LinkButton>
                 <LinkButton onClick={() => go("landing")} disabled={busy}>
-                  Change number
+                  Changer de numéro
                 </LinkButton>
               </div>
             </div>
@@ -291,11 +293,11 @@ export function AuthShell({
         {view === "recovery" && (
           <>
             <h1 ref={headingRef} tabIndex={-1} className={heading}>
-              Can&apos;t get in?
+              Impossible de vous connecter ?
             </h1>
             <p className={sub}>
-              {SITE.name} accounts don&apos;t have passwords, so there&apos;s nothing to reset.
-              Pick the option that matches how you joined.
+              Les comptes {SITE.name} n&apos;ont pas de mot de passe, il n&apos;y a donc rien à
+              réinitialiser. Choisissez l&apos;option qui correspond à votre inscription.
             </p>
 
             <div className="mt-7 space-y-6">
@@ -303,7 +305,7 @@ export function AuthShell({
 
               <section aria-labelledby="rec-google">
                 <h2 id="rec-google" className="mb-2 text-sm font-semibold text-text">
-                  I signed up with Gmail
+                  Je me suis inscrit avec Gmail
                 </h2>
                 <GoogleButton
                   onClick={handleGoogle}
@@ -314,12 +316,12 @@ export function AuthShell({
 
               <section aria-labelledby="rec-email">
                 <h2 id="rec-email" className="mb-2 text-sm font-semibold text-text">
-                  I lost access to my phone number
+                  Je n&apos;ai plus accès à mon numéro de téléphone
                 </h2>
                 {emailSentTo ? (
                   <Alert tone="success">
-                    We sent a sign-in link to <strong>{emailSentTo}</strong>. It expires in about
-                    an hour.{" "}
+                    Nous avons envoyé un lien de connexion à <strong>{emailSentTo}</strong>. Il
+                    expire dans environ une heure.{" "}
                     <LinkButton
                       className="!text-inherit underline"
                       onClick={() => {
@@ -327,13 +329,13 @@ export function AuthShell({
                         setEmail("");
                       }}
                     >
-                      Use a different email
+                      Utiliser une autre adresse
                     </LinkButton>
                   </Alert>
                 ) : (
                   <form onSubmit={sendEmailLink} className="space-y-3">
                     <label htmlFor="rec-email-input" className="sr-only">
-                      Email address
+                      Adresse e-mail
                     </label>
                     <input
                       id="rec-email-input"
@@ -343,17 +345,17 @@ export function AuthShell({
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       disabled={busy}
-                      placeholder="you@example.com"
+                      placeholder="vous@exemple.com"
                       className="w-full rounded-xl border border-border bg-bg px-3.5 py-3 text-[15px] text-text placeholder:text-text-secondary/60 disabled:opacity-60"
                     />
                     <SecondaryButton
                       type="submit"
                       loading={phase === "emailing"}
-                      loadingLabel="Sending link…"
+                      loadingLabel="Envoi du lien…"
                       disabled={busy || !email.includes("@")}
                       icon={<Mail size={16} aria-hidden="true" />}
                     >
-                      Email me a sign-in link
+                      M&apos;envoyer un lien de connexion
                     </SecondaryButton>
                   </form>
                 )}
@@ -361,26 +363,27 @@ export function AuthShell({
 
               <section aria-labelledby="rec-phone">
                 <h2 id="rec-phone" className="mb-2 text-sm font-semibold text-text">
-                  I have a new phone number
+                  J&apos;ai un nouveau numéro de téléphone
                 </h2>
                 <SecondaryButton
                   onClick={() => go("landing")}
                   disabled={busy}
                   icon={<Smartphone size={16} aria-hidden="true" />}
                 >
-                  Sign in with a different number
+                  Se connecter avec un autre numéro
                 </SecondaryButton>
               </section>
 
               <details className="group rounded-lg border border-border bg-bg-secondary/60 px-3.5 py-3 text-sm">
                 <summary className="flex cursor-pointer list-none items-center gap-2 font-medium text-text">
                   <LifeBuoy size={15} className="text-accent" aria-hidden="true" />
-                  Why isn&apos;t there a password?
+                  Pourquoi n&apos;y a-t-il pas de mot de passe ?
                 </summary>
                 <p className="mt-2 leading-relaxed text-text-secondary">
-                  Your Google account or phone number already proves it&apos;s you, so we never
-                  store a password that could be leaked or forgotten. If none of the options
-                  above work, sign in with Google to start fresh.
+                  Votre compte Google ou votre numéro de téléphone prouve déjà votre identité,
+                  nous ne stockons donc jamais de mot de passe susceptible de fuiter ou
+                  d&apos;être oublié. Si aucune des options ci-dessus ne fonctionne,
+                  connectez-vous avec Google pour repartir de zéro.
                 </p>
               </details>
             </div>

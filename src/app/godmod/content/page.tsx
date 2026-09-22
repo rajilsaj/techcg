@@ -36,14 +36,14 @@ export default async function ContentPage() {
 
   return (
     <div className="p-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Content Moderation</h1>
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">Modération du contenu</h1>
 
       {/* Flagged Items */}
       <div className="mb-12">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Flagged Content ({flaggedItems.length})</h2>
+        <h2 className="text-xl font-bold text-gray-900 mb-4">Contenu signalé ({flaggedItems.length})</h2>
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           {flaggedItems.length === 0 ? (
-            <div className="p-6 text-center text-gray-500">No flagged items</div>
+            <div className="p-6 text-center text-gray-500">Aucun contenu signalé</div>
           ) : (
             <div className="divide-y divide-gray-200">
               {flaggedItems.map((item) => (
@@ -54,11 +54,11 @@ export default async function ContentPage() {
                         {item.title || item.text?.slice(0, 100)}
                       </h3>
                       <p className="text-sm text-gray-500 mt-1">
-                        {item.type} by {item.author.username}
+                        {item.type} par {item.author.username}
                       </p>
                     </div>
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-                      {item.flagCount} flags
+                      {item.flagCount} {item.flagCount > 1 ? "signalements" : "signalement"}
                     </span>
                   </div>
                   <div className="flex gap-2 mt-4">
@@ -73,10 +73,10 @@ export default async function ContentPage() {
 
       {/* Deleted Items */}
       <div>
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Recently Deleted ({deletedItems.length})</h2>
+        <h2 className="text-xl font-bold text-gray-900 mb-4">Supprimés récemment ({deletedItems.length})</h2>
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           {deletedItems.length === 0 ? (
-            <div className="p-6 text-center text-gray-500">No deleted items</div>
+            <div className="p-6 text-center text-gray-500">Aucun élément supprimé</div>
           ) : (
             <div className="divide-y divide-gray-200">
               {deletedItems.map((item) => (
@@ -85,11 +85,11 @@ export default async function ContentPage() {
                     <div>
                       <h3 className="font-medium text-gray-900">{item.title}</h3>
                       <p className="text-sm text-gray-500 mt-1">
-                        {item.type} by {item.author.username}
+                        {item.type} par {item.author.username}
                       </p>
                     </div>
                     <span className="text-xs text-gray-400">
-                      {new Date(item.updatedAt).toLocaleDateString()}
+                      {new Date(item.updatedAt).toLocaleDateString("fr-FR")}
                     </span>
                   </div>
                 </div>

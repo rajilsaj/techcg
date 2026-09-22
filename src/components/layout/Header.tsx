@@ -18,22 +18,22 @@ export function Header() {
 
           <div className="flex items-center gap-4 text-sm">
             <Link href="/" className="text-text hover:text-accent transition-colors">
-              Top
+              À la une
             </Link>
             <Link href="/newest" className="text-text hover:text-accent transition-colors">
-              Newest
+              Récents
             </Link>
             <Link href="/ask" className="text-text hover:text-accent transition-colors">
-              Ask
+              Questions
             </Link>
             <Link href="/show" className="text-text hover:text-accent transition-colors">
-              Show
+              Vitrine
             </Link>
             <Link href="/jobs" className="text-text hover:text-accent transition-colors">
-              Jobs
+              Emplois
             </Link>
             <Link href="/comments" className="text-text hover:text-accent transition-colors">
-              Comments
+              Commentaires
             </Link>
           </div>
         </nav>

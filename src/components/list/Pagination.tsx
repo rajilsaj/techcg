@@ -25,7 +25,7 @@ export function Pagination({
   return (
     <div className="border-t border-border px-4 py-4 flex items-center justify-between">
       <div className="text-sm text-text-secondary">
-        {currentPage === 1 ? "Page 1" : `Page ${currentPage}`} of many
+        Page {currentPage}
       </div>
 
       <div className="flex gap-2">
@@ -34,7 +34,7 @@ export function Pagination({
             href={buildUrl(prevCursor)}
             className="px-3 py-1.5 border border-border rounded hover:border-accent hover:text-accent transition-colors text-sm"
           >
-            ← Previous
+            ← Précédent
           </Link>
         )}
 
@@ -43,7 +43,7 @@ export function Pagination({
             href={buildUrl(nextCursor)}
             className="px-3 py-1.5 border border-accent text-accent rounded hover:bg-accent/10 transition-colors text-sm"
           >
-            Next →
+            Suivant →
           </Link>
         )}
       </div>

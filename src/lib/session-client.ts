@@ -15,7 +15,7 @@ export async function establishSession(user: User): Promise<EstablishedSession> 
 
   const body = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(body.error || "Couldn't complete sign-in. Please try again.");
+    throw new Error(body.error || "Impossible de finaliser la connexion. Veuillez réessayer.");
   }
   return body as EstablishedSession;
 }

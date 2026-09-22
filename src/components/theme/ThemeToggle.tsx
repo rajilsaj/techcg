@@ -29,7 +29,7 @@ export function ThemeToggle() {
     <button
       onClick={toggleTheme}
       className="p-1 rounded hover:bg-bg-secondary transition-colors"
-      aria-label="Toggle theme"
+      aria-label="Changer de thème"
     >
       {isDark ? (
         <Sun size={18} className="text-text" />

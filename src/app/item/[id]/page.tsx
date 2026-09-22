@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { Header } from "@/components/layout/Header";
-import { getDomain, formatTime } from "@/lib/utils";
+import { getDomain, formatTime, pluralize } from "@/lib/utils";
 import { CommentThread } from "@/components/item/CommentThread";
 import { CommentForm } from "@/components/item/CommentForm";
 import { buildCommentTree, CommentData } from "@/lib/thread";
@@ -127,12 +127,12 @@ export default async function ItemPage({ params }: PageProps) {
           )}
 
           <div className="flex items-center gap-4 text-xs text-text-secondary">
-            <span>{story.points} point{story.points !== 1 ? 's' : ''}</span>
+            <span>{story.points} {pluralize(story.points, "point")}</span>
             <a href={`/user/${story.author.username}`} className="text-accent hover:underline">
               {story.author.username}
             </a>
             <span>{formatTime(story.createdAt)}</span>
-            <span>{story.commentCount} comment{story.commentCount !== 1 ? 's' : ''}</span>
+            <span>{story.commentCount} {pluralize(story.commentCount, "commentaire")}</span>
           </div>
         </div>
 
@@ -144,7 +144,7 @@ export default async function ItemPage({ params }: PageProps) {
           <CommentThread comments={commentTree} depth={0} />
         ) : (
           <div className="p-4 text-center text-text-secondary">
-            No comments yet. Be the first to comment!
+            Pas encore de commentaires. Soyez le premier à réagir !
           </div>
         )}
       </div>

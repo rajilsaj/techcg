@@ -23,10 +23,10 @@ export function UserActions({
       if (response.ok) {
         window.location.reload();
       } else {
-        alert("Failed to update user status");
+        alert("Échec de la mise à jour du statut");
       }
     } catch (error) {
-      alert("Error updating user status");
+      alert("Erreur lors de la mise à jour du statut");
     } finally {
       setLoading(false);
     }
@@ -43,7 +43,7 @@ export function UserActions({
             : "bg-red-100 text-red-800 hover:bg-red-200"
         } disabled:opacity-50`}
       >
-        {loading ? "..." : isShadowBanned ? "Unban" : "Shadow Ban"}
+        {loading ? "…" : isShadowBanned ? "Réhabiliter" : "Shadow ban"}
       </button>
     </div>
   );

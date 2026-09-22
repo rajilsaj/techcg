@@ -11,15 +11,15 @@ export async function submitCommentAction(
   const session = await getSession();
 
   if (!session) {
-    return { error: "Not authenticated" };
+    return { error: "Vous devez être connecté" };
   }
 
   if (!text || !text.trim()) {
-    return { error: "Comment text required" };
+    return { error: "Le commentaire ne peut pas être vide" };
   }
 
   if (text.length > 10000) {
-    return { error: "Comment too long (max 10,000 characters)" };
+    return { error: "Commentaire trop long (10 000 caractères maximum)" };
   }
 
   // Check if parent item exists
@@ -33,7 +33,7 @@ export async function submitCommentAction(
   });
 
   if (!parent) {
-    return { error: "Item not found" };
+    return { error: "Élément introuvable" };
   }
 
   // Create comment

@@ -25,7 +25,7 @@ export function MagicLinkComplete() {
       try {
         const user = await completeMagicLink(emailOverride);
         if (!user) {
-          setError("This page only works when opened from a sign-in link we emailed you.");
+          setError("Cette page ne fonctionne qu'en ouvrant le lien de connexion que nous vous avons envoyé par e-mail.");
           setState("error");
           return;
         }
@@ -60,7 +60,7 @@ export function MagicLinkComplete() {
       footer={
         state === "error" ? (
           <Link href="/recover" className="font-medium">
-            Request a new link
+            Demander un nouveau lien
           </Link>
         ) : null
       }
@@ -69,21 +69,21 @@ export function MagicLinkComplete() {
         <div className="flex flex-col items-center py-6 text-center" role="status" aria-live="polite">
           <Spinner className="h-6 w-6 text-accent" />
           <p className="mt-4 text-[15px] text-text-secondary">
-            {state === "done" ? "Signed in. Taking you home…" : "Confirming your sign-in link…"}
+            {state === "done" ? "Connecté. Redirection vers l'accueil…" : "Vérification de votre lien de connexion…"}
           </p>
         </div>
       ) : state === "need-email" ? (
         <>
-          <h1 className="text-2xl font-bold tracking-tight text-text">Confirm your email</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-text">Confirmez votre e-mail</h1>
           <p className="mt-1.5 text-[15px] leading-relaxed text-text-secondary">
-            Looks like you opened this link on a different device. Enter the email address you
-            requested it with to finish signing in.
+            Il semble que vous ayez ouvert ce lien sur un autre appareil. Saisissez l&apos;adresse
+            e-mail utilisée pour le demander afin de finaliser la connexion.
           </p>
           <form onSubmit={submitEmail} className="mt-6 space-y-4">
             {error && <Alert tone="error">{error}</Alert>}
             <div>
               <label htmlFor="ml-email" className="mb-1.5 block text-sm font-medium text-text">
-                Email address
+                Adresse e-mail
               </label>
               <input
                 id="ml-email"
@@ -93,7 +93,7 @@ export function MagicLinkComplete() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
+                placeholder="vous@exemple.com"
                 className="w-full rounded-xl border border-border bg-bg px-3.5 py-3 text-[15px] text-text placeholder:text-text-secondary/60"
               />
             </div>
@@ -102,13 +102,13 @@ export function MagicLinkComplete() {
               disabled={!email.includes("@")}
               icon={<Mail size={16} aria-hidden="true" />}
             >
-              Finish signing in
+              Finaliser la connexion
             </PrimaryButton>
           </form>
         </>
       ) : (
         <>
-          <h1 className="text-2xl font-bold tracking-tight text-text">Link didn&apos;t work</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-text">Le lien n&apos;a pas fonctionné</h1>
           <div className="mt-5">
             <Alert tone="error">{error}</Alert>
           </div>

@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     if (error instanceof FirebaseAdminNotConfiguredError) {
       console.error(error.message);
       return NextResponse.json(
-        { error: "Sign-in isn't configured on the server yet. Please try again later." },
+        { error: "La connexion n'est pas encore configurée sur le serveur. Veuillez réessayer plus tard." },
         { status: 503 }
       );
     }
@@ -55,11 +55,11 @@ export async function POST(request: NextRequest) {
       // Anything outside auth/* means the Admin SDK itself failed (e.g. malformed private key).
       console.error("Firebase Admin initialization failed:", error);
       return NextResponse.json(
-        { error: "Server sign-in credentials are invalid. Please try again later." },
+        { error: "Les identifiants de connexion du serveur sont invalides. Veuillez réessayer plus tard." },
         { status: 500 }
       );
     }
-    return NextResponse.json({ error: "Invalid or expired sign-in token." }, { status: 401 });
+    return NextResponse.json({ error: "Jeton de connexion invalide ou expiré." }, { status: 401 });
   }
 
   const email = token.email ?? null;

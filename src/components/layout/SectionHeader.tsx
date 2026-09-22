@@ -14,7 +14,7 @@ export function SectionHeader({ title, showSubmit = true }: SectionHeaderProps) 
           href="/submit"
           className="px-3 py-1.5 border border-accent text-accent rounded hover:bg-accent/10 transition-colors text-sm font-medium"
         >
-          + Submit
+          + Publier
         </Link>
       )}
     </div>

@@ -56,7 +56,7 @@ export default async function ShowPage({ searchParams }: PageProps) {
     <>
       <Header />
       <div className="max-w-5xl mx-auto">
-        <SectionHeader title="Show" />
+        <SectionHeader title="Vitrine" />
 
         <div>
           {displayStories.map((story, i) => (
@@ -64,7 +64,7 @@ export default async function ShowPage({ searchParams }: PageProps) {
               key={story.id}
               rank={i + 1}
               id={story.id}
-              title={story.title || "Untitled"}
+              title={story.title || "Sans titre"}
               url={story.url || undefined}
               author={story.author.username}
               points={story.points}

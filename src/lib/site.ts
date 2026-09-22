@@ -1,6 +1,6 @@
 export const SITE = {
   name: "Tech.cg",
-  tagline: "Central Africa's tech community",
+  tagline: "La communauté tech d'Afrique centrale",
   description:
-    "A community-driven link aggregator for technology in Central Africa. Submit stories, discuss in comments, earn karma.",
+    "Un agrégateur de liens communautaire dédié à la technologie en Afrique centrale. Publiez des articles, discutez en commentaires, gagnez du karma.",
 };

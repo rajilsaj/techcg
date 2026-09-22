@@ -51,7 +51,7 @@ export function VoteButton({ itemId, isVoted = false, isLoggedIn = false }: Vote
             ? "text-accent bg-accent/10"
             : "text-text-secondary hover:text-accent hover:bg-accent/5"
         }`}
-        aria-label={voted ? "Unvote" : "Upvote"}
+        aria-label={voted ? "Retirer le vote" : "Voter"}
         title={error || ""}
       >
         <ChevronUp

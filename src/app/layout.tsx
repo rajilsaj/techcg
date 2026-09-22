@@ -13,7 +13,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="fr" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
         <script
@@ -32,7 +32,7 @@ export default function RootLayout({
       </head>
       <body>
         <a href="#main" className="sr-only focus:not-sr-only">
-          Skip to main content
+          Aller au contenu principal
         </a>
         <main id="main">
           {children}
