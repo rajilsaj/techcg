@@ -21,6 +21,31 @@ export const fr = {
   "nav.karmaTitle": "Karma",
 
   "theme.toggle": "Changer de thème",
+  "theme.light": "Clair",
+  "theme.dark": "Sombre",
+
+  "hero.title": "Un espace libre pour lire, noter et discuter",
+  "hero.tabs": "Publications",
+  "hero.new": "Nouveautés",
+  "hero.past": "Archives",
+
+  "archives.previousDay": "Jour précédent",
+  "archives.nextDay": "Jour suivant",
+  "archives.empty": "Aucune publication ce jour-là.",
+
+  "story.by": "par",
+  "story.like": "J'aime",
+  "story.liked": "Aimé",
+  "story.hide": "Masquer",
+  "story.hidden": "Publication masquée.",
+  "story.undoHide": "Annuler",
+  "story.history": "Historique",
+  "story.discuss": "Discuter",
+  "story.excerptLabel": "Extrait de l'article",
+  "story.empty": "Aucune publication pour le moment.",
+
+  "site.heading": "Publications de {domain}",
+  "comments.empty": "Aucun commentaire pour le moment.",
 
   "meta.login": "Connexion",
   "meta.register": "Inscription",
@@ -37,7 +62,6 @@ export const fr = {
 
   "common.untitled": "Sans titre",
   "common.comment": "Commentaire",
-  "common.textPost": "texte",
   "common.cancel": "Annuler",
   "common.sending": "Envoi…",
 
@@ -51,11 +75,7 @@ export const fr = {
   "unit.replies": "réponses",
 
   "pagination.page": "Page {page}",
-  "pagination.prev": "← Précédent",
   "pagination.next": "Suivant →",
-
-  "vote.upvote": "Voter",
-  "vote.unvote": "Retirer le vote",
 
   "comment.add": "Ajouter un commentaire",
   "comment.placeholder": "Partagez votre avis…",

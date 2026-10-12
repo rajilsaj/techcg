@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { after } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { Header } from "@/components/layout/Header";
@@ -7,6 +8,8 @@ import { formatRelativeTime, pluralize, t } from "@/i18n";
 import { CommentThread } from "@/components/item/CommentThread";
 import { CommentForm } from "@/components/item/CommentForm";
 import { buildCommentTree, CommentData } from "@/lib/thread";
+import { enrichStory, needsEnrichment } from "@/lib/enrich-story";
+import { LikeButton } from "@/components/list/StoryActions";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -32,6 +35,11 @@ export default async function ItemPage({ params }: PageProps) {
       title: true,
       url: true,
       text: true,
+      excerpt: true,
+      excerptLang: true,
+      imageUrl: true,
+      previewAt: true,
+      deleted: true,
       author: {
         select: {
           username: true,
@@ -43,9 +51,15 @@ export default async function ItemPage({ params }: PageProps) {
     },
   });
 
-  if (!story || story.type !== "story") {
+  if (!story || story.type === "comment" || story.deleted) {
     notFound();
   }
+
+  if (needsEnrichment(story)) after(() => enrichStory(story.id));
+
+  const voted = session
+    ? !!(await prisma.vote.findUnique({ where: { userId_itemId: { userId: session.userId, itemId } } }))
+    : false;
 
   // Fetch all comments for this story
   const commentRows = await prisma.item.findMany({
@@ -110,15 +124,37 @@ export default async function ItemPage({ params }: PageProps) {
 
           {domain && (
             <p className="text-sm text-text-secondary mb-3">
-              <a
-                href={`https://${domain}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-accent hover:underline"
-              >
-                ({domain})
+              <a href={`/site/${domain}`} className="text-accent hover:underline">
+                {domain}
               </a>
             </p>
+          )}
+
+          {story.url && (story.imageUrl || story.excerpt) && (
+            <a
+              href={story.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mb-4 flex flex-col gap-3 rounded-lg border border-border bg-bg-secondary p-3 transition-colors hover:border-text-secondary sm:flex-row"
+            >
+              {story.imageUrl && (
+                // eslint-disable-next-line @next/next/no-img-element -- arbitrary third-party hosts
+                <img
+                  src={story.imageUrl}
+                  alt=""
+                  referrerPolicy="no-referrer"
+                  className="h-40 w-full shrink-0 rounded object-cover sm:h-28 sm:w-48"
+                />
+              )}
+              {story.excerpt && (
+                <div className="min-w-0">
+                  <p className="text-xs font-medium uppercase tracking-wide text-text-secondary">
+                    {t("story.excerptLabel")}
+                  </p>
+                  <p className="mt-1 text-sm text-text">{story.excerpt}</p>
+                </div>
+              )}
+            </a>
           )}
 
           {story.text && (
@@ -127,8 +163,11 @@ export default async function ItemPage({ params }: PageProps) {
             </div>
           )}
 
-          <div className="flex items-center gap-4 text-xs text-text-secondary">
-            <span>{story.points} {pluralize(story.points, t("unit.point"), t("unit.points"))}</span>
+          <div className="flex flex-wrap items-center gap-4 text-xs text-text-secondary">
+            <span className="font-semibold text-text">
+              {story.points} {pluralize(story.points, t("unit.point"), t("unit.points"))}
+            </span>
+            <LikeButton itemId={story.id} voted={voted} isLoggedIn={!!session} />
             <a href={`/profil/${story.author.username}`} className="text-accent hover:underline">
               {story.author.username}
             </a>

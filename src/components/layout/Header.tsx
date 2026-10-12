@@ -3,41 +3,29 @@ import { SITE } from "@/lib/site";
 import { getSession } from "@/lib/auth";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { LogoutButton } from "@/components/layout/LogoutButton";
+import { NavLinks } from "@/components/layout/NavLinks";
 import { t } from "@/i18n";
-
-const NAV = [
-  { href: "/", key: "nav.top" },
-  { href: "/recents", key: "nav.newest" },
-  { href: "/questions", key: "nav.ask" },
-  { href: "/vitrine", key: "nav.show" },
-  { href: "/emplois", key: "nav.jobs" },
-  { href: "/commentaires", key: "nav.comments" },
-] as const;
 
 export async function Header() {
   const session = await getSession();
 
   return (
-    <header className="border-b border-border sticky top-0 z-50 bg-bg">
-      <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-        <nav className="flex items-center gap-6">
-          <Link
-            href="/"
-            className="text-lg font-bold text-accent hover:opacity-80 transition-opacity"
-          >
-            {SITE.name}
-          </Link>
+    <header className="sticky top-0 z-50 border-b border-border bg-bg">
+      <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3">
+        <Link href="/" className="flex items-center gap-2 font-semibold text-text">
+          <span className="flex h-7 w-7 items-center justify-center rounded-sm border-2 border-text text-sm font-bold text-accent">
+            {SITE.name.charAt(0).toUpperCase()}
+          </span>
+          {SITE.name}
+        </Link>
 
-          <div className="flex items-center gap-4 text-sm">
-            {NAV.map(({ href, key }) => (
-              <Link key={href} href={href} className="text-text hover:text-accent transition-colors">
-                {t(key)}
-              </Link>
-            ))}
-          </div>
+        <ThemeToggle />
+
+        <nav className="order-last w-full md:order-none md:ml-auto md:w-auto">
+          <NavLinks />
         </nav>
 
-        <div className="flex items-center gap-4 text-sm">
+        <div className="ml-auto flex items-center gap-4 text-sm md:ml-0">
           {session ? (
             <>
               {session.isAdmin && (
@@ -60,11 +48,13 @@ export async function Header() {
               <LogoutButton />
             </>
           ) : (
-            <Link href="/connexion" className="text-text hover:text-accent transition-colors">
+            <Link
+              href="/connexion"
+              className="rounded-full bg-accent px-5 py-1.5 font-medium text-white transition-opacity hover:opacity-90"
+            >
               {t("nav.login")}
             </Link>
           )}
-          <ThemeToggle />
         </div>
       </div>
     </header>

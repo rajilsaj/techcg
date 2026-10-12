@@ -5,6 +5,8 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { revalidateTag } from "next/cache";
+import { after } from "next/server";
+import { enrichStory } from "@/lib/enrich-story";
 import { t } from "@/i18n";
 
 export async function submitStoryAction(
@@ -142,6 +144,9 @@ export async function submitStoryAction(
       itemId: story.id,
     },
   });
+
+  // Fetch the link's image and excerpt (translated to French) once the response is sent.
+  if (hasUrl) after(() => enrichStory(story.id));
 
   // Revalidate cache
   // revalidateTag("stories");

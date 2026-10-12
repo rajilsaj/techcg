@@ -9,52 +9,60 @@ datasource db {
 }
 
 model User {
-  id            Int       @id @default(autoincrement())
-  username      String    @unique
-  passwordHash  String?
-  firebaseUid   String?   @unique
-  email         String?
-  phone         String?
-  about         String?
-  karma         Int       @default(0)
-  shadowBanned  Boolean   @default(false)
-  isAdmin       Boolean   @default(false)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  passwordHash String?
+  firebaseUid  String?  @unique
+  email        String?
+  phone        String?
+  about        String?
+  karma        Int      @default(0)
+  shadowBanned Boolean  @default(false)
+  isAdmin      Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  items         Item[]
-  votes         Vote[]
+  items  Item[]
+  votes  Vote[]
+  hidden HiddenItem[]
 
   @@index([karma])
   @@index([createdAt])
 }
 
 model Item {
-  id            Int       @id @default(autoincrement())
-  type          String    // 'story' | 'comment' | 'ask' | 'show' | 'job'
-  title         String?
-  url           String?
-  text          String?
-  authorId      Int
-  author        User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  id    Int     @id @default(autoincrement())
+  type  String // 'story' | 'comment' | 'ask' | 'show' | 'job'
+  title String?
+  url   String?
+  text  String?
 
-  parentId      Int?
-  parent        Item?     @relation("Comments", fields: [parentId], references: [id], onDelete: Cascade)
-  children      Item[]    @relation("Comments")
-  path          String    @default("")
-  depth         Int       @default(0)
+  // Link preview, filled in after submission (see src/lib/enrich-story.ts)
+  excerpt     String? // in French when translation succeeded
+  excerptLang String? // language of `excerpt`, e.g. "fr", "en"
+  imageUrl    String?
+  previewAt   DateTime? // last preview attempt; null = never tried
+  authorId    Int
+  author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
-  points        Int       @default(1)
-  rankScore     Float     @default(0)
-  rankedAt      DateTime  @default(now())
-  votes         Vote[]
+  parentId Int?
+  parent   Item?  @relation("Comments", fields: [parentId], references: [id], onDelete: Cascade)
+  children Item[] @relation("Comments")
+  path     String @default("")
+  depth    Int    @default(0)
 
-  flagCount     Int       @default(0)
-  deleted       Boolean   @default(false)
+  points    Int          @default(1)
+  rankScore Float        @default(0)
+  rankedAt  DateTime     @default(now())
+  votes     Vote[]
+  hiddenBy  HiddenItem[]
 
-  commentCount  Int       @default(0)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  flagCount Int     @default(0)
+  deleted   Boolean @default(false)
+
+  commentCount Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@index([type, createdAt])
   @@index([parentId])
@@ -64,13 +72,25 @@ model Item {
 }
 
 model Vote {
-  id        Int   @id @default(autoincrement())
-  userId    Int
-  user      User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  itemId    Int
-  item      Item  @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  id     Int  @id @default(autoincrement())
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  itemId Int
+  item   Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
 
   @@unique([userId, itemId])
   @@index([userId])
+  @@index([itemId])
+}
+
+/// Stories a user chose to hide from their lists.
+model HiddenItem {
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  itemId    Int
+  item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, itemId])
   @@index([itemId])
 }

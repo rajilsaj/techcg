@@ -6,14 +6,14 @@ export interface SectionHeaderProps {
   showSubmit?: boolean;
 }
 
-export async function SectionHeader({ title, showSubmit = true }: SectionHeaderProps) {
+export function SectionHeader({ title, showSubmit = true }: SectionHeaderProps) {
   return (
-    <div className="border-b border-border px-4 py-4 flex items-center justify-between">
-      <h1 className="text-lg font-medium text-text">{title}</h1>
+    <div className="flex items-center justify-between gap-4 border-b border-border pb-4 pt-8 sm:pt-10">
+      <h1 className="text-3xl font-medium text-text">{title}</h1>
       {showSubmit && (
         <Link
           href="/publier"
-          className="px-3 py-1.5 border border-accent text-accent rounded hover:bg-accent/10 transition-colors text-sm font-medium"
+          className="shrink-0 rounded-full border border-accent px-4 py-1.5 text-sm font-medium text-accent transition-colors hover:bg-accent hover:text-white"
         >
           {t("section.submit")}
         </Link>

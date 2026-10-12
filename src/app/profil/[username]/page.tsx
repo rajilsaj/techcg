@@ -2,7 +2,8 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { Header } from "@/components/layout/Header";
-import { StoryRow } from "@/components/list/StoryRow";
+import { StoryList } from "@/components/list/StoryList";
+import { listStories } from "@/lib/stories";
 import { formatRelativeTime, pluralize, t } from "@/i18n";
 
 interface PageProps {
@@ -31,29 +32,11 @@ export default async function UserPage({ params }: PageProps) {
   }
 
   // Fetch user's stories
-  const stories = await prisma.item.findMany({
-    where: {
-      authorId: user.id,
-      type: "story",
-      deleted: false,
-    },
-    select: {
-      id: true,
-      title: true,
-      url: true,
-      author: {
-        select: {
-          username: true,
-        },
-      },
-      points: true,
-      commentCount: true,
-      createdAt: true,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-    take: 30,
+  const { stories } = await listStories({
+    where: { authorId: user.id, type: "story" },
+    order: "newest",
+    viewerId: session?.userId,
+    includeShadowBanned: true,
   });
 
   // Fetch user's comments
@@ -123,22 +106,7 @@ export default async function UserPage({ params }: PageProps) {
             <h2 className="text-xl font-bold text-text mb-4">
               {stories.length} {pluralize(stories.length, t("unit.story"), t("unit.stories"))}
             </h2>
-            <div className="border border-border rounded">
-              {stories.map((story, i) => (
-                <StoryRow
-                  key={story.id}
-                  rank={i + 1}
-                  id={story.id}
-                  title={story.title || t("common.untitled")}
-                  url={story.url || undefined}
-                  author={story.author.username}
-                  points={story.points}
-                  commentCount={story.commentCount}
-                  createdAt={story.createdAt}
-                  isLoggedIn={!!session}
-                />
-              ))}
-            </div>
+            <StoryList stories={stories} isLoggedIn={!!session} />
           </div>
         )}
 

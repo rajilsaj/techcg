@@ -27,6 +27,8 @@ export interface LinkPreview {
   description: string | null;
   image: string | null;
   siteName: string | null;
+  /** Page language from <html lang>, og:locale or Content-Language, e.g. "en". */
+  lang: string | null;
 }
 
 export type PreviewResult =
@@ -35,7 +37,8 @@ export type PreviewResult =
 
 const TIMEOUT_MS = 6000;
 const MAX_REDIRECTS = 5;
-const MAX_HTML_BYTES = 512 * 1024; // metadata lives in <head>; no need for more
+// Enough for <head> plus the start of the article, used when meta tags are missing.
+const MAX_HTML_BYTES = 512 * 1024;
 const USER_AGENT = "Mozilla/5.0 (compatible; TechCGBot/1.0; +link-preview)";
 
 /* ---------- Address checks ---------- */
@@ -118,6 +121,7 @@ interface RawResponse {
   status: number;
   location?: string;
   contentType: string;
+  contentLanguage: string;
   body: string;
 }
 
@@ -147,11 +151,12 @@ function request(url: URL): Promise<RawResponse> {
         const status = res.statusCode ?? 0;
         const contentType = String(res.headers["content-type"] ?? "");
         const location = res.headers.location;
+        const contentLanguage = String(res.headers["content-language"] ?? "");
 
         // Only HTML bodies of successful responses are worth reading.
         if (status >= 300 || !/html/i.test(contentType)) {
           res.resume();
-          return resolve({ status, location, contentType, body: "" });
+          return resolve({ status, location, contentType, contentLanguage, body: "" });
         }
 
         const encoding = String(res.headers["content-encoding"] ?? "").toLowerCase();
@@ -168,12 +173,12 @@ function request(url: URL): Promise<RawResponse> {
           if (done) return;
           done = true;
           req.destroy();
-          resolve({ status, contentType, body: Buffer.concat(chunks).toString("utf8") });
+          resolve({ status, contentType, contentLanguage, body: Buffer.concat(chunks).toString("utf8") });
         };
         stream.on("data", (chunk: Buffer) => {
           chunks.push(chunk);
           size += chunk.length;
-          if (size >= MAX_HTML_BYTES || /<\/head>/i.test(chunk.toString("latin1"))) finish();
+          if (size >= MAX_HTML_BYTES) finish();
         });
         stream.on("end", finish);
         stream.on("error", (err) => (done ? undefined : reject(err)));
@@ -232,8 +237,61 @@ function absoluteHttpUrl(value: string | null | undefined, base: URL): string | 
   }
 }
 
-/** Reads title, description, image and site name from a page's HTML. */
-export function parseMetadata(html: string, pageUrl: URL): LinkPreview {
+/** Strips tags from an HTML fragment and decodes entities. */
+function plainText(fragment: string): string {
+  return decodeEntities(fragment.replace(/<[^>]+>/g, " ")).replace(/\s+/g, " ").trim();
+}
+
+/** The article body if the page marks one, else the whole document minus chrome. */
+function contentArea(html: string): string {
+  const withoutNoise = html.replace(
+    /<(script|style|noscript|svg|template|nav|header|footer|aside|form)\b[\s\S]*?<\/\1>/gi,
+    " "
+  );
+  return (
+    withoutNoise.match(/<article\b[\s\S]*?<\/article>/i)?.[0] ??
+    withoutNoise.match(/<main\b[\s\S]*?<\/main>/i)?.[0] ??
+    withoutNoise
+  );
+}
+
+/** First paragraph that reads like prose, for pages without a meta description. */
+export function firstParagraph(html: string): string | undefined {
+  for (const m of contentArea(html).matchAll(/<p\b[^>]*>([\s\S]*?)<\/p>/gi)) {
+    const text = plainText(m[1]);
+    // Skip bylines, cookie notices and other short fragments.
+    if (text.length >= 80 && /[.!?…»”"]\s*$|[.!?]\s/.test(text)) return text;
+  }
+  return undefined;
+}
+
+const NOT_CONTENT_IMAGE = /logo|icon|avatar|sprite|badge|pixel|tracking|spacer|blank|emoji|\.svg(\?|$)|^data:/i;
+
+/** First image in the article body that looks like content rather than chrome. */
+export function firstContentImage(html: string): string | undefined {
+  for (const m of contentArea(html).matchAll(/<img\b[^>]*>/gi)) {
+    const attrs = attributes(m[0]);
+    const src = attrs.src || attrs["data-src"] || attrs["data-lazy-src"] || attrs.srcset?.split(/\s+/)[0];
+    if (!src || NOT_CONTENT_IMAGE.test(src)) continue;
+    const width = parseInt(attrs.width ?? "", 10);
+    const height = parseInt(attrs.height ?? "", 10);
+    if ((width && width < 120) || (height && height < 80)) continue;
+    return src;
+  }
+  return undefined;
+}
+
+function primaryLanguage(value: string | undefined | null): string | null {
+  const lang = value?.trim().toLowerCase().split(/[-_,;\s]/)[0];
+  return lang && /^[a-z]{2,3}$/.test(lang) ? lang : null;
+}
+
+/**
+ * Reads title, description, image, site name and language from a page's HTML.
+ * Falls back to the first prose paragraph and the first content image when the
+ * page has no meta tags, so a reachable article almost always yields one of them.
+ */
+export function parseMetadata(html: string, pageUrl: URL, contentLanguage = ""): LinkPreview {
   const head = html.slice(0, MAX_HTML_BYTES);
   const meta: Record<string, string> = {};
   for (const m of head.matchAll(/<meta\b[^>]*>/gi)) {
@@ -251,17 +309,27 @@ export function parseMetadata(html: string, pageUrl: URL): LinkPreview {
   }
 
   const titleTag = head.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1];
+  const htmlLang = head.match(/<html\b[^>]*\blang\s*=\s*["']?([\w-]+)/i)?.[1];
+
+  const metaDescription = meta["og:description"] ?? meta["twitter:description"] ?? meta["description"];
+  const metaImage =
+    meta["og:image:secure_url"] ?? meta["og:image"] ?? meta["og:image:url"] ?? meta["twitter:image"] ?? meta["twitter:image:src"];
 
   return {
     url: pageUrl.toString(),
     domain: pageUrl.hostname.replace(/^www\./, ""),
     title: clean(meta["og:title"] ?? meta["twitter:title"] ?? titleTag, 200),
-    description: clean(meta["og:description"] ?? meta["twitter:description"] ?? meta["description"], 300),
-    image: absoluteHttpUrl(
-      meta["og:image:secure_url"] ?? meta["og:image"] ?? meta["og:image:url"] ?? meta["twitter:image"] ?? meta["twitter:image:src"] ?? icon,
-      pageUrl
+    // A one-word meta description is useless as an excerpt; prefer real prose.
+    description: clean(
+      metaDescription && metaDescription.trim().length >= 40 ? metaDescription : firstParagraph(html) ?? metaDescription,
+      300
     ),
+    image:
+      absoluteHttpUrl(metaImage, pageUrl) ??
+      absoluteHttpUrl(firstContentImage(html), pageUrl) ??
+      absoluteHttpUrl(icon, pageUrl),
     siteName: clean(meta["og:site_name"] ?? meta["application-name"], 80),
+    lang: primaryLanguage(htmlLang) ?? primaryLanguage(meta["og:locale"]) ?? primaryLanguage(contentLanguage),
   };
 }
 
@@ -316,10 +384,11 @@ async function resolvePreview(start: URL): Promise<PreviewResult> {
           description: null,
           image: /^image\//i.test(res.contentType) ? url.toString() : null,
           siteName: null,
+          lang: primaryLanguage(res.contentLanguage),
         },
       };
     }
-    return { ok: true, preview: parseMetadata(res.body, url) };
+    return { ok: true, preview: parseMetadata(res.body, url, res.contentLanguage) };
   }
   return { ok: false, reason: "unreachable" };
 }

@@ -1,42 +1,43 @@
 "use client";
 
-import { Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 import { t } from "@/i18n";
 
+/** "Clair ◯ Sombre" switch. The initial theme is applied by a script in the root layout. */
 export function ThemeToggle() {
   const [isDark, setIsDark] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    const theme = localStorage.getItem("theme");
-    const prefersDark =
-      theme === "dark" ||
-      (theme !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches);
-    setIsDark(prefersDark);
+    setIsDark(document.documentElement.getAttribute("data-theme") === "dark");
   }, []);
 
   const toggleTheme = () => {
-    const newIsDark = !isDark;
-    setIsDark(newIsDark);
-    localStorage.setItem("theme", newIsDark ? "dark" : "light");
-    document.documentElement.setAttribute("data-theme", newIsDark ? "dark" : "light");
+    const next = !isDark;
+    setIsDark(next);
+    localStorage.setItem("theme", next ? "dark" : "light");
+    document.documentElement.setAttribute("data-theme", next ? "dark" : "light");
   };
 
-  if (!mounted) return null;
-
   return (
-    <button
-      onClick={toggleTheme}
-      className="p-1 rounded hover:bg-bg-secondary transition-colors"
-      aria-label={t("theme.toggle")}
-    >
-      {isDark ? (
-        <Sun size={18} className="text-text" />
-      ) : (
-        <Moon size={18} className="text-text" />
-      )}
-    </button>
+    <div className="flex items-center gap-2 text-xs">
+      <span className={isDark ? "text-text-secondary" : "font-medium text-text"}>{t("theme.light")}</span>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={mounted && isDark}
+        aria-label={t("theme.toggle")}
+        onClick={toggleTheme}
+        className="relative h-5 w-9 shrink-0 rounded-full bg-accent transition-colors"
+      >
+        <span
+          className={`absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${
+            mounted && isDark ? "translate-x-4" : ""
+          }`}
+        />
+      </button>
+      <span className={isDark ? "font-medium text-text" : "text-text-secondary"}>{t("theme.dark")}</span>
+    </div>
   );
 }

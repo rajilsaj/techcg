@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
+import { Quicksand } from "next/font/google";
 import { SITE } from "@/lib/site";
 import { t } from "@/i18n";
 import "@/styles/globals.css";
+
+const quicksand = Quicksand({ subsets: ["latin"], variable: "--font-quicksand", display: "swap" });
 
 export const metadata: Metadata = {
   title: SITE.name,
@@ -10,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" suppressHydrationWarning>
+    <html lang="fr" className={quicksand.variable} suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
         <script

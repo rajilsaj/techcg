@@ -53,7 +53,7 @@ html {
 body {
   background-color: var(--bg);
   color: var(--text);
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: var(--font-quicksand), system-ui, -apple-system, sans-serif;
   line-height: 1.5;
   transition: background-color 0.2s, color 0.2s;
 }
@@ -164,4 +164,12 @@ textarea:focus {
   html {
     font-size: 14px;
   }
+}
+
+/* Horizontally scrollable rows (mobile nav) without a visible scrollbar */
+.scrollbar-none {
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getLinkPreview, isPublicIp, normalizeUrl, parseMetadata } from "@/lib/link-preview";
+import { firstContentImage, firstParagraph, getLinkPreview, isPublicIp, normalizeUrl, parseMetadata } from "@/lib/link-preview";
 
 describe("isPublicIp", () => {
   it("rejects private, loopback, link-local and metadata addresses", () => {
@@ -37,10 +37,10 @@ describe("parseMetadata", () => {
   const page = new URL("https://www.exemple.com/article/1");
 
   it("prefers Open Graph tags and resolves relative image URLs", () => {
-    const html = `<html><head>
+    const html = `<html lang="fr-FR"><head>
       <title>Titre HTML</title>
       <meta property="og:title" content="Titre &amp; OG">
-      <meta content="Une description" property='og:description'>
+      <meta content="Une description assez longue pour servir d'extrait." property='og:description'>
       <meta property="og:image" content="/img/cover.jpg">
       <meta property="og:site_name" content="Exemple">
     </head></html>`;
@@ -48,9 +48,10 @@ describe("parseMetadata", () => {
       url: "https://www.exemple.com/article/1",
       domain: "exemple.com",
       title: "Titre & OG",
-      description: "Une description",
+      description: "Une description assez longue pour servir d'extrait.",
       image: "https://www.exemple.com/img/cover.jpg",
       siteName: "Exemple",
+      lang: "fr",
     });
   });
 
@@ -63,8 +64,41 @@ describe("parseMetadata", () => {
     expect(preview.image).toBe("https://www.exemple.com/favicon.png");
   });
 
+  it("uses the article's first paragraph and image when meta tags are missing", () => {
+    const html = `<html lang="en"><head><title>T</title><link rel="icon" href="/favicon.ico"></head><body>
+      <header><p>Subscribe to our newsletter for the latest updates and much more news.</p><img src="/logo.png"></header>
+      <article>
+        <p>By Jane</p>
+        <img src="/tracking-pixel.gif" width="1" height="1">
+        <img src="/media/hero.jpg" width="800">
+        <p>The new compiler release brings faster builds, smaller binaries and a long list of fixes. Here is what changed.</p>
+      </article></body></html>`;
+    const preview = parseMetadata(html, page);
+    expect(preview.description).toBe(
+      "The new compiler release brings faster builds, smaller binaries and a long list of fixes. Here is what changed."
+    );
+    expect(preview.image).toBe("https://www.exemple.com/media/hero.jpg");
+    expect(preview.lang).toBe("en");
+  });
+
+  it("prefers a real paragraph over a one-word meta description", () => {
+    const html = `<meta name="description" content="Accueil"><main><p>Une longue phrase d'introduction qui décrit vraiment le contenu de cette page web.</p></main>`;
+    expect(parseMetadata(html, page).description).toMatch(/^Une longue phrase/);
+  });
+
+  it("takes the language from Content-Language when the page doesn't declare one", () => {
+    expect(parseMetadata("<title>x</title>", page, "de-DE").lang).toBe("de");
+  });
+
   it("drops non-http image URLs", () => {
     const html = `<meta property="og:image" content="javascript:alert(1)">`;
     expect(parseMetadata(html, page).image).toBeNull();
+  });
+});
+
+describe("content fallbacks", () => {
+  it("skips short fragments and chrome", () => {
+    expect(firstParagraph("<nav><p>A long navigation paragraph that should never be used as an excerpt at all.</p></nav><p>Too short.</p>")).toBeUndefined();
+    expect(firstContentImage('<img src="/icons/star.svg"><img src="data:image/png;base64,xx"><img data-src="/a.jpg">')).toBe("/a.jpg");
   });
 });
