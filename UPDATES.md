@@ -6,6 +6,7 @@ Every change requested in a Claude Code session, newest first, with when it was 
 
 | Date & time (UTC-4) | Update | Pushed |
 | --- | --- | --- |
+| 2026-10-12 13:48 | Publish form (`/publier`): typing a URL shows a clickable preview card (image, title, description, domain) under the field, after checking the site exists. Dead links show a friendly notice instead (introuvable/404 "perdu dans l'espace 🚀", erreur 5xx, délai dépassé, injoignable, aperçu refusé). New `/api/link-preview` endpoint: logged-in users only, 30/min, public addresses only. Submission unchanged. | Yes (5546699) |
 | 2026-10-12 13:41 | Page addresses are in French: `/recents`, `/questions`, `/vitrine`, `/emplois`, `/commentaires`, `/connexion`, `/inscription`, `/recuperation`, `/publier`, `/publication/:id`, `/profil/:nom`, `/connexion/confirmation`, `/godmod/utilisateurs`, `/godmod/moderation`, `/godmod/parametres`. Old English addresses redirect permanently to the French ones. `/api/*` unchanged. | Yes (92b72e0) |
 | 2026-10-12 13:40 | Completed updates are now committed and pushed to `main` automatically (rule saved in the local `CLAUDE.md`). Added this log, `UPDATES.md`. | Yes (this log's commit) |
 | 2026-10-12 13:31 | Header shows the logged-in user: username and karma (links to the profile), **Publier** and **Déconnexion**; logged-out visitors see **Connexion**. Logout also signs out of Firebase. `getSession()` is cached per request. | Yes (1a15d61) |
