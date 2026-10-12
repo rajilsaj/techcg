@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { listStories } from "@/lib/stories";
 import { Header } from "@/components/layout/Header";
-import { Hero } from "@/components/home/Hero";
+import { SectionHeader } from "@/components/layout/SectionHeader";
 import { StoryList, pageNumber } from "@/components/list/StoryList";
 import { t } from "@/i18n";
 
@@ -58,7 +58,7 @@ export default async function ArchivesPage({ searchParams }: PageProps) {
     <>
       <Header />
       <div className="mx-auto max-w-5xl px-4">
-        <Hero active="past" />
+        <SectionHeader title={t("archives.heading")} showSubmit={false} />
 
         <div className="flex items-center justify-between gap-4 border-b border-border py-4 text-sm">
           <Link href={`/archives?jour=${previousDay}`} className="text-accent hover:underline">

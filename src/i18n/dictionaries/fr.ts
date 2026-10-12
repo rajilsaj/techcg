@@ -20,11 +20,7 @@ export const fr = {
   "theme.light": "Clair",
   "theme.dark": "Sombre",
 
-  "hero.title": "Un espace libre pour lire, noter et discuter",
-  "hero.tabs": "Publications",
-  "hero.new": "Nouveautés",
-  "hero.past": "Archives",
-
+  "archives.heading": "Archives",
   "archives.previousDay": "Jour précédent",
   "archives.nextDay": "Jour suivant",
   "archives.empty": "Aucune publication ce jour-là.",

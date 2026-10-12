@@ -1,7 +1,6 @@
 import { getSession } from "@/lib/auth";
 import { listStories, STORIES_PER_PAGE } from "@/lib/stories";
 import { Header } from "@/components/layout/Header";
-import { Hero } from "@/components/home/Hero";
 import { InfiniteStoryList } from "@/components/list/InfiniteStoryList";
 import { nextPageHref, pageNumber } from "@/components/list/StoryList";
 
@@ -26,8 +25,7 @@ export default async function Home({ searchParams }: PageProps) {
   return (
     <>
       <Header />
-      <div className="mx-auto max-w-5xl px-4">
-        <Hero active="new" />
+      <div className="mx-auto max-w-5xl px-4 pt-4">
         <InfiniteStoryList
           feed="top"
           initialStories={stories}
