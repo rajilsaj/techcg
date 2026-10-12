@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { submitStoryAction } from "@/app/api/actions/submit";
+import { LinkPreview } from "@/components/forms/LinkPreview";
 import { t } from "@/i18n";
 
 export interface SubmitFormProps {
@@ -90,6 +91,7 @@ export function SubmitForm({ defaultType = "story" }: SubmitFormProps) {
         <p className="text-xs text-text-secondary mt-1">
           {t("submit.urlHint")}
         </p>
+        <LinkPreview url={url} />
       </div>
 
       {/* Visual divider */}

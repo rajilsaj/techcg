@@ -27,11 +27,16 @@ const CONFIGS: Record<string, RateLimitConfig> = {
     refillRate: 30 / (60 * 60), // Per hour
     window: 60 * 60, // 1 hour
   },
+  preview: {
+    maxTokens: 30, // 30 link previews per window
+    refillRate: 30 / 60, // Per minute
+    window: 60, // 1 minute
+  },
 };
 
 export async function checkRateLimit(
   userId: number,
-  action: "submit" | "comment"
+  action: "submit" | "comment" | "preview"
 ): Promise<{ allowed: boolean; remaining: number; retryAfter?: number }> {
   const config = CONFIGS[action];
   const key = `${action}:${userId}`;
