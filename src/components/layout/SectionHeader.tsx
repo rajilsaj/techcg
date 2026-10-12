@@ -12,7 +12,7 @@ export async function SectionHeader({ title, showSubmit = true }: SectionHeaderP
       <h1 className="text-lg font-medium text-text">{title}</h1>
       {showSubmit && (
         <Link
-          href="/submit"
+          href="/publier"
           className="px-3 py-1.5 border border-accent text-accent rounded hover:bg-accent/10 transition-colors text-sm font-medium"
         >
           {t("section.submit")}

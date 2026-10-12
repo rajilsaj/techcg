@@ -66,7 +66,7 @@ export async function StoryRow({
         <MetaItem
           icon={User}
           label={author}
-          href={`/user/${author}`}
+          href={`/profil/${author}`}
         />
 
         {url && (
@@ -82,7 +82,7 @@ export async function StoryRow({
         <MetaItem
           icon={MessageCircle}
           label={`${commentCount} ${pluralize(commentCount, t("unit.comment"), t("unit.comments"))}`}
-          href={`/item/${id}`}
+          href={`/publication/${id}`}
         />
       </div>
     </div>

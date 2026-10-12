@@ -87,7 +87,7 @@ export async function confirmPhoneCode(
 export async function sendMagicLink(email: string): Promise<void> {
   const auth = requireAuth();
   await sendSignInLinkToEmail(auth, email, {
-    url: `${window.location.origin}/auth/complete`,
+    url: `${window.location.origin}/connexion/confirmation`,
     handleCodeInApp: true,
   });
   window.localStorage.setItem(MAGIC_LINK_EMAIL_KEY, email);

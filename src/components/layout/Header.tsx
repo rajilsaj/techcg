@@ -7,11 +7,11 @@ import { t } from "@/i18n";
 
 const NAV = [
   { href: "/", key: "nav.top" },
-  { href: "/newest", key: "nav.newest" },
-  { href: "/ask", key: "nav.ask" },
-  { href: "/show", key: "nav.show" },
-  { href: "/jobs", key: "nav.jobs" },
-  { href: "/comments", key: "nav.comments" },
+  { href: "/recents", key: "nav.newest" },
+  { href: "/questions", key: "nav.ask" },
+  { href: "/vitrine", key: "nav.show" },
+  { href: "/emplois", key: "nav.jobs" },
+  { href: "/commentaires", key: "nav.comments" },
 ] as const;
 
 export async function Header() {
@@ -40,11 +40,11 @@ export async function Header() {
         <div className="flex items-center gap-4 text-sm">
           {session ? (
             <>
-              <Link href="/submit" className="text-text hover:text-accent transition-colors">
+              <Link href="/publier" className="text-text hover:text-accent transition-colors">
                 {t("nav.submit")}
               </Link>
               <Link
-                href={`/user/${session.username}`}
+                href={`/profil/${session.username}`}
                 className="font-medium text-text hover:text-accent transition-colors"
               >
                 {session.username}{" "}
@@ -55,7 +55,7 @@ export async function Header() {
               <LogoutButton />
             </>
           ) : (
-            <Link href="/login" className="text-text hover:text-accent transition-colors">
+            <Link href="/connexion" className="text-text hover:text-accent transition-colors">
               {t("nav.login")}
             </Link>
           )}

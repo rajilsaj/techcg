@@ -12,44 +12,48 @@ interface PageProps {
   searchParams: Promise<Record<string, string>>;
 }
 
-export default async function AskPage({ searchParams }: PageProps) {
+export default async function CommentsPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const cursorParam = params.cursor;
 
-  const stories = await prisma.item.findMany({
+  const comments = await prisma.item.findMany({
     where: {
-      type: "ask",
+      type: "comment",
       deleted: false,
       author: {
         shadowBanned: false,
       },
     },
     orderBy: {
-      rankScore: "desc",
+      createdAt: "desc",
     },
     take: ITEMS_PER_PAGE + 1,
     select: {
       id: true,
-      title: true,
-      url: true,
+      text: true,
       author: {
         select: {
           username: true,
         },
       },
       points: true,
-      commentCount: true,
       createdAt: true,
+      parent: {
+        select: {
+          id: true,
+          title: true,
+        },
+      },
     },
   });
 
-  const hasNext = stories.length > ITEMS_PER_PAGE;
-  const displayStories = stories.slice(0, ITEMS_PER_PAGE);
+  const hasNext = comments.length > ITEMS_PER_PAGE;
+  const displayComments = comments.slice(0, ITEMS_PER_PAGE);
   const nextCursor =
-    hasNext && displayStories.length > 0
+    hasNext && displayComments.length > 0
       ? encodeCursor({
           rankScore: 0,
-          id: displayStories[displayStories.length - 1].id,
+          id: displayComments[displayComments.length - 1].id,
         })
       : undefined;
 
@@ -57,20 +61,19 @@ export default async function AskPage({ searchParams }: PageProps) {
     <>
       <Header />
       <div className="max-w-5xl mx-auto">
-        <SectionHeader title={t("section.ask")} />
+        <SectionHeader title={t("section.recentComments")} showSubmit={false} />
 
         <div>
-          {displayStories.map((story, i) => (
+          {displayComments.map((comment, i) => (
             <StoryRow
-              key={story.id}
+              key={comment.id}
               rank={i + 1}
-              id={story.id}
-              title={story.title || t("common.untitled")}
-              url={story.url || undefined}
-              author={story.author.username}
-              points={story.points}
-              commentCount={story.commentCount}
-              createdAt={story.createdAt}
+              id={comment.id}
+              title={comment.text ? comment.text.slice(0, 100) + (comment.text.length > 100 ? "…" : "") : t("common.comment")}
+              author={comment.author.username}
+              points={comment.points}
+              commentCount={0}
+              createdAt={comment.createdAt}
             />
           ))}
         </div>
@@ -79,7 +82,7 @@ export default async function AskPage({ searchParams }: PageProps) {
           currentPage={estimatePageNumber(cursorParam)}
           hasNext={hasNext}
           nextCursor={nextCursor}
-          pathname="/ask"
+          pathname="/commentaires"
         />
       </div>
     </>

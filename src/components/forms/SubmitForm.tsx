@@ -28,7 +28,7 @@ export function SubmitForm({ defaultType = "story" }: SubmitFormProps) {
       if (result.error) {
         setError(result.error);
       } else if (result.success && result.itemId) {
-        router.push(`/item/${result.itemId}`);
+        router.push(`/publication/${result.itemId}`);
       }
     } finally {
       setLoading(false);

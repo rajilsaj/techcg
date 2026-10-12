@@ -12,7 +12,7 @@ export default async function SubmitPage({ searchParams }: PageProps) {
   const session = await getSession();
 
   if (!session) {
-    redirect("/login");
+    redirect("/connexion");
   }
 
   const params = await searchParams;

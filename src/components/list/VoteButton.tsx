@@ -22,7 +22,7 @@ export function VoteButton({ itemId, isVoted = false, isLoggedIn = false }: Vote
     if (loading) return;
 
     if (!isLoggedIn) {
-      router.push("/login");
+      router.push("/connexion");
       return;
     }
 

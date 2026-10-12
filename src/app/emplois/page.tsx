@@ -3,7 +3,7 @@ import { Header } from "@/components/layout/Header";
 import { SectionHeader } from "@/components/layout/SectionHeader";
 import { StoryRow } from "@/components/list/StoryRow";
 import { Pagination } from "@/components/list/Pagination";
-import { decodeCursor, encodeCursor, estimatePageNumber } from "@/lib/list-pagination";
+import { encodeCursor, estimatePageNumber } from "@/lib/list-pagination";
 import { t } from "@/i18n";
 
 const ITEMS_PER_PAGE = 30;
@@ -12,22 +12,20 @@ interface PageProps {
   searchParams: Promise<Record<string, string>>;
 }
 
-export default async function NewestPage({ searchParams }: PageProps) {
+export default async function JobsPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const cursorParam = params.cursor;
-  const cursor = cursorParam ? decodeCursor(cursorParam) : null;
 
-  // Fetch stories sorted by creation time (newest first, exclude shadowbanned)
   const stories = await prisma.item.findMany({
     where: {
-      type: "story",
+      type: "job",
       deleted: false,
       author: {
         shadowBanned: false,
       },
     },
     orderBy: {
-      createdAt: "desc",
+      rankScore: "desc",
     },
     take: ITEMS_PER_PAGE + 1,
     select: {
@@ -50,18 +48,16 @@ export default async function NewestPage({ searchParams }: PageProps) {
   const nextCursor =
     hasNext && displayStories.length > 0
       ? encodeCursor({
-          rankScore: 0, // Not used for newest sort, but required by cursor type
+          rankScore: 0,
           id: displayStories[displayStories.length - 1].id,
         })
       : undefined;
-
-  const currentPage = estimatePageNumber(cursorParam);
 
   return (
     <>
       <Header />
       <div className="max-w-5xl mx-auto">
-        <SectionHeader title={t("section.newest")} />
+        <SectionHeader title={t("section.jobs")} />
 
         <div>
           {displayStories.map((story, i) => (
@@ -80,10 +76,10 @@ export default async function NewestPage({ searchParams }: PageProps) {
         </div>
 
         <Pagination
-          currentPage={currentPage}
+          currentPage={estimatePageNumber(cursorParam)}
           hasNext={hasNext}
           nextCursor={nextCursor}
-          pathname="/newest"
+          pathname="/emplois"
         />
       </div>
     </>

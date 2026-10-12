@@ -54,7 +54,7 @@ export function CommentItem({ comment, depth }: CommentItemProps) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 text-xs mb-1">
               <a
-                href={`/user/${comment.authorUsername}`}
+                href={`/profil/${comment.authorUsername}`}
                 className="font-medium text-text hover:underline"
               >
                 {comment.authorUsername}

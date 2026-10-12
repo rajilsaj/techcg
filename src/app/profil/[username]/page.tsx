@@ -177,7 +177,7 @@ export default async function UserPage({ params }: PageProps) {
                     <p className="text-xs text-text-secondary">
                       {t("user.on")}{" "}
                       <a
-                        href={`/item/${comment.parent.id}`}
+                        href={`/publication/${comment.parent.id}`}
                         className="text-accent hover:underline"
                       >
                         "{comment.parent.title}"

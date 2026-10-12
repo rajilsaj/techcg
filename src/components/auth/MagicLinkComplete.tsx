@@ -60,7 +60,7 @@ export function MagicLinkComplete() {
       viewKey={state}
       footer={
         state === "error" ? (
-          <Link href="/recover" className="font-medium">
+          <Link href="/recuperation" className="font-medium">
             {t("auth.magic.requestNew")}
           </Link>
         ) : null

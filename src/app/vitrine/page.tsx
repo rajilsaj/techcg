@@ -12,48 +12,44 @@ interface PageProps {
   searchParams: Promise<Record<string, string>>;
 }
 
-export default async function CommentsPage({ searchParams }: PageProps) {
+export default async function ShowPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const cursorParam = params.cursor;
 
-  const comments = await prisma.item.findMany({
+  const stories = await prisma.item.findMany({
     where: {
-      type: "comment",
+      type: "show",
       deleted: false,
       author: {
         shadowBanned: false,
       },
     },
     orderBy: {
-      createdAt: "desc",
+      rankScore: "desc",
     },
     take: ITEMS_PER_PAGE + 1,
     select: {
       id: true,
-      text: true,
+      title: true,
+      url: true,
       author: {
         select: {
           username: true,
         },
       },
       points: true,
+      commentCount: true,
       createdAt: true,
-      parent: {
-        select: {
-          id: true,
-          title: true,
-        },
-      },
     },
   });
 
-  const hasNext = comments.length > ITEMS_PER_PAGE;
-  const displayComments = comments.slice(0, ITEMS_PER_PAGE);
+  const hasNext = stories.length > ITEMS_PER_PAGE;
+  const displayStories = stories.slice(0, ITEMS_PER_PAGE);
   const nextCursor =
-    hasNext && displayComments.length > 0
+    hasNext && displayStories.length > 0
       ? encodeCursor({
           rankScore: 0,
-          id: displayComments[displayComments.length - 1].id,
+          id: displayStories[displayStories.length - 1].id,
         })
       : undefined;
 
@@ -61,19 +57,20 @@ export default async function CommentsPage({ searchParams }: PageProps) {
     <>
       <Header />
       <div className="max-w-5xl mx-auto">
-        <SectionHeader title={t("section.recentComments")} showSubmit={false} />
+        <SectionHeader title={t("section.show")} />
 
         <div>
-          {displayComments.map((comment, i) => (
+          {displayStories.map((story, i) => (
             <StoryRow
-              key={comment.id}
+              key={story.id}
               rank={i + 1}
-              id={comment.id}
-              title={comment.text ? comment.text.slice(0, 100) + (comment.text.length > 100 ? "…" : "") : t("common.comment")}
-              author={comment.author.username}
-              points={comment.points}
-              commentCount={0}
-              createdAt={comment.createdAt}
+              id={story.id}
+              title={story.title || t("common.untitled")}
+              url={story.url || undefined}
+              author={story.author.username}
+              points={story.points}
+              commentCount={story.commentCount}
+              createdAt={story.createdAt}
             />
           ))}
         </div>
@@ -82,7 +79,7 @@ export default async function CommentsPage({ searchParams }: PageProps) {
           currentPage={estimatePageNumber(cursorParam)}
           hasNext={hasNext}
           nextCursor={nextCursor}
-          pathname="/comments"
+          pathname="/vitrine"
         />
       </div>
     </>

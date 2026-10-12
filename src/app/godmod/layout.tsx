@@ -4,9 +4,9 @@ import { t } from "@/i18n";
 
 const NAV = [
   { href: "/godmod", key: "admin.nav.dashboard" },
-  { href: "/godmod/users", key: "admin.nav.users" },
-  { href: "/godmod/content", key: "admin.nav.moderation" },
-  { href: "/godmod/settings", key: "admin.nav.settings" },
+  { href: "/godmod/utilisateurs", key: "admin.nav.users" },
+  { href: "/godmod/moderation", key: "admin.nav.moderation" },
+  { href: "/godmod/parametres", key: "admin.nav.settings" },
 ] as const;
 
 export default async function AdminLayout({

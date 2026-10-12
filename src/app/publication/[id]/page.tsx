@@ -129,7 +129,7 @@ export default async function ItemPage({ params }: PageProps) {
 
           <div className="flex items-center gap-4 text-xs text-text-secondary">
             <span>{story.points} {pluralize(story.points, t("unit.point"), t("unit.points"))}</span>
-            <a href={`/user/${story.author.username}`} className="text-accent hover:underline">
+            <a href={`/profil/${story.author.username}`} className="text-accent hover:underline">
               {story.author.username}
             </a>
             <span>{formatRelativeTime(story.createdAt)}</span>

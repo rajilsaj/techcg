@@ -12,13 +12,13 @@ interface PageProps {
   searchParams: Promise<Record<string, string>>;
 }
 
-export default async function JobsPage({ searchParams }: PageProps) {
+export default async function AskPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const cursorParam = params.cursor;
 
   const stories = await prisma.item.findMany({
     where: {
-      type: "job",
+      type: "ask",
       deleted: false,
       author: {
         shadowBanned: false,
@@ -57,7 +57,7 @@ export default async function JobsPage({ searchParams }: PageProps) {
     <>
       <Header />
       <div className="max-w-5xl mx-auto">
-        <SectionHeader title={t("section.jobs")} />
+        <SectionHeader title={t("section.ask")} />
 
         <div>
           {displayStories.map((story, i) => (
@@ -79,7 +79,7 @@ export default async function JobsPage({ searchParams }: PageProps) {
           currentPage={estimatePageNumber(cursorParam)}
           hasNext={hasNext}
           nextCursor={nextCursor}
-          pathname="/jobs"
+          pathname="/questions"
         />
       </div>
     </>
