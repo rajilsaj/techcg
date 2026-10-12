@@ -98,7 +98,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
 
     await prisma.item.update({
       where: { id },
-      data: { deleted: true },
+      data: { status: "trash" },
     });
 
     return createSuccessResponse({ deleted: true });

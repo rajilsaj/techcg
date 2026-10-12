@@ -8,17 +8,27 @@ import { revalidateTag } from "next/cache";
 import { after } from "next/server";
 import { enrichStory } from "@/lib/enrich-story";
 import { t } from "@/i18n";
+import { publiclyVisible } from "@/lib/content-status";
+import { getSettings } from "@/lib/settings";
+import { parseTagNames, setItemTags } from "@/lib/taxonomy";
 
 export async function submitStoryAction(
   type: string,
   title: string,
   url: string,
-  text: string
+  text: string,
+  categoryId?: number | null,
+  tags?: string
 ): Promise<{ error?: string; success?: boolean; itemId?: number }> {
   const session = await getSession();
 
   if (!session) {
     return { error: t("action.notAuthenticated") };
+  }
+
+  const settings = await getSettings();
+  if (!settings.submissionsOpen && !session.isAdmin) {
+    return { error: t("action.submissionsClosed") };
   }
 
   // Validate type
@@ -74,7 +84,7 @@ export async function submitStoryAction(
         createdAt: {
           gte: twoWeeksAgo,
         },
-        deleted: false,
+        ...publiclyVisible(),
       },
       select: {
         id: true,
@@ -127,8 +137,10 @@ export async function submitStoryAction(
       authorId: session.userId,
       path: "", // Will be set to item ID padded
       points: 1,
+      categoryId: await validCategoryId(categoryId ?? settings.defaultCategoryId),
     },
   });
+  await setItemTags(story.id, parseTagNames(tags));
 
   // Update path to use story ID
   const path = String(story.id).padStart(6, "0");
@@ -152,4 +164,11 @@ export async function submitStoryAction(
   // revalidateTag("stories");
 
   return { success: true, itemId: story.id };
+}
+
+/** The category id if it exists, else null (a stale form must not break publishing). */
+async function validCategoryId(id: number | null | undefined): Promise<number | null> {
+  if (!id || !Number.isInteger(id)) return null;
+  const category = await prisma.category.findUnique({ where: { id }, select: { id: true } });
+  return category?.id ?? null;
 }

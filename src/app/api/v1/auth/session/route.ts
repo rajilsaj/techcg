@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
 
   let user = await prisma.user.findUnique({
     where: { firebaseUid: token.uid },
-    select: { id: true, username: true, email: true, phone: true },
+    select: { id: true, username: true, email: true, phone: true, banned: true },
   });
   let isNew = false;
 
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
         email,
         phone,
       },
-      select: { id: true, username: true, email: true, phone: true },
+      select: { id: true, username: true, email: true, phone: true, banned: true },
     });
     isNew = true;
   } else if ((email && !user.email) || (phone && !user.phone)) {
@@ -88,6 +88,10 @@ export async function POST(request: NextRequest) {
       where: { id: user.id },
       data: { email: user.email ?? email, phone: user.phone ?? phone },
     });
+  }
+
+  if (user.banned) {
+    return NextResponse.json({ error: t("action.accountSuspended") }, { status: 403 });
   }
 
   await createSession(user.id);

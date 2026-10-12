@@ -58,7 +58,7 @@ export async function flagItemAction(itemId: number): Promise<{ error?: string; 
     await prisma.item.update({
       where: { id: itemId },
       data: {
-        deleted: true,
+        status: "pending", // hidden until an admin reviews it
       },
     });
   }

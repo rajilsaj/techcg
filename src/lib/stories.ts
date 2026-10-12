@@ -2,6 +2,7 @@ import { after } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import { enrichStories, needsEnrichment } from "./enrich-story";
+import { publiclyVisible } from "./content-status";
 
 export const STORIES_PER_PAGE = 30;
 /** Previews fetched per page view for stories that don't have one yet. */
@@ -22,6 +23,7 @@ const storySelect = {
   commentCount: true,
   createdAt: true,
   author: { select: { username: true } },
+  category: { select: { name: true, slug: true } },
 } satisfies Prisma.ItemSelect;
 
 export type StoryRecord = Prisma.ItemGetPayload<{ select: typeof storySelect }>;
@@ -74,7 +76,7 @@ export interface ListStoriesOptions {
 }
 
 /**
- * One page of stories: excludes deleted posts, shadow-banned authors and stories
+ * One page of stories: only publicly visible ones, without shadow-banned authors or stories
  * the viewer hid; marks the viewer's votes; and schedules preview fetching for
  * stories that don't have an image/excerpt yet (after the response is sent).
  */
@@ -90,7 +92,8 @@ export async function listStories({
     where: {
       AND: [
         where,
-        includeShadowBanned ? { deleted: false } : { deleted: false, author: { shadowBanned: false } },
+        publiclyVisible(),
+        includeShadowBanned ? {} : { author: { shadowBanned: false } },
         viewerId ? { hiddenBy: { none: { userId: viewerId } } } : {},
         afterCursor(order, decodeCursor(cursor)),
       ],

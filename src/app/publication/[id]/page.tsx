@@ -10,6 +10,7 @@ import { CommentForm } from "@/components/item/CommentForm";
 import { buildCommentTree, CommentData } from "@/lib/thread";
 import { enrichStory, needsEnrichment } from "@/lib/enrich-story";
 import { LikeButton } from "@/components/list/StoryActions";
+import { STATUS_LABELS, isItemStatus, isPubliclyVisible, publiclyVisible } from "@/lib/content-status";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -39,7 +40,8 @@ export default async function ItemPage({ params }: PageProps) {
       excerptLang: true,
       imageUrl: true,
       previewAt: true,
-      deleted: true,
+      status: true,
+      publishAt: true,
       author: {
         select: {
           username: true,
@@ -51,7 +53,9 @@ export default async function ItemPage({ params }: PageProps) {
     },
   });
 
-  if (!story || story.type === "comment" || story.deleted) {
+  // Hidden stories (draft, trash…) 404 for the public; admins can still open them.
+  const visible = !!story && isPubliclyVisible(story);
+  if (!story || story.type === "comment" || (!visible && !session?.isAdmin)) {
     notFound();
   }
 
@@ -66,7 +70,7 @@ export default async function ItemPage({ params }: PageProps) {
     where: {
       parentId: itemId,
       type: "comment",
-      deleted: false,
+      ...publiclyVisible(),
     },
     select: {
       id: true,
@@ -105,6 +109,14 @@ export default async function ItemPage({ params }: PageProps) {
     <>
       <Header />
       <div className="max-w-3xl mx-auto">
+        {!visible && (
+          <p className="mx-4 mt-4 rounded-lg border border-amber-500/50 bg-amber-500/10 px-3 py-2 text-sm text-text">
+            {t("item.hiddenNotice", { status: isItemStatus(story.status) ? STATUS_LABELS[story.status] : story.status })}{" "}
+            <a href={`/godmod/articles/${story.id}`} className="font-medium text-accent hover:underline">
+              {t("item.editInAdmin")}
+            </a>
+          </p>
+        )}
         {/* Story metadata */}
         <div className="border-b border-border p-4">
           <h1 className="text-2xl font-bold text-text mb-2">

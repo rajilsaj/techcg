@@ -4,6 +4,7 @@ import { Header } from "@/components/layout/Header";
 import { SectionHeader } from "@/components/layout/SectionHeader";
 import { pageNumber } from "@/components/list/StoryList";
 import { formatRelativeTime, t } from "@/i18n";
+import { publiclyVisible } from "@/lib/content-status";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +22,7 @@ export default async function CommentsPage({ searchParams }: PageProps) {
   const rows = await prisma.item.findMany({
     where: {
       type: "comment",
-      deleted: false,
+      ...publiclyVisible(),
       author: { shadowBanned: false },
       ...(Number.isInteger(before) ? { id: { lt: before } } : {}),
     },

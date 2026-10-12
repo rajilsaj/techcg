@@ -18,6 +18,7 @@ export async function loginAction(
     select: {
       id: true,
       passwordHash: true,
+      banned: true,
     },
   });
 
@@ -28,6 +29,10 @@ export async function loginAction(
   const isValid = await verifyPassword(password, user.passwordHash);
   if (!isValid) {
     return { error: t("action.invalidCredentials") };
+  }
+
+  if (user.banned) {
+    return { error: t("action.accountSuspended") };
   }
 
   await createSession(user.id);

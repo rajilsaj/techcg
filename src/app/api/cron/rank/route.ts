@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { calculateRankScore } from "@/lib/ranking";
 import { revalidateTag } from "next/cache";
+import { publiclyVisible } from "@/lib/content-status";
 
 export async function POST(request: NextRequest) {
   // Verify secret
@@ -21,7 +22,7 @@ export async function POST(request: NextRequest) {
         createdAt: {
           gte: fortyEightHoursAgo,
         },
-        deleted: false,
+        ...publiclyVisible(),
       },
       select: {
         id: true,

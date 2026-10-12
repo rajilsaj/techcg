@@ -81,6 +81,15 @@ export function StoryItem({ rank, story, isLoggedIn }: StoryItemProps) {
                 {story.author.username}
               </Link>{" "}
               · {formatRelativeTime(story.createdAt)}
+              {story.category && (
+                <>
+                  {" "}
+                  · {t("story.in")}{" "}
+                  <Link href={`/categorie/${story.category.slug}`} className="text-accent hover:underline">
+                    {story.category.name}
+                  </Link>
+                </>
+              )}
             </span>
             <LikeButton itemId={story.id} voted={story.voted} isLoggedIn={isLoggedIn} />
             <HideButton itemId={story.id} isLoggedIn={isLoggedIn} />

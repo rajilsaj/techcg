@@ -2,13 +2,15 @@
 
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
-import { revalidateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
+import { isPubliclyVisible } from "@/lib/content-status";
+import { getSettings } from "@/lib/settings";
 import { t } from "@/i18n";
 
 export async function submitCommentAction(
   itemId: number,
   text: string
-): Promise<{ error?: string; success?: boolean }> {
+): Promise<{ error?: string; success?: boolean; pending?: boolean }> {
   const session = await getSession();
 
   if (!session) {
@@ -28,14 +30,24 @@ export async function submitCommentAction(
     where: { id: itemId },
     select: {
       id: true,
+      type: true,
       path: true,
-      commentCount: true,
+      status: true,
+      publishAt: true,
     },
   });
 
-  if (!parent) {
+  if (!parent || parent.type === "comment" || !isPubliclyVisible(parent)) {
     return { error: t("action.itemNotFound") };
   }
+
+  // Comment moderation setting: hold every comment, or a member's first one, for approval.
+  const { commentModeration } = await getSettings();
+  const held =
+    !session.isAdmin &&
+    (commentModeration === "all" ||
+      (commentModeration === "first" &&
+        (await prisma.item.count({ where: { type: "comment", authorId: session.userId, status: "published" } })) === 0));
 
   // Create comment
   const parentPath = parent.path;
@@ -50,20 +62,15 @@ export async function submitCommentAction(
       path: newPath,
       depth: parent.path.split(".").length,
       points: 1,
+      status: held ? "pending" : "published",
     },
   });
 
-  // Increment parent's commentCount
-  await prisma.item.update({
-    where: { id: itemId },
-    data: {
-      commentCount: parent.commentCount + 1,
-    },
-  });
+  // Only visible comments count.
+  if (!held) {
+    await prisma.item.update({ where: { id: itemId }, data: { commentCount: { increment: 1 } } });
+  }
 
-  // Revalidate cache
-  // revalidateTag(`item-${itemId}`);
-  // revalidateTag("stories");
-
-  return { success: true };
+  revalidatePath(`/publication/${itemId}`);
+  return { success: true, pending: held };
 }

@@ -1,72 +1,161 @@
+import Link from "next/link";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
-import { UserActions } from "@/components/admin/UserActions";
-import { t } from "@/i18n";
 import { requireAdminPage } from "@/lib/admin";
+import { formatLocalDateTime } from "@/lib/local-time";
+import { SubmitButton } from "@/components/admin/FormControls";
+import { AdminHeader, AdminNotice, AdminPagination, SearchForm, StatusTabs, adminHref, tdClass, thClass } from "@/components/admin/ui";
+import { userAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
-export default async function UsersPage() {
-  await requireAdminPage("/godmod/utilisateurs");
-  const users = await prisma.user.findMany({
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      username: true,
-      karma: true,
-      shadowBanned: true,
-      isAdmin: true,
-      createdAt: true,
-      _count: { select: { items: true } },
-    },
+const PER_PAGE = 25;
+const FILTERS: Record<string, { label: string; where: Prisma.UserWhereInput }> = {
+  tous: { label: "Tous", where: {} },
+  admins: { label: "Administrateurs", where: { isAdmin: true } },
+  bannis: { label: "Suspendus", where: { banned: true } },
+  masques: { label: "Masqués", where: { shadowBanned: true } },
+  demo: { label: "Démo", where: { email: { endsWith: "@demo.invalid" } } },
+};
+
+const link = "text-xs text-accent hover:underline";
+const danger = "text-xs text-red-500 hover:underline";
+
+interface PageProps {
+  searchParams: Promise<Record<string, string | undefined>>;
+}
+
+export default async function UsersAdminPage({ searchParams }: PageProps) {
+  const session = await requireAdminPage("/godmod/utilisateurs");
+  const params = await searchParams;
+  const filter = params.filtre && params.filtre in FILTERS ? params.filtre : "tous";
+  const q = params.q?.trim() || undefined;
+  const page = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
+
+  const search: Prisma.UserWhereInput = q
+    ? { OR: [{ username: { contains: q, mode: "insensitive" } }, { email: { contains: q, mode: "insensitive" } }] }
+    : {};
+  const where: Prisma.UserWhereInput = { ...search, ...FILTERS[filter].where };
+
+  const [counts, total, users] = await Promise.all([
+    Promise.all(Object.entries(FILTERS).map(async ([key, f]) => [key, await prisma.user.count({ where: { ...search, ...f.where } })] as const)),
+    prisma.user.count({ where }),
+    prisma.user.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * PER_PAGE,
+      take: PER_PAGE,
+      select: { id: true, username: true, email: true, phone: true, karma: true, isAdmin: true, banned: true, shadowBanned: true, createdAt: true },
+    }),
+  ]);
+
+  const activity = await prisma.item.groupBy({
+    by: ["authorId", "type"],
+    where: { authorId: { in: users.map((u) => u.id) }, status: { not: "trash" } },
+    _count: { _all: true },
   });
+  const countFor = (userId: number, comments: boolean) =>
+    activity.filter((a) => a.authorId === userId && (a.type === "comment") === comments).reduce((n, a) => n + a._count._all, 0);
+
+  const href = (overrides: Record<string, string | number | undefined>) => adminHref("/godmod/utilisateurs", { filtre: filter, q, ...overrides });
+  const currentUrl = href({ page });
 
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">{t("admin.users.heading")}</h1>
+    <>
+      <AdminHeader title="Utilisateurs" description="Les membres s'inscrivent depuis le site ; seuls les administrateurs accèdent à cet espace." />
+      <AdminNotice notice={params.notice} />
 
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">{t("admin.users.username")}</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">{t("admin.users.karma")}</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">{t("admin.users.stories")}</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">{t("admin.users.status")}</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">{t("admin.users.joined")}</th>
-              <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900">{t("admin.users.actions")}</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {users.map((user) => (
-              <tr key={user.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 text-sm font-medium text-gray-900">{user.username}</td>
-                <td className="px-6 py-4 text-sm text-gray-600">{user.karma}</td>
-                <td className="px-6 py-4 text-sm text-gray-600">{user._count.items}</td>
-                <td className="px-6 py-4 text-sm">
-                  <div className="flex gap-2">
-                    {user.isAdmin && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                        {t("admin.users.badgeAdmin")}
-                      </span>
-                    )}
-                    {user.shadowBanned && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                        {t("admin.users.badgeShadowBanned")}
-                      </span>
-                    )}
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-600">
-                  {new Date(user.createdAt).toLocaleDateString("fr-FR")}
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <UserActions userId={user.id} isShadowBanned={user.shadowBanned} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <StatusTabs
+          active={filter}
+          hrefFor={(key) => href({ filtre: key, page: undefined })}
+          tabs={counts.map(([key, count]) => ({ key, label: FILTERS[key].label, count })).filter((t) => t.count > 0 || t.key === "tous" || t.key === filter)}
+        />
+        <SearchForm action="/godmod/utilisateurs" query={q} keep={{ filtre: filter === "tous" ? undefined : filter }} placeholder="Nom ou e-mail…" />
       </div>
-    </div>
+
+      <form action={userAction}>
+        <input type="hidden" name="back" value={currentUrl} />
+        <div className="overflow-x-auto rounded-xl border border-border bg-bg">
+          <table className="w-full min-w-[760px] border-collapse">
+            <thead>
+              <tr>
+                <th className={thClass}>Utilisateur</th>
+                <th className={thClass}>Rôle</th>
+                <th className={`${thClass} text-right`}>Karma</th>
+                <th className={`${thClass} text-right`}>Articles</th>
+                <th className={`${thClass} text-right`}>Comm.</th>
+                <th className={thClass}>Inscription</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.length === 0 && (
+                <tr>
+                  <td colSpan={6} className={`${tdClass} py-10 text-center text-text-secondary`}>
+                    Aucun utilisateur trouvé.
+                  </td>
+                </tr>
+              )}
+              {users.map((u) => {
+                const self = u.id === session.userId;
+                return (
+                  <tr key={u.id}>
+                    <td className={tdClass}>
+                      <Link href={`/godmod/utilisateurs/${u.id}`} className="font-medium text-text hover:text-accent">
+                        {u.username}
+                      </Link>
+                      {self && <span className="ml-1 text-xs text-text-secondary">(vous)</span>}
+                      <div className="text-xs text-text-secondary">{u.email ?? u.phone ?? "—"}</div>
+                      <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1">
+                        <Link href={`/godmod/utilisateurs/${u.id}`} className={link}>
+                          Modifier
+                        </Link>
+                        <Link href={`/profil/${u.username}`} className={link}>
+                          Profil
+                        </Link>
+                        {!self && (
+                          <>
+                            <SubmitButton name="row" value={`${u.isAdmin ? "demote" : "promote"}:${u.id}`} className={link}
+                              confirm={u.isAdmin ? undefined : `Donner à ${u.username} un accès complet à l'administration ?`}>
+                              {u.isAdmin ? "Retirer admin" : "Rendre admin"}
+                            </SubmitButton>
+                            <SubmitButton name="row" value={`${u.shadowBanned ? "unshadow" : "shadow"}:${u.id}`} className={link}>
+                              {u.shadowBanned ? "Démasquer" : "Masquer"}
+                            </SubmitButton>
+                            <SubmitButton name="row" value={`${u.banned ? "unban" : "ban"}:${u.id}`} className={u.banned ? link : danger}>
+                              {u.banned ? "Réactiver" : "Suspendre"}
+                            </SubmitButton>
+                            <SubmitButton name="row" value={`delete:${u.id}`} className={danger}
+                              confirm={`Supprimer ${u.username} et TOUT son contenu (articles, commentaires, votes) ? Action définitive.`}>
+                              Supprimer
+                            </SubmitButton>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                    <td className={tdClass}>
+                      <span className={u.isAdmin ? "font-medium text-accent" : "text-text"}>{u.isAdmin ? "Administrateur" : "Membre"}</span>
+                      {u.banned && <div className="text-xs text-red-500">Suspendu</div>}
+                      {u.shadowBanned && <div className="text-xs text-amber-600">Masqué</div>}
+                    </td>
+                    <td className={`${tdClass} text-right tabular-nums`}>{u.karma}</td>
+                    <td className={`${tdClass} text-right tabular-nums`}>{countFor(u.id, false)}</td>
+                    <td className={`${tdClass} text-right tabular-nums`}>{countFor(u.id, true)}</td>
+                    <td className={`${tdClass} whitespace-nowrap text-xs text-text-secondary`}>{formatLocalDateTime(u.createdAt)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </form>
+
+      <AdminPagination page={page} pageCount={Math.ceil(total / PER_PAGE)} total={total} hrefFor={(p) => href({ page: p })} />
+
+      <p className="mt-6 text-xs text-text-secondary">
+        <strong>Masquer</strong> : le membre continue à publier mais personne d&apos;autre ne voit ses contributions.{" "}
+        <strong>Suspendre</strong> : le membre ne peut plus se connecter ni publier.
+      </p>
+    </>
   );
 }

@@ -1,5 +1,6 @@
 import { prisma } from "./db";
 import { getDomain } from "./utils";
+import { publiclyVisible } from "./content-status";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 /** Days are counted in Brazzaville time (UTC+1, no daylight saving). */
@@ -24,7 +25,7 @@ export interface SiteStats {
 
 export async function getSiteStats(now = Date.now()): Promise<SiteStats> {
   const since30 = new Date(now - 30 * DAY_MS);
-  const live = { deleted: false };
+  const live = publiclyVisible(new Date(now));
 
   const windowed = async (count: (where: { gte: Date }) => Promise<number>, total: Promise<number>) => {
     const [all, last30] = await Promise.all([total, count({ gte: since30 })]);
@@ -50,7 +51,8 @@ export async function getSiteStats(now = Date.now()): Promise<SiteStats> {
       SELECT to_char(("createdAt" + make_interval(hours => ${UTC_OFFSET_HOURS}::int))::date, 'YYYY-MM-DD') AS day,
              count(*) AS count
       FROM "Item"
-      WHERE deleted = false AND type <> 'comment' AND "createdAt" >= ${since30}
+      WHERE type <> 'comment' AND "createdAt" >= ${since30}
+        AND (status = 'published' OR (status = 'scheduled' AND "publishAt" <= now()))
       GROUP BY day`,
     prisma.item.findMany({
       where: { ...live, type: { in: POST_TYPES }, url: { not: null }, author: { shadowBanned: false } },

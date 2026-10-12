@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import { Quicksand } from "next/font/google";
-import { SITE } from "@/lib/site";
+import { getSettings } from "@/lib/settings";
 import { t } from "@/i18n";
 import "@/styles/globals.css";
 
 const quicksand = Quicksand({ subsets: ["latin"], variable: "--font-quicksand", display: "swap" });
 
-export const metadata: Metadata = {
-  title: SITE.name,
-  description: t("site.description"),
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { siteName, siteDescription } = await getSettings();
+  return { title: { default: siteName, template: `%s · ${siteName}` }, description: siteDescription };
+}
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

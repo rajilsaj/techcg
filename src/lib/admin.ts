@@ -22,3 +22,24 @@ export async function adminApiError(): Promise<NextResponse | null> {
   if (!session.isAdmin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   return null;
 }
+
+/** Guard for admin server actions: the current admin, or throws. */
+export async function requireAdminAction(): Promise<Session> {
+  const session = await getSession();
+  if (!session?.isAdmin) throw new Error("Forbidden");
+  return session;
+}
+
+/** A safe place to send the admin back to after a form: their admin page, never another site. */
+export function backTo(formData: FormData, fallback: string): string {
+  const back = formData.get("back");
+  return typeof back === "string" && back.startsWith("/godmod") && !back.startsWith("//") ? back : fallback;
+}
+
+/** Adds a one-time notice (shown by <AdminNotice>) to an admin URL. */
+export function withNotice(url: string, notice: string): string {
+  const [path, query = ""] = url.split("?");
+  const params = new URLSearchParams(query);
+  params.set("notice", notice);
+  return `${path}?${params}`;
+}

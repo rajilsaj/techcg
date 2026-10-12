@@ -104,11 +104,13 @@ export const getSession = cache(async (): Promise<Session | null> => {
         username: true,
         karma: true,
         isAdmin: true,
+        banned: true,
         createdAt: true,
       },
     });
 
-    if (!user) return null;
+    // Suspended members are treated as logged out everywhere.
+    if (!user || user.banned) return null;
 
     return {
       userId: user.id,

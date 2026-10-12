@@ -1,55 +1,49 @@
+import type { Metadata } from "next";
 import Link from "next/link";
-import { SITE } from "@/lib/site";
-import { t } from "@/i18n";
+import { ExternalLink } from "lucide-react";
+import { prisma } from "@/lib/db";
 import { requireAdminPage } from "@/lib/admin";
+import { getSettings } from "@/lib/settings";
+import { AdminNav } from "@/components/admin/AdminNav";
+import { LogoutButton } from "@/components/layout/LogoutButton";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
-const NAV = [
-  { href: "/godmod", key: "admin.nav.dashboard" },
-  { href: "/godmod/utilisateurs", key: "admin.nav.users" },
-  { href: "/godmod/moderation", key: "admin.nav.moderation" },
-  { href: "/godmod/parametres", key: "admin.nav.settings" },
-] as const;
+export const metadata: Metadata = { title: "Administration", robots: { index: false } };
 
-export default async function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  await requireAdminPage("/godmod");
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const session = await requireAdminPage("/godmod");
+  const [settings, pendingComments] = await Promise.all([
+    getSettings(),
+    prisma.item.count({ where: { type: "comment", status: "pending" } }),
+  ]);
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="flex">
-        {/* Sidebar */}
-        <aside className="w-64 bg-white border-r border-gray-200 min-h-screen">
-          <div className="p-6">
-            <h1 className="text-2xl font-bold text-gray-900">{t("admin.title")}</h1>
-            <p className="text-sm text-gray-500 mt-1">{t("admin.subtitle", { site: SITE.name })}</p>
+    <div className="min-h-screen bg-bg-secondary">
+      <header className="sticky top-0 z-40 border-b border-border bg-bg">
+        <div className="flex items-center gap-4 px-4 py-2.5">
+          <Link href="/godmod" className="flex items-center gap-2 font-semibold text-text">
+            <span className="flex h-7 w-7 items-center justify-center rounded-sm border-2 border-text text-sm font-bold text-accent">
+              {settings.siteName.charAt(0).toUpperCase()}
+            </span>
+            <span className="hidden sm:inline">{settings.siteName}</span>
+            <span className="text-xs font-normal text-text-secondary">Admin</span>
+          </Link>
+          <Link href="/" className="inline-flex items-center gap-1 text-sm text-text-secondary hover:text-accent">
+            Voir le site <ExternalLink size={13} aria-hidden />
+          </Link>
+          <div className="ml-auto flex items-center gap-4 text-sm">
+            <ThemeToggle />
+            <span className="hidden text-text sm:inline">{session.username}</span>
+            <LogoutButton />
           </div>
+        </div>
+      </header>
 
-          <nav className="space-y-1 px-4 py-6">
-            {NAV.map(({ href, key }) => (
-              <Link
-                key={href}
-                href={href}
-                className="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition"
-              >
-                {t(key)}
-              </Link>
-            ))}
-          </nav>
-
-          <div className="px-4 py-6 border-t border-gray-200">
-            <Link
-              href="/"
-              className="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition text-sm"
-            >
-              {t("admin.backToSite")}
-            </Link>
-          </div>
+      <div className="lg:flex">
+        <aside className="border-b border-border bg-bg-secondary p-3 lg:sticky lg:top-[53px] lg:h-[calc(100vh-53px)] lg:w-56 lg:shrink-0 lg:border-b-0 lg:border-r">
+          <AdminNav pendingComments={pendingComments} />
         </aside>
-
-        {/* Main content */}
-        <main className="flex-1">{children}</main>
+        <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
     </div>
   );

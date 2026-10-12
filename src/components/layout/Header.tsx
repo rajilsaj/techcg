@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { SITE } from "@/lib/site";
+import { getSettings } from "@/lib/settings";
 import { getSession } from "@/lib/auth";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { LogoutButton } from "@/components/layout/LogoutButton";
@@ -7,16 +7,16 @@ import { NavLinks } from "@/components/layout/NavLinks";
 import { t } from "@/i18n";
 
 export async function Header() {
-  const session = await getSession();
+  const [session, { siteName }] = await Promise.all([getSession(), getSettings()]);
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-bg">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3">
         <Link href="/" className="flex items-center gap-2 font-semibold text-text">
           <span className="flex h-7 w-7 items-center justify-center rounded-sm border-2 border-text text-sm font-bold text-accent">
-            {SITE.name.charAt(0).toUpperCase()}
+            {siteName.charAt(0).toUpperCase()}
           </span>
-          {SITE.name}
+          {siteName}
         </Link>
 
         <ThemeToggle />

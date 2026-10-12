@@ -3,7 +3,8 @@ export const GRAVITY_CONSTANT = 1.8;
 export const AGE_OFFSET_HOURS = 2;
 
 export function calculateRankScore(points: number, createdAt: Date): number {
-  const ageInHours = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60);
+  // Future dates (scheduled stories) count as brand new rather than producing NaN.
+  const ageInHours = Math.max(0, (Date.now() - createdAt.getTime()) / (1000 * 60 * 60));
   const numerator = points - 1;
   const denominator = Math.pow(ageInHours + AGE_OFFSET_HOURS, GRAVITY_CONSTANT);
 

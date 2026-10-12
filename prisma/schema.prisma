@@ -19,12 +19,15 @@ model User {
   karma        Int      @default(0)
   shadowBanned Boolean  @default(false)
   isAdmin      Boolean  @default(false)
+  banned       Boolean  @default(false) // can't sign in or post
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  items  Item[]
-  votes  Vote[]
-  hidden HiddenItem[]
+  items    Item[]
+  votes    Vote[]
+  hidden   HiddenItem[]
+  media    Media[]
+  activity ActivityLog[]
 
   @@index([karma])
   @@index([createdAt])
@@ -58,7 +61,15 @@ model Item {
   hiddenBy  HiddenItem[]
 
   flagCount Int     @default(0)
-  deleted   Boolean @default(false)
+  deleted   Boolean @default(false) // deprecated: replaced by status "trash"
+
+  // Publication workflow (see src/lib/content-status.ts)
+  status    String    @default("published") // published | draft | pending | scheduled | spam | trash
+  publishAt DateTime? // for status "scheduled"
+
+  categoryId Int?
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  tags       ItemTag[]
 
   commentCount Int      @default(0)
   createdAt    DateTime @default(now())
@@ -69,6 +80,8 @@ model Item {
   @@index([rankScore])
   @@index([authorId])
   @@index([deleted])
+  @@index([status])
+  @@index([categoryId])
 }
 
 model Vote {
@@ -93,4 +106,67 @@ model HiddenItem {
 
   @@id([userId, itemId])
   @@index([itemId])
+}
+
+model Category {
+  id          Int      @id @default(autoincrement())
+  name        String
+  slug        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  items       Item[]
+}
+
+model Tag {
+  id        Int       @id @default(autoincrement())
+  name      String
+  slug      String    @unique
+  createdAt DateTime  @default(now())
+  items     ItemTag[]
+}
+
+model ItemTag {
+  itemId Int
+  item   Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  tagId  Int
+  tag    Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([itemId, tagId])
+  @@index([tagId])
+}
+
+/// Site-wide settings edited in the admin, stored as key/value (see src/lib/settings.ts).
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+/// Admin actions, shown in the admin's activity log.
+model ActivityLog {
+  id         Int      @id @default(autoincrement())
+  actorId    Int?
+  actor      User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  action     String
+  summary    String
+  targetType String?
+  targetId   Int?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+/// Files uploaded to Vercel Blob from the admin's media library.
+model Media {
+  id           Int      @id @default(autoincrement())
+  url          String
+  pathname     String   @unique
+  contentType  String
+  size         Int
+  alt          String   @default("")
+  uploadedById Int?
+  uploadedBy   User?    @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
 }

@@ -1,88 +1,102 @@
-import { SITE } from "@/lib/site";
-import { t } from "@/i18n";
 import { requireAdminPage } from "@/lib/admin";
+import { getSettings } from "@/lib/settings";
+import { listCategories } from "@/lib/taxonomy";
+import { SubmitButton } from "@/components/admin/FormControls";
+import { AdminHeader, AdminNotice, Card, inputClass, primaryButtonClass } from "@/components/admin/ui";
+import { saveSettingsAction } from "./actions";
 
-export default async function SettingsPage() {
+export const dynamic = "force-dynamic";
+
+const label = "mb-1 block text-sm font-medium text-text";
+const hint = "mt-1 text-xs text-text-secondary";
+
+const MODERATION = [
+  { value: "none", label: "Publier tous les commentaires immédiatement" },
+  { value: "first", label: "Valider le premier commentaire de chaque membre, puis publier les suivants" },
+  { value: "all", label: "Valider chaque commentaire avant publication" },
+];
+
+interface PageProps {
+  searchParams: Promise<Record<string, string | undefined>>;
+}
+
+export default async function SettingsPage({ searchParams }: PageProps) {
   await requireAdminPage("/godmod/parametres");
+  const { notice } = await searchParams;
+  const [settings, categories] = await Promise.all([getSettings(), listCategories()]);
+
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">{t("admin.settings.heading")}</h1>
+    <>
+      <AdminHeader title="Réglages" description="Paramètres généraux du site." />
+      <AdminNotice notice={notice} />
 
-      <div className="max-w-2xl space-y-8">
-        {/* Site Settings */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">{t("admin.settings.site")}</h2>
+      <form action={saveSettingsAction} className="max-w-2xl space-y-4">
+        <Card title="Général">
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">{t("admin.settings.siteName")}</label>
-              <input
-                type="text"
-                defaultValue={SITE.name}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              <label htmlFor="siteName" className={label}>
+                Nom du site
+              </label>
+              <input id="siteName" name="siteName" defaultValue={settings.siteName} required maxLength={60} className={inputClass} />
+              <p className={hint}>Affiché dans l&apos;en-tête et l&apos;onglet du navigateur.</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">{t("admin.settings.siteDescription")}</label>
-              <textarea
-                defaultValue={t("admin.settings.siteDescriptionDefault")}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              <label htmlFor="siteDescription" className={label}>
+                Description
+              </label>
+              <textarea id="siteDescription" name="siteDescription" rows={3} maxLength={300} defaultValue={settings.siteDescription} className={inputClass} />
+              <p className={hint}>Utilisée par les moteurs de recherche et lors des partages.</p>
             </div>
           </div>
-        </div>
+        </Card>
 
-        {/* Moderation Settings */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">{t("admin.settings.moderation")}</h2>
+        <Card title="Publication">
           <div className="space-y-4">
-            <label className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                defaultChecked
-                className="w-4 h-4 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-              />
-              <span className="text-sm text-gray-700">{t("admin.settings.requireApproval")}</span>
+            <label className="flex items-start gap-3 text-sm text-text">
+              <input type="checkbox" name="submissionsOpen" defaultChecked={settings.submissionsOpen} className="mt-0.5 h-4 w-4 accent-[var(--accent)]" />
+              <span>
+                Les membres peuvent publier
+                <span className={`block ${hint}`}>Décochez pour fermer temporairement le formulaire « Publier ». Les administrateurs peuvent toujours publier.</span>
+              </span>
             </label>
-            <label className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                className="w-4 h-4 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-              />
-              <span className="text-sm text-gray-700">{t("admin.settings.enableFlagging")}</span>
-            </label>
-            <label className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                defaultChecked
-                className="w-4 h-4 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-              />
-              <span className="text-sm text-gray-700">{t("admin.settings.autoHide")}</span>
-            </label>
+            <div>
+              <label htmlFor="defaultCategoryId" className={label}>
+                Catégorie par défaut
+              </label>
+              <select id="defaultCategoryId" name="defaultCategoryId" defaultValue={settings.defaultCategoryId ?? ""} className={inputClass}>
+                <option value="">Aucune</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+              <p className={hint}>Attribuée aux publications pour lesquelles le membre n&apos;a pas choisi de catégorie.</p>
+            </div>
           </div>
-        </div>
+        </Card>
 
-        {/* Authentication */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">{t("admin.settings.auth")}</h2>
-          <div className="rounded-lg bg-blue-50 border border-blue-200 p-4">
-            <p className="text-sm text-blue-900">{t("admin.settings.authNote")}</p>
-          </div>
-        </div>
+        <Card title="Commentaires">
+          <fieldset className="space-y-2">
+            <legend className="sr-only">Modération des commentaires</legend>
+            {MODERATION.map((m) => (
+              <label key={m.value} className="flex items-start gap-3 text-sm text-text">
+                <input
+                  type="radio"
+                  name="commentModeration"
+                  value={m.value}
+                  defaultChecked={settings.commentModeration === m.value}
+                  className="mt-0.5 h-4 w-4 accent-[var(--accent)]"
+                />
+                {m.label}
+              </label>
+            ))}
+          </fieldset>
+          <p className={hint}>Les commentaires en attente apparaissent dans Commentaires → En attente.</p>
+        </Card>
 
-        {/* Danger Zone */}
-        <div className="bg-white rounded-lg border border-red-200 p-6">
-          <h2 className="text-lg font-semibold text-red-900 mb-4">{t("admin.settings.danger")}</h2>
-          <p className="text-sm text-gray-600 mb-4">{t("admin.settings.dangerNote")}</p>
-          <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm font-medium">
-            {t("admin.settings.clearAllFlags")}
-          </button>
-        </div>
-
-        <button className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium">
-          {t("admin.settings.save")}
-        </button>
-      </div>
-    </div>
+        <SubmitButton className={primaryButtonClass}>Enregistrer les réglages</SubmitButton>
+      </form>
+    </>
   );
 }

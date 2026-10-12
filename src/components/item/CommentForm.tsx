@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { submitCommentAction } from "@/app/api/actions/comment";
 import { t } from "@/i18n";
 
@@ -13,6 +14,8 @@ export function CommentForm({ itemId, isLoggedIn }: CommentFormProps) {
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
+  const [notice, setNotice] = useState<string>("");
+  const router = useRouter();
 
   if (!isLoggedIn) {
     return null;
@@ -24,6 +27,7 @@ export function CommentForm({ itemId, isLoggedIn }: CommentFormProps) {
 
     setLoading(true);
     setError("");
+    setNotice("");
 
     try {
       const result = await submitCommentAction(itemId, text);
@@ -31,7 +35,8 @@ export function CommentForm({ itemId, isLoggedIn }: CommentFormProps) {
         setError(result.error);
       } else {
         setText("");
-        // Page will refresh via revalidateTag
+        if (result.pending) setNotice(t("comment.pendingModeration"));
+        router.refresh();
       }
     } finally {
       setLoading(false);
@@ -41,6 +46,12 @@ export function CommentForm({ itemId, isLoggedIn }: CommentFormProps) {
   return (
     <form onSubmit={handleSubmit} className="border-t border-border p-4">
       <h3 className="text-sm font-medium text-text mb-3">{t("comment.add")}</h3>
+
+      {notice && (
+        <div className="mb-3 rounded border border-amber-500/50 bg-amber-500/10 p-3 text-sm text-text" role="status">
+          {notice}
+        </div>
+      )}
 
       {error && (
         <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded text-sm mb-3">

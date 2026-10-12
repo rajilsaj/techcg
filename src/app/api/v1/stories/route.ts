@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { createSuccessResponse, createErrorResponse, createPaginatedResponse, validatePagination, handleApiError } from "@/lib/api-utils";
 import { API_ERRORS, CreateStoryRequest, StoryResponse } from "@/types/api";
 import { NextRequest } from "next/server";
+import { publiclyVisible } from "@/lib/content-status";
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,7 +15,7 @@ export async function GET(request: NextRequest) {
 
     const [items, total] = await Promise.all([
       prisma.item.findMany({
-        where: { type: "story", deleted: false, author: { shadowBanned: false } },
+        where: { type: "story", ...publiclyVisible(), author: { shadowBanned: false } },
         orderBy: { rankScore: "desc" },
         skip,
         take: pp,
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest) {
         },
       }),
       prisma.item.count({
-        where: { type: "story", deleted: false, author: { shadowBanned: false } },
+        where: { type: "story", ...publiclyVisible(), author: { shadowBanned: false } },
       }),
     ]);
 

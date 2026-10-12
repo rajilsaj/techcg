@@ -8,14 +8,17 @@ import { t } from "@/i18n";
 
 export interface SubmitFormProps {
   defaultType?: string;
+  categories?: { id: number; name: string }[];
 }
 
-export function SubmitForm({ defaultType = "story" }: SubmitFormProps) {
+export function SubmitForm({ defaultType = "story", categories = [] }: SubmitFormProps) {
   const router = useRouter();
   const [type, setType] = useState(defaultType);
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
   const [text, setText] = useState("");
+  const [categoryId, setCategoryId] = useState("");
+  const [tags, setTags] = useState("");
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState(false);
 
@@ -25,7 +28,7 @@ export function SubmitForm({ defaultType = "story" }: SubmitFormProps) {
     setLoading(true);
 
     try {
-      const result = await submitStoryAction(type, title, url, text);
+      const result = await submitStoryAction(type, title, url, text, categoryId ? Number(categoryId) : null, tags);
       if (result.error) {
         setError(result.error);
       } else if (result.success && result.itemId) {
@@ -92,6 +95,45 @@ export function SubmitForm({ defaultType = "story" }: SubmitFormProps) {
           {t("submit.urlHint")}
         </p>
         <LinkPreview url={url} />
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        {categories.length > 0 && (
+          <div>
+            <label htmlFor="categoryId" className="block text-sm font-medium text-text mb-2">
+              {t("submit.category")}
+            </label>
+            <select
+              id="categoryId"
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+              disabled={loading}
+              className="w-full px-3 py-2 border border-border rounded text-text bg-bg"
+            >
+              <option value="">{t("submit.categoryNone")}</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+        <div className={categories.length > 0 ? "" : "sm:col-span-2"}>
+          <label htmlFor="tags" className="block text-sm font-medium text-text mb-2">
+            {t("submit.tags")}
+          </label>
+          <input
+            id="tags"
+            type="text"
+            value={tags}
+            onChange={(e) => setTags(e.target.value)}
+            className="w-full px-3 py-2 border border-border rounded text-text"
+            placeholder={t("submit.tagsPlaceholder")}
+            disabled={loading}
+          />
+          <p className="text-xs text-text-secondary mt-1">{t("submit.tagsHint")}</p>
+        </div>
       </div>
 
       {/* Visual divider */}

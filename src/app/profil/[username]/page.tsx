@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/Header";
 import { StoryList } from "@/components/list/StoryList";
 import { listStories } from "@/lib/stories";
 import { formatRelativeTime, pluralize, t } from "@/i18n";
+import { publiclyVisible } from "@/lib/content-status";
 
 interface PageProps {
   params: Promise<{ username: string }>;
@@ -44,7 +45,7 @@ export default async function UserPage({ params }: PageProps) {
     where: {
       authorId: user.id,
       type: "comment",
-      deleted: false,
+      ...publiclyVisible(),
     },
     select: {
       id: true,

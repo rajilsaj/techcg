@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { createSuccessResponse, createErrorResponse, createPaginatedResponse, validatePagination, handleApiError } from "@/lib/api-utils";
 import { API_ERRORS, CreateCommentRequest, CommentResponse } from "@/types/api";
 import { NextRequest } from "next/server";
+import { publiclyVisible } from "@/lib/content-status";
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,7 +20,7 @@ export async function GET(request: NextRequest) {
 
     const [comments, total] = await Promise.all([
       prisma.item.findMany({
-        where: { type: "comment", parentId: parseInt(itemId), deleted: false },
+        where: { type: "comment", parentId: parseInt(itemId), ...publiclyVisible() },
         orderBy: { points: "desc" },
         skip,
         take: pp,
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest) {
         },
       }),
       prisma.item.count({
-        where: { type: "comment", parentId: parseInt(itemId), deleted: false },
+        where: { type: "comment", parentId: parseInt(itemId), ...publiclyVisible() },
       }),
     ]);
 
