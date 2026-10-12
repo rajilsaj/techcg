@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SITE } from "@/lib/site";
 import { t } from "@/i18n";
+import { requireAdminPage } from "@/lib/admin";
 
 const NAV = [
   { href: "/godmod", key: "admin.nav.dashboard" },
@@ -14,6 +15,7 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+  await requireAdminPage("/godmod");
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="flex">

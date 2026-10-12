@@ -1,9 +1,11 @@
 import { prisma } from "@/lib/db";
 import { t } from "@/i18n";
+import { requireAdminPage } from "@/lib/admin";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboard() {
+  await requireAdminPage("/godmod");
   const [totalUsers, totalItems, totalComments, recentItems] = await Promise.all([
     prisma.user.count(),
     prisma.item.count({ where: { type: "story" } }),

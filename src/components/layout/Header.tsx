@@ -40,6 +40,11 @@ export async function Header() {
         <div className="flex items-center gap-4 text-sm">
           {session ? (
             <>
+              {session.isAdmin && (
+                <Link href="/godmod" className="text-text hover:text-accent transition-colors">
+                  {t("nav.admin")}
+                </Link>
+              )}
               <Link href="/publier" className="text-text hover:text-accent transition-colors">
                 {t("nav.submit")}
               </Link>

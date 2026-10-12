@@ -1,10 +1,12 @@
 import { prisma } from "@/lib/db";
 import { UserActions } from "@/components/admin/UserActions";
 import { t } from "@/i18n";
+import { requireAdminPage } from "@/lib/admin";
 
 export const dynamic = "force-dynamic";
 
 export default async function UsersPage() {
+  await requireAdminPage("/godmod/utilisateurs");
   const users = await prisma.user.findMany({
     orderBy: { createdAt: "desc" },
     select: {

@@ -1,10 +1,12 @@
 import { prisma } from "@/lib/db";
 import { ContentActions } from "@/components/admin/ContentActions";
 import { t } from "@/i18n";
+import { requireAdminPage } from "@/lib/admin";
 
 export const dynamic = "force-dynamic";
 
 export default async function ContentPage() {
+  await requireAdminPage("/godmod/moderation");
   const [flaggedItems, deletedItems] = await Promise.all([
     prisma.item.findMany({
       where: { flagCount: { gt: 0 }, deleted: false },

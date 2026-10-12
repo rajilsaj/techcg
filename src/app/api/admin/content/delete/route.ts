@@ -1,9 +1,12 @@
 import { prisma } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
+import { adminApiError } from "@/lib/admin";
 
 export async function POST(request: NextRequest) {
+  const denied = await adminApiError();
+  if (denied) return denied;
+
   try {
-    // TODO: Replace with OAuth verification
     const { itemId } = await request.json();
 
     if (!itemId) {

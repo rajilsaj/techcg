@@ -17,6 +17,7 @@ export const fr = {
   "nav.submit": "Publier",
   "nav.login": "Connexion",
   "nav.logout": "Déconnexion",
+  "nav.admin": "Admin",
   "nav.karmaTitle": "Karma",
 
   "theme.toggle": "Changer de thème",

@@ -1,7 +1,9 @@
 import { SITE } from "@/lib/site";
 import { t } from "@/i18n";
+import { requireAdminPage } from "@/lib/admin";
 
 export default async function SettingsPage() {
+  await requireAdminPage("/godmod/parametres");
   return (
     <div className="p-8">
       <h1 className="text-3xl font-bold text-gray-900 mb-8">{t("admin.settings.heading")}</h1>
