@@ -2,10 +2,9 @@
 
 import { Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useT } from "@/i18n/client";
+import { t } from "@/i18n";
 
 export function ThemeToggle() {
-  const t = useT();
   const [isDark, setIsDark] = useState(false);
   const [mounted, setMounted] = useState(false);
 

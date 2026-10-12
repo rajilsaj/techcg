@@ -4,7 +4,7 @@ import { ChevronUp } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toggleVoteAction } from "@/app/api/actions/vote";
-import { useT } from "@/i18n/client";
+import { t } from "@/i18n";
 
 export interface VoteButtonProps {
   itemId: number;
@@ -17,7 +17,6 @@ export function VoteButton({ itemId, isVoted = false, isLoggedIn = false }: Vote
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
   const router = useRouter();
-  const t = useT();
 
   const handleVote = useCallback(async () => {
     if (loading) return;

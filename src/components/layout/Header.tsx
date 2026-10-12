@@ -1,10 +1,9 @@
-"use client";
-
 import Link from "next/link";
 import { SITE } from "@/lib/site";
-import { useT } from "@/i18n/client";
+import { getSession } from "@/lib/auth";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
-import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
+import { LogoutButton } from "@/components/layout/LogoutButton";
+import { t } from "@/i18n";
 
 const NAV = [
   { href: "/", key: "nav.top" },
@@ -15,8 +14,8 @@ const NAV = [
   { href: "/comments", key: "nav.comments" },
 ] as const;
 
-export function Header() {
-  const t = useT();
+export async function Header() {
+  const session = await getSession();
 
   return (
     <header className="border-b border-border sticky top-0 z-50 bg-bg">
@@ -38,8 +37,28 @@ export function Header() {
           </div>
         </nav>
 
-        <div className="flex items-center gap-3">
-          <LanguageSwitcher />
+        <div className="flex items-center gap-4 text-sm">
+          {session ? (
+            <>
+              <Link href="/submit" className="text-text hover:text-accent transition-colors">
+                {t("nav.submit")}
+              </Link>
+              <Link
+                href={`/user/${session.username}`}
+                className="font-medium text-text hover:text-accent transition-colors"
+              >
+                {session.username}{" "}
+                <span className="text-text-secondary" title={t("nav.karmaTitle")}>
+                  ({session.karma})
+                </span>
+              </Link>
+              <LogoutButton />
+            </>
+          ) : (
+            <Link href="/login" className="text-text hover:text-accent transition-colors">
+              {t("nav.login")}
+            </Link>
+          )}
           <ThemeToggle />
         </div>
       </div>

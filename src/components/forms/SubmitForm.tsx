@@ -3,14 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { submitStoryAction } from "@/app/api/actions/submit";
-import { useT } from "@/i18n/client";
+import { t } from "@/i18n";
 
 export interface SubmitFormProps {
   defaultType?: string;
 }
 
 export function SubmitForm({ defaultType = "story" }: SubmitFormProps) {
-  const t = useT();
   const router = useRouter();
   const [type, setType] = useState(defaultType);
   const [title, setTitle] = useState("");

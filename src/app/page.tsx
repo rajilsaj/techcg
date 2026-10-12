@@ -3,14 +3,13 @@ import { Header } from "@/components/layout/Header";
 import { SectionHeader } from "@/components/layout/SectionHeader";
 import { StoryRow } from "@/components/list/StoryRow";
 import { Pagination } from "@/components/list/Pagination";
-import { getT } from "@/i18n/server";
+import { t } from "@/i18n";
 
 export const dynamic = 'force-dynamic';
 
 const ITEMS_PER_PAGE = 30;
 
 export default async function Home() {
-  const t = await getT();
   // Fetch top stories by rankScore (exclude deleted and shadowbanned authors)
   const stories = await prisma.item.findMany({
     where: {

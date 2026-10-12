@@ -2,10 +2,10 @@
 
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { getT } from "@/i18n/server";
 import { getSession } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { revalidateTag } from "next/cache";
+import { t } from "@/i18n";
 
 export async function submitStoryAction(
   type: string,
@@ -13,7 +13,6 @@ export async function submitStoryAction(
   url: string,
   text: string
 ): Promise<{ error?: string; success?: boolean; itemId?: number }> {
-  const t = await getT();
   const session = await getSession();
 
   if (!session) {

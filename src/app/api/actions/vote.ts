@@ -1,12 +1,11 @@
 "use server";
 
 import { prisma } from "@/lib/db";
-import { getT } from "@/i18n/server";
 import { getSession } from "@/lib/auth";
 import { revalidateTag } from "next/cache";
+import { t } from "@/i18n";
 
 export async function toggleVoteAction(itemId: number): Promise<{ error?: string; success?: boolean }> {
-  const t = await getT();
   const session = await getSession();
 
   if (!session) {

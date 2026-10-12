@@ -3,7 +3,7 @@ import type { DecodedIdToken } from "firebase-admin/auth";
 import { prisma } from "@/lib/db";
 import { createSession, clearSession } from "@/lib/auth";
 import { getFirebaseAdminAuth, FirebaseAdminNotConfiguredError } from "@/lib/firebase-admin";
-import { getT } from "@/i18n/server";
+import { t } from "@/i18n";
 
 const USERNAME_MAX = 20;
 
@@ -34,7 +34,6 @@ async function uniqueUsername(base: string) {
  * session cookie. New users are registered automatically.
  */
 export async function POST(request: NextRequest) {
-  const t = await getT();
   const { idToken } = await request.json().catch(() => ({}));
 
   if (!idToken || typeof idToken !== "string") {

@@ -1,7 +1,6 @@
 /**
- * French is the reference dictionary: its keys define the `Dictionary` type
- * that every other locale must satisfy. Keys are "area.element", values may
- * contain `{placeholders}` filled by `translate()`.
+ * All UI copy. Its keys define the `Dictionary` type. Keys are "area.element",
+ * values may contain `{placeholders}` filled by `t()`.
  */
 export const fr = {
   "site.tagline": "La communauté tech d'Afrique centrale",
@@ -17,11 +16,10 @@ export const fr = {
   "nav.comments": "Commentaires",
   "nav.submit": "Publier",
   "nav.login": "Connexion",
+  "nav.logout": "Déconnexion",
+  "nav.karmaTitle": "Karma",
 
   "theme.toggle": "Changer de thème",
-  "lang.switch": "Langue",
-  "lang.fr": "Français",
-  "lang.en": "English",
 
   "meta.login": "Connexion",
   "meta.register": "Inscription",

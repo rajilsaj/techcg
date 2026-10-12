@@ -13,13 +13,13 @@ import {
   startPhoneSignIn,
 } from "@/lib/firebase-auth";
 import { establishSession } from "@/lib/session-client";
-import { useT } from "@/i18n/client";
 import { Alert } from "./Alert";
 import { AuthFrame } from "./AuthFrame";
 import { LinkButton, PrimaryButton, SecondaryButton } from "./Button";
 import { GoogleButton } from "./GoogleButton";
 import { OtpInput } from "./OtpInput";
 import { COUNTRIES, PhoneField, isValidNational, toE164, type Country } from "./PhoneField";
+import { t } from "@/i18n";
 
 export type AuthView = "landing" | "otp" | "recovery";
 type Intent = "signin" | "signup";
@@ -42,7 +42,6 @@ export function AuthShell({
   /** Relative path to return to after sign-in (from `?next=`). */
   next?: string | null;
 }) {
-  const t = useT();
   const router = useRouter();
   const nextPath = safeNext(next);
 

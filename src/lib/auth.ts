@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { cookies } from "next/headers";
 import bcrypt from "bcrypt";
 import { prisma } from "./db";
@@ -39,8 +40,9 @@ export async function createSession(userId: number): Promise<void> {
 /**
  * Get current session from cookie.
  * In v1, userId is stored directly in cookie. For v2+, use a proper session store.
+ * Cached per request so the header and the page share one lookup.
  */
-export async function getSession(): Promise<Session | null> {
+export const getSession = cache(async (): Promise<Session | null> => {
   const cookieStore = await cookies();
   const userIdStr = cookieStore.get(SESSION_COOKIE)?.value;
 
@@ -71,7 +73,7 @@ export async function getSession(): Promise<Session | null> {
   } catch {
     return null;
   }
-}
+});
 
 export async function clearSession(): Promise<void> {
   const cookieStore = await cookies();

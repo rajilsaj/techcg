@@ -2,8 +2,7 @@
 
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
-import { formatRelativeTime, pluralize } from "@/i18n";
-import { useLocale, useT } from "@/i18n/client";
+import { formatRelativeTime, pluralize, t } from "@/i18n";
 import { CommentNode } from "@/lib/thread";
 import { CommentThread } from "./CommentThread";
 
@@ -13,8 +12,6 @@ export interface CommentItemProps {
 }
 
 export function CommentItem({ comment, depth }: CommentItemProps) {
-  const t = useT();
-  const locale = useLocale();
   const [collapsed, setCollapsed] = useState(false);
   const hasChildren = comment.children.length > 0;
   const childCount = comment.children.length;
@@ -31,7 +28,7 @@ export function CommentItem({ comment, depth }: CommentItemProps) {
               onClick={() => setCollapsed(!collapsed)}
               className="flex-shrink-0 p-0.5 hover:bg-border rounded transition-colors"
               aria-label={collapsed ? t("comment.expand") : t("comment.collapse")}
-              title={`${childCount} ${pluralize(childCount, locale, t("unit.reply"), t("unit.replies"))}`}
+              title={`${childCount} ${pluralize(childCount, t("unit.reply"), t("unit.replies"))}`}
             >
               {collapsed ? (
                 <svg
@@ -63,9 +60,9 @@ export function CommentItem({ comment, depth }: CommentItemProps) {
                 {comment.authorUsername}
               </a>
               <span className="text-text-secondary">
-                {comment.points} {pluralize(comment.points, locale, t("unit.point"), t("unit.points"))}
+                {comment.points} {pluralize(comment.points, t("unit.point"), t("unit.points"))}
               </span>
-              <span className="text-text-secondary">{formatRelativeTime(comment.createdAt, locale)}</span>
+              <span className="text-text-secondary">{formatRelativeTime(comment.createdAt)}</span>
             </div>
 
             <div className="text-sm text-text break-words whitespace-pre-wrap">

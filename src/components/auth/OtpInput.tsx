@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ClipboardEvent, type KeyboardEvent } from "react";
-import { useT } from "@/i18n/client";
+import { t } from "@/i18n";
 
 interface OtpInputProps {
   length?: number;
@@ -28,7 +28,6 @@ export function OtpInput({
   labelledBy,
   describedBy,
 }: OtpInputProps) {
-  const t = useT();
   const [cells, setCells] = useState<string[]>(() => Array(length).fill(""));
   const refs = useRef<(HTMLInputElement | null)[]>([]);
 

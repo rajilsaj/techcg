@@ -3,8 +3,8 @@ import { Header } from "@/components/layout/Header";
 import { SectionHeader } from "@/components/layout/SectionHeader";
 import { StoryRow } from "@/components/list/StoryRow";
 import { Pagination } from "@/components/list/Pagination";
-import { getT } from "@/i18n/server";
 import { encodeCursor, estimatePageNumber } from "@/lib/list-pagination";
+import { t } from "@/i18n";
 
 const ITEMS_PER_PAGE = 30;
 
@@ -13,7 +13,6 @@ interface PageProps {
 }
 
 export default async function ShowPage({ searchParams }: PageProps) {
-  const t = await getT();
   const params = await searchParams;
   const cursorParam = params.cursor;
 

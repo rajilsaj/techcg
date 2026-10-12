@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getT } from "@/i18n/server";
+import { t } from "@/i18n";
 
 export interface SectionHeaderProps {
   title: string;
@@ -7,8 +7,6 @@ export interface SectionHeaderProps {
 }
 
 export async function SectionHeader({ title, showSubmit = true }: SectionHeaderProps) {
-  const t = await getT();
-
   return (
     <div className="border-b border-border px-4 py-4 flex items-center justify-between">
       <h1 className="text-lg font-medium text-text">{title}</h1>

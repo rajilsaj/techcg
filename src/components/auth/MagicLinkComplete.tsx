@@ -6,15 +6,14 @@ import Link from "next/link";
 import { Mail } from "lucide-react";
 import { completeMagicLink, describeAuthError } from "@/lib/firebase-auth";
 import { establishSession } from "@/lib/session-client";
-import { useT } from "@/i18n/client";
 import { Alert } from "./Alert";
 import { AuthFrame } from "./AuthFrame";
 import { PrimaryButton, Spinner } from "./Button";
+import { t } from "@/i18n";
 
 type State = "working" | "need-email" | "error" | "done";
 
 export function MagicLinkComplete() {
-  const t = useT();
   const router = useRouter();
   const [state, setState] = useState<State>("working");
   const [email, setEmail] = useState("");

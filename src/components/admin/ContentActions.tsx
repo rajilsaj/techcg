@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useT } from "@/i18n/client";
+import { t } from "@/i18n";
 
 export function ContentActions({ itemId }: { itemId: number }) {
-  const t = useT();
   const [loading, setLoading] = useState(false);
 
   const handleDelete = async () => {

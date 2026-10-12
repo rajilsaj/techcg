@@ -1,14 +1,13 @@
 "use server";
 
 import { prisma } from "@/lib/db";
-import { getT } from "@/i18n/server";
 import { getSession } from "@/lib/auth";
 import { revalidateTag } from "next/cache";
+import { t } from "@/i18n";
 
 const FLAG_THRESHOLD = 5; // Auto-hide after 5 flags
 
 export async function flagItemAction(itemId: number): Promise<{ error?: string; success?: boolean }> {
-  const t = await getT();
   const session = await getSession();
 
   if (!session) {

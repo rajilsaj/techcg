@@ -1,7 +1,7 @@
 "use client";
 
-import { useT } from "@/i18n/client";
 import { SecondaryButton } from "./Button";
+import { t } from "@/i18n";
 
 function GoogleGlyph() {
   return (
@@ -37,7 +37,6 @@ export function GoogleButton({
   disabled?: boolean;
   label?: string;
 }) {
-  const t = useT();
   return (
     <SecondaryButton
       onClick={onClick}

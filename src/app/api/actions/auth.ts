@@ -3,13 +3,12 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { hashPassword, verifyPassword, createSession, clearSession } from "@/lib/auth";
-import { getT } from "@/i18n/server";
+import { t } from "@/i18n";
 
 export async function loginAction(
   username: string,
   password: string
 ): Promise<{ error?: string }> {
-  const t = await getT();
   if (!username || !password) {
     return { error: t("action.credentialsRequired") };
   }
@@ -40,7 +39,6 @@ export async function registerAction(
   password: string,
   confirmPassword: string
 ): Promise<{ error?: string }> {
-  const t = await getT();
   if (!username || !password || !confirmPassword) {
     return { error: t("action.allFieldsRequired") };
   }

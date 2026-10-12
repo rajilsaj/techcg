@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { Header } from "@/components/layout/Header";
 import { SubmitForm } from "@/components/forms/SubmitForm";
-import { getT } from "@/i18n/server";
+import { t } from "@/i18n";
 
 interface PageProps {
   searchParams: Promise<Record<string, string>>;
@@ -15,7 +15,6 @@ export default async function SubmitPage({ searchParams }: PageProps) {
     redirect("/login");
   }
 
-  const t = await getT();
   const params = await searchParams;
   const defaultType = params.type || "story";
 

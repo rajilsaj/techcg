@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { SITE } from "@/lib/site";
-import { getT } from "@/i18n/server";
+import { t } from "@/i18n";
 
 const NAV = [
   { href: "/godmod", key: "admin.nav.dashboard" },
@@ -14,8 +14,6 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const t = await getT();
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="flex">

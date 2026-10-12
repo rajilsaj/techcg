@@ -1,7 +1,6 @@
 import { MessageCircle, User, Globe } from "lucide-react";
 import { getDomain } from "@/lib/utils";
-import { formatRelativeTime, pluralize } from "@/i18n";
-import { getLocale, getT } from "@/i18n/server";
+import { formatRelativeTime, pluralize, t } from "@/i18n";
 import { MetaItem } from "./MetaItem";
 import { VoteButton } from "./VoteButton";
 
@@ -30,10 +29,9 @@ export async function StoryRow({
   isVoted,
   isLoggedIn,
 }: StoryRowProps) {
-  const [t, locale] = await Promise.all([getT(), getLocale()]);
   const domain = url ? getDomain(url) : "";
   const domain_label = domain || t("common.textPost");
-  const timeAgo = formatRelativeTime(createdAt, locale);
+  const timeAgo = formatRelativeTime(createdAt);
   const displayTitle = title || t("common.untitled");
 
   return (
@@ -83,7 +81,7 @@ export async function StoryRow({
 
         <MetaItem
           icon={MessageCircle}
-          label={`${commentCount} ${pluralize(commentCount, locale, t("unit.comment"), t("unit.comments"))}`}
+          label={`${commentCount} ${pluralize(commentCount, t("unit.comment"), t("unit.comments"))}`}
           href={`/item/${id}`}
         />
       </div>

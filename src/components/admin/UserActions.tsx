@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useT } from "@/i18n/client";
+import { t } from "@/i18n";
 
 export function UserActions({
   userId,
@@ -10,7 +10,6 @@ export function UserActions({
   userId: number;
   isShadowBanned: boolean;
 }) {
-  const t = useT();
   const [loading, setLoading] = useState(false);
 
   const handleToggleShadowBan = async () => {

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { submitCommentAction } from "@/app/api/actions/comment";
-import { useT } from "@/i18n/client";
+import { t } from "@/i18n";
 
 export interface CommentFormProps {
   itemId: number;
@@ -10,7 +10,6 @@ export interface CommentFormProps {
 }
 
 export function CommentForm({ itemId, isLoggedIn }: CommentFormProps) {
-  const t = useT();
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");

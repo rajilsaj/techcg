@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getT } from "@/i18n/server";
+import { t } from "@/i18n";
 
 export interface PaginationProps {
   currentPage: number;
@@ -16,8 +16,6 @@ export async function Pagination({
   prevCursor,
   pathname,
 }: PaginationProps) {
-  const t = await getT();
-
   const buildUrl = (cursor?: string) => {
     const params = new URLSearchParams();
     if (cursor) params.set("cursor", cursor);

@@ -1,9 +1,7 @@
 import { SITE } from "@/lib/site";
-import { getT } from "@/i18n/server";
+import { t } from "@/i18n";
 
 export default async function SettingsPage() {
-  const t = await getT();
-
   return (
     <div className="p-8">
       <h1 className="text-3xl font-bold text-gray-900 mb-8">{t("admin.settings.heading")}</h1>

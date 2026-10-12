@@ -3,8 +3,7 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { Header } from "@/components/layout/Header";
 import { StoryRow } from "@/components/list/StoryRow";
-import { formatRelativeTime, pluralize } from "@/i18n";
-import { getLocale, getT } from "@/i18n/server";
+import { formatRelativeTime, pluralize, t } from "@/i18n";
 
 interface PageProps {
   params: Promise<{ username: string }>;
@@ -14,7 +13,6 @@ export default async function UserPage({ params }: PageProps) {
   const { username } = await params;
 
   const session = await getSession();
-  const [t, locale] = await Promise.all([getT(), getLocale()]);
 
   // Fetch user
   const user = await prisma.user.findUnique({
@@ -98,7 +96,7 @@ export default async function UserPage({ params }: PageProps) {
         <div className="border-b border-border pb-8 mb-8">
           <h1 className="text-3xl font-bold text-text mb-2">{user.username}</h1>
           <p className="text-sm text-text-secondary mb-4">
-            {t("user.karmaJoined", { karma: user.karma, time: formatRelativeTime(user.createdAt, locale) })}
+            {t("user.karmaJoined", { karma: user.karma, time: formatRelativeTime(user.createdAt) })}
           </p>
 
           {user.about && (
@@ -123,7 +121,7 @@ export default async function UserPage({ params }: PageProps) {
         {stories.length > 0 && (
           <div className="mb-8">
             <h2 className="text-xl font-bold text-text mb-4">
-              {stories.length} {pluralize(stories.length, locale, t("unit.story"), t("unit.stories"))}
+              {stories.length} {pluralize(stories.length, t("unit.story"), t("unit.stories"))}
             </h2>
             <div className="border border-border rounded">
               {stories.map((story, i) => (
@@ -148,7 +146,7 @@ export default async function UserPage({ params }: PageProps) {
         {comments.length > 0 && (
           <div>
             <h2 className="text-xl font-bold text-text mb-4">
-              {comments.length} {pluralize(comments.length, locale, t("unit.comment"), t("unit.comments"))}
+              {comments.length} {pluralize(comments.length, t("unit.comment"), t("unit.comments"))}
             </h2>
             <div className="space-y-4">
               {comments.map((comment) => (
@@ -162,10 +160,10 @@ export default async function UserPage({ params }: PageProps) {
                         {comment.author.username}
                       </span>
                       <span className="text-text-secondary">
-                        {comment.points} {pluralize(comment.points, locale, t("unit.point"), t("unit.points"))}
+                        {comment.points} {pluralize(comment.points, t("unit.point"), t("unit.points"))}
                       </span>
                       <span className="text-text-secondary">
-                        {formatRelativeTime(comment.createdAt, locale)}
+                        {formatRelativeTime(comment.createdAt)}
                       </span>
                     </div>
                   </div>

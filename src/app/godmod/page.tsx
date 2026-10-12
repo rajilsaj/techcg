@@ -1,10 +1,9 @@
 import { prisma } from "@/lib/db";
-import { getLocale, getT } from "@/i18n/server";
+import { t } from "@/i18n";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboard() {
-  const [t, locale] = await Promise.all([getT(), getLocale()]);
   const [totalUsers, totalItems, totalComments, recentItems] = await Promise.all([
     prisma.user.count(),
     prisma.item.count({ where: { type: "story" } }),
@@ -58,7 +57,7 @@ export default async function AdminDashboard() {
                   </p>
                 </div>
                 <span className="text-xs text-gray-400">
-                  {new Date(item.createdAt).toLocaleDateString(locale)}
+                  {new Date(item.createdAt).toLocaleDateString("fr-FR")}
                 </span>
               </div>
             </div>

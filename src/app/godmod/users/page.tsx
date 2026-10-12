@@ -1,11 +1,10 @@
 import { prisma } from "@/lib/db";
 import { UserActions } from "@/components/admin/UserActions";
-import { getLocale, getT } from "@/i18n/server";
+import { t } from "@/i18n";
 
 export const dynamic = "force-dynamic";
 
 export default async function UsersPage() {
-  const [t, locale] = await Promise.all([getT(), getLocale()]);
   const users = await prisma.user.findMany({
     orderBy: { createdAt: "desc" },
     select: {
@@ -56,7 +55,7 @@ export default async function UsersPage() {
                   </div>
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-600">
-                  {new Date(user.createdAt).toLocaleDateString(locale)}
+                  {new Date(user.createdAt).toLocaleDateString("fr-FR")}
                 </td>
                 <td className="px-6 py-4 text-right">
                   <UserActions userId={user.id} isShadowBanned={user.shadowBanned} />

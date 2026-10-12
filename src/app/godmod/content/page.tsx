@@ -1,11 +1,10 @@
 import { prisma } from "@/lib/db";
 import { ContentActions } from "@/components/admin/ContentActions";
-import { getLocale, getT } from "@/i18n/server";
+import { t } from "@/i18n";
 
 export const dynamic = "force-dynamic";
 
 export default async function ContentPage() {
-  const [t, locale] = await Promise.all([getT(), getLocale()]);
   const [flaggedItems, deletedItems] = await Promise.all([
     prisma.item.findMany({
       where: { flagCount: { gt: 0 }, deleted: false },
@@ -91,7 +90,7 @@ export default async function ContentPage() {
                       </p>
                     </div>
                     <span className="text-xs text-gray-400">
-                      {new Date(item.updatedAt).toLocaleDateString(locale)}
+                      {new Date(item.updatedAt).toLocaleDateString("fr-FR")}
                     </span>
                   </div>
                 </div>

@@ -3,7 +3,7 @@
 import { forwardRef } from "react";
 import { ChevronDown } from "lucide-react";
 import type { Key } from "@/i18n";
-import { useT } from "@/i18n/client";
+import { t } from "@/i18n";
 
 export interface Country {
   code: string;
@@ -56,7 +56,6 @@ export const PhoneField = forwardRef<HTMLInputElement, PhoneFieldProps>(function
   { id, country, onCountryChange, value, onChange, disabled, invalid, describedBy },
   ref
 ) {
-  const t = useT();
   return (
     <div>
       <label htmlFor={id} className="mb-1.5 block text-sm font-medium text-text">
