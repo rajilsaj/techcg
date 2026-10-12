@@ -10,7 +10,9 @@
     "lint": "next lint",
     "test": "vitest",
     "seed": "node --import tsx prisma/seed.ts",
-    "rank": "node --import tsx scripts/rank.ts"
+    "rank": "node --import tsx scripts/rank.ts",
+    "demo:seed": "node --import tsx scripts/demo-data.ts seed",
+    "demo:remove": "node --import tsx scripts/demo-data.ts remove"
   },
   "dependencies": {
     "@prisma/client": "^6.0.0",
