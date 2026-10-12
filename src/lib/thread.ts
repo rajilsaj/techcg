@@ -45,17 +45,14 @@ export function buildCommentTree(
   for (const comment of comments) {
     const node = nodeMap.get(comment.path)!;
 
-    // Find parent by removing last component of path
-    const pathParts = comment.path.split(".");
-    if (pathParts.length === 1) {
-      // Root comment
-      roots.push(node);
+    // Parent = path minus its last component. Stored paths start with the story's
+    // own segments, so a comment whose parent isn't in the list is a top-level one.
+    const parentPath = comment.path.split(".").slice(0, -1).join(".");
+    const parent = nodeMap.get(parentPath);
+    if (parent) {
+      parent.children.push(node);
     } else {
-      const parentPath = pathParts.slice(0, -1).join(".");
-      const parent = nodeMap.get(parentPath);
-      if (parent) {
-        parent.children.push(node);
-      }
+      roots.push(node);
     }
   }
 
