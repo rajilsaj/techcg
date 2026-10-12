@@ -1,8 +1,9 @@
 import { getSession } from "@/lib/auth";
-import { listStories } from "@/lib/stories";
+import { listStories, STORIES_PER_PAGE } from "@/lib/stories";
 import { Header } from "@/components/layout/Header";
 import { Hero } from "@/components/home/Hero";
-import { StoryList, nextPageHref, pageNumber } from "@/components/list/StoryList";
+import { InfiniteStoryList } from "@/components/list/InfiniteStoryList";
+import { nextPageHref, pageNumber } from "@/components/list/StoryList";
 
 export const dynamic = "force-dynamic";
 
@@ -27,11 +28,13 @@ export default async function Home({ searchParams }: PageProps) {
       <Header />
       <div className="mx-auto max-w-5xl px-4">
         <Hero active="new" />
-        <StoryList
-          stories={stories}
+        <InfiniteStoryList
+          feed="top"
+          initialStories={stories}
+          initialCursor={nextCursor}
           isLoggedIn={!!session}
-          page={page}
-          nextHref={nextPageHref("/", nextCursor, page)}
+          firstRank={(page - 1) * STORIES_PER_PAGE + 1}
+          fallbackHref={nextPageHref("/", nextCursor, page)}
         />
       </div>
     </>

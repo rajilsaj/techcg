@@ -4,13 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { t, type Key } from "@/i18n";
 
+// Récents, Questions, Vitrine, Emplois and Commentaires still exist but are left out of the menu.
 const NAV: { href: string; key: Key; match?: string[] }[] = [
   { href: "/", key: "nav.top", match: ["/", "/archives"] },
-  { href: "/recents", key: "nav.newest" },
-  { href: "/questions", key: "nav.ask" },
-  { href: "/vitrine", key: "nav.show" },
-  { href: "/emplois", key: "nav.jobs" },
-  { href: "/commentaires", key: "nav.comments" },
+  { href: "/indicateurs", key: "nav.indicators" },
 ];
 
 /** Section links; the current one is underlined like in the design. */
