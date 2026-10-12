@@ -63,7 +63,7 @@ export const PhoneField = forwardRef<HTMLInputElement, PhoneFieldProps>(function
       </label>
 
       <div
-        className={`flex rounded-xl border bg-bg transition-all focus-within:border-accent focus-within:shadow-[0_0_0_3px_rgba(255,102,0,0.15)] ${
+        className={`flex rounded-xl border bg-bg transition-all focus-within:border-accent focus-within:shadow-[0_0_0_3px_rgba(0,102,255,0.15)] ${
           invalid ? "border-red-500" : "border-border"
         } ${disabled ? "opacity-60" : ""}`}
       >

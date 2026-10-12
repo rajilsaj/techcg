@@ -14,7 +14,7 @@ const TONES: Record<Tone, { box: string; icon: typeof Info }> = {
     icon: CheckCircle2,
   },
   info: {
-    box: "border-[rgba(255,102,0,0.3)] bg-[rgba(255,102,0,0.07)] text-text",
+    box: "border-[rgba(0,102,255,0.3)] bg-[rgba(0,102,255,0.07)] text-text",
     icon: Info,
   },
 };
