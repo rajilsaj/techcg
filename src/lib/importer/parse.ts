@@ -1,4 +1,5 @@
 import { decodeEntities, plainText, primaryLanguage } from "../link-preview";
+import { stripLeadingTitle } from "../excerpt";
 
 /** One article found on a source, before it becomes a story. */
 export interface FoundArticle {
@@ -87,7 +88,7 @@ export function parseFeed(xml: string, feedUrl: URL): ParsedFeed {
 
     const html =
       tagText(block, "description") ?? tagText(block, "summary") ?? tagText(block, "content:encoded") ?? tagText(block, "content") ?? "";
-    const summary = plainText(decodeEntities(html));
+    const summary = stripLeadingTitle(plainText(decodeEntities(html)), title);
     articles.push({
       title: clip(title, 300),
       url: link,

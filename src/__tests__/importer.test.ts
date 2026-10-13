@@ -72,3 +72,35 @@ describe("canonicalUrl", () => {
     expect(canonicalUrl("https://a.com/x?id=3&utm_source=rss&xtor=RSS-1#top")).toBe("https://a.com/x?id=3");
   });
 });
+
+describe("stripLeadingTitle", () => {
+  it("drops a title repeated at the start of the summary", async () => {
+    const { stripLeadingTitle } = await import("@/lib/excerpt");
+    const title = "« L'IA n'est pas une superintelligence » : les experts accusent Trump";
+    const summary = "« L'IA n'est pas une superintelligence » : les experts accusent Trump. Une tribune publiée lundi dénonce une occultation des risques.";
+    expect(stripLeadingTitle(summary, title)).toBe("Une tribune publiée lundi dénonce une occultation des risques.");
+    // The summary simply carries on after the title as a new sentence.
+    expect(stripLeadingTitle("Des cybercriminels ont dégelé les congélateurs Des pirates ont pris le contrôle des systèmes de réfrigération.", "Des cybercriminels ont dégelé les congélateurs")).toBe(
+      "Des pirates ont pris le contrôle des systèmes de réfrigération."
+    );
+    expect(stripLeadingTitle("Python 3.15 est disponible. Voici les nouveautés majeures du langage cette année.", "Python 3.15 est disponible")).toBe(
+      "Voici les nouveautés majeures du langage cette année."
+    );
+  });
+
+  it("handles a title the feed cut mid-phrase", async () => {
+    const { stripLeadingTitle } = await import("@/lib/excerpt");
+    const title = "L'IA s'est fait passer pour un témoin, ce qui constitue un délit";
+    const summary = "L'IA s'est fait passer pour un témoin, ce qui constitue « un délit mineur » Anthropic a déclaré que son modèle avait envoyé un faux signalement.";
+    expect(stripLeadingTitle(summary, title)).toBe("Anthropic a déclaré que son modèle avait envoyé un faux signalement.");
+    // No clear end of phrase: leave it as it is.
+    const noBreak = "L'IA s'est fait passer pour un témoin, ce qui constitue un délit selon la police locale et les experts interrogés par la presse";
+    expect(stripLeadingTitle(noBreak, title)).toBe(noBreak);
+  });
+
+  it("keeps summaries that don't start with the title, or would become too short", async () => {
+    const { stripLeadingTitle } = await import("@/lib/excerpt");
+    expect(stripLeadingTitle("Un tout autre texte qui parle d'autre chose.", "Titre de l'article ici")).toBe("Un tout autre texte qui parle d'autre chose.");
+    expect(stripLeadingTitle("Titre de l'article ici. Court.", "Titre de l'article ici")).toBe("Titre de l'article ici. Court.");
+  });
+});

@@ -11,6 +11,7 @@ import { buildCommentTree, CommentData } from "@/lib/thread";
 import { enrichStory, needsEnrichment } from "@/lib/enrich-story";
 import { LikeButton } from "@/components/list/StoryActions";
 import { STATUS_LABELS, isItemStatus, isPubliclyVisible, publiclyVisible } from "@/lib/content-status";
+import { CoverImage } from "@/components/media/CoverImage";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -150,13 +151,7 @@ export default async function ItemPage({ params }: PageProps) {
               className="mb-4 flex flex-col gap-3 rounded-lg border border-border bg-bg-secondary p-3 transition-colors hover:border-text-secondary sm:flex-row"
             >
               {story.imageUrl && (
-                // eslint-disable-next-line @next/next/no-img-element -- arbitrary third-party hosts
-                <img
-                  src={story.imageUrl}
-                  alt=""
-                  referrerPolicy="no-referrer"
-                  className="h-40 w-full shrink-0 rounded object-cover sm:h-28 sm:w-48"
-                />
+                <CoverImage src={story.imageUrl} eager className="h-40 w-full shrink-0 rounded sm:h-28 sm:w-48" />
               )}
               {story.excerpt && (
                 <div className="min-w-0">

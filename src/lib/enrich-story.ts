@@ -1,6 +1,7 @@
 import { prisma } from "./db";
 import { getLinkPreview } from "./link-preview";
 import { translateToFrench } from "./translate";
+import { stripLeadingTitle } from "./excerpt";
 
 /** How long to wait before retrying a story whose excerpt couldn't be translated. */
 const TRANSLATION_RETRY_MS = 60 * 60 * 1000;
@@ -37,7 +38,7 @@ export async function enrichStory(itemId: number): Promise<void> {
   try {
     const item = await prisma.item.findUnique({
       where: { id: itemId },
-      select: { url: true, excerpt: true, excerptLang: true, imageUrl: true, previewAt: true },
+      select: { url: true, title: true, excerpt: true, excerptLang: true, imageUrl: true, previewAt: true },
     });
     if (!item?.url) return;
 
@@ -53,7 +54,7 @@ export async function enrichStory(itemId: number): Promise<void> {
       if (result.ok) {
         imageUrl = result.preview.image ?? imageUrl;
         if (result.preview.description) {
-          excerpt = result.preview.description;
+          excerpt = stripLeadingTitle(result.preview.description, item.title);
           excerptLang = result.preview.lang ?? null;
         }
       }

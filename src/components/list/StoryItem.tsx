@@ -4,6 +4,7 @@ import { getDomain } from "@/lib/utils";
 import type { ListedStory } from "@/lib/stories";
 import { formatRelativeTime, pluralize, t } from "@/i18n";
 import { HideableStory, HideButton, LikeButton } from "./StoryActions";
+import { CoverImage } from "@/components/media/CoverImage";
 
 export interface StoryItemProps {
   rank: number;
@@ -51,14 +52,7 @@ export function StoryItem({ rank, story, isLoggedIn }: StoryItemProps) {
             <div className="mt-2 flex gap-3">
               {story.imageUrl && (
                 <a href={href} target="_blank" rel="noopener noreferrer" className="shrink-0" tabIndex={-1}>
-                  {/* eslint-disable-next-line @next/next/no-img-element -- arbitrary third-party hosts */}
-                  <img
-                    src={story.imageUrl}
-                    alt=""
-                    loading="lazy"
-                    referrerPolicy="no-referrer"
-                    className="h-16 w-28 rounded border border-border bg-bg-secondary object-cover sm:h-20 sm:w-36"
-                  />
+                  <CoverImage src={story.imageUrl} className="h-16 w-28 rounded border border-border sm:h-20 sm:w-36" />
                 </a>
               )}
               {excerpt && (

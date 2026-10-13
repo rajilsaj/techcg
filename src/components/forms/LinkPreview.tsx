@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Globe } from "lucide-react";
 import { t, type Key } from "@/i18n";
 import type { LinkPreview as Preview, PreviewFailure, PreviewResult } from "@/lib/link-preview";
+import { CoverImage } from "@/components/media/CoverImage";
 
 type Failure = PreviewFailure | "rate_limited";
 type State =
@@ -91,7 +92,6 @@ const FAILURES: Record<PreviewFailure, { title: Key; body: Key; tone: "error" | 
 
 export function LinkPreview({ url }: { url: string }) {
   const state = useLinkPreview(url);
-  const [brokenImage, setBrokenImage] = useState<string | null>(null);
 
   if (state.status === "idle") return null;
 
@@ -133,16 +133,8 @@ export function LinkPreview({ url }: { url: string }) {
           aria-label={`${t("preview.label")} : ${state.preview.title ?? state.preview.domain}`}
           className="group flex overflow-hidden rounded-lg border border-border bg-bg-secondary transition-colors hover:border-text-secondary"
         >
-          {state.preview.image && brokenImage !== state.preview.image ? (
-            // eslint-disable-next-line @next/next/no-img-element -- arbitrary third-party hosts
-            <img
-              src={state.preview.image}
-              alt=""
-              loading="lazy"
-              referrerPolicy="no-referrer"
-              onError={() => setBrokenImage(state.preview.image)}
-              className="w-24 shrink-0 self-stretch object-cover sm:w-36"
-            />
+          {state.preview.image ? (
+            <CoverImage src={state.preview.image} className="w-24 shrink-0 self-stretch sm:w-36" />
           ) : (
             <div className="flex w-24 shrink-0 items-center justify-center bg-bg text-text-secondary sm:w-36">
               <Globe className="h-6 w-6" aria-hidden />
