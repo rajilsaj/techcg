@@ -15,8 +15,8 @@ export async function establishSession(user: User): Promise<EstablishedSession> 
 
   const body = await response.json().catch(() => ({}));
   if (!response.ok) {
-    // Empty message: callers substitute a localised fallback.
-    throw new Error(body.error || "");
+    // Errors come as { error: { code, message } }. Empty message: callers substitute a localised fallback.
+    throw new Error(body.error?.message || "");
   }
   return body as EstablishedSession;
 }

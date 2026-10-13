@@ -85,14 +85,19 @@ After linking, get these from Vercel Dashboard:
 
 | Name | Value | Production | Preview | Development |
 |------|-------|-----------|---------|-------------|
-| `DATABASE_URL` | PostgreSQL connection string | ✅ | ✅ | ❌ |
+| `POSTGRES_PRISMA_URL` | Pooled PostgreSQL connection string (Supabase integration) | ✅ | ✅ | ❌ |
+| `POSTGRES_URL_NON_POOLING` | Direct connection string, used by migrations | ✅ | ✅ | ❌ |
+| `FIREBASE_PROJECT_ID` / `FIREBASE_CLIENT_EMAIL` / `FIREBASE_PRIVATE_KEY` | Firebase Admin service account (see AUTH.md) | ✅ | ✅ | ❌ |
+| `SESSION_SECRET` | Long random string signing the session cookie | ✅ | ✅ | ❌ |
 | `CRON_SECRET` | Random secure string | ✅ | ❌ | ❌ |
-| `NEXT_PUBLIC_SUPABASE_URL` | `https://PROJECT.supabase.co` | ✅ | ✅ | ❌ |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key | ✅ | ✅ | ❌ |
+| `MYMEMORY_EMAIL` | Optional: raises the free translation quota | optional | ❌ | ❌ |
+| `BLOB_READ_WRITE_TOKEN` or `BLOB_STORE_ID` | Set by connecting a public Vercel Blob store (media library) | ✅ | ✅ | ❌ |
+
+No `NEXT_PUBLIC_` secret is needed: the app only reaches the database from the server (see AUTH.md).
 
 **Steps for each variable**:
 1. Click "Add New"
-2. Name: `DATABASE_URL`
+2. Name: `POSTGRES_PRISMA_URL`
 3. Value: Paste Supabase connection string
 4. Select "Production" checkbox
 5. Click "Save"
@@ -102,19 +107,11 @@ After linking, get these from Vercel Dashboard:
 
 From Supabase Dashboard (https://app.supabase.com):
 
-1. **DATABASE_URL**:
-   - Project Settings → Database → Connection String
-   - Format: `postgresql://postgres:PASSWORD@db.PROJECT.supabase.co:5432/postgres`
+1. **POSTGRES_PRISMA_URL / POSTGRES_URL_NON_POOLING**:
+   - Set automatically by the Supabase integration on Vercel, or
+   - Project Settings → Database → Connection String (pooled and direct)
 
-2. **NEXT_PUBLIC_SUPABASE_URL**:
-   - Project Settings → General → Project URL
-   - Format: `https://PROJECT.supabase.co`
-
-3. **NEXT_PUBLIC_SUPABASE_ANON_KEY**:
-   - Project Settings → API → Project API keys
-   - Copy "anon" public key
-
-4. **CRON_SECRET**:
+2. **CRON_SECRET**:
    - Generate a secure random string:
    ```bash
    openssl rand -base64 32

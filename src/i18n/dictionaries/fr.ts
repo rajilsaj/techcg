@@ -184,9 +184,11 @@ export const fr = {
 
   "authApi.notConfigured":
     "La connexion n'est pas encore configurée sur le serveur. Veuillez réessayer plus tard.",
-  "authApi.invalidCredentials":
-    "Les identifiants de connexion du serveur sont invalides. Veuillez réessayer plus tard.",
   "authApi.invalidToken": "Jeton de connexion invalide ou expiré.",
+  "authApi.invalidRequest": "Requête de connexion invalide.",
+  "authApi.tokenRevoked": "Cette session a été révoquée. Veuillez vous reconnecter.",
+  "authApi.unsupportedProvider": "Ce mode de connexion n'est pas pris en charge.",
+  "authApi.internal": "La connexion a échoué. Veuillez réessayer dans un instant.",
 
   "auth.google": "Continuer avec Google",
   "auth.googleOpening": "Ouverture de Google…",
