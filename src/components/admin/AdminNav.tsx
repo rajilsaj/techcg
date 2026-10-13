@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BarChart3,
+  Download,
   FileText,
   FolderTree,
   History,
@@ -20,6 +21,7 @@ const ITEMS: { href: string; label: string; icon: LucideIcon; badge?: "comments"
   { href: "/godmod", label: "Tableau de bord", icon: LayoutDashboard },
   { href: "/godmod/statistiques", label: "Statistiques", icon: BarChart3 },
   { href: "/godmod/articles", label: "Articles", icon: FileText },
+  { href: "/godmod/importation", label: "Importation", icon: Download },
   { href: "/godmod/commentaires", label: "Commentaires", icon: MessageSquare, badge: "comments" },
   { href: "/godmod/categories", label: "Catégories", icon: FolderTree },
   { href: "/godmod/etiquettes", label: "Étiquettes", icon: Tags },

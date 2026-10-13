@@ -120,6 +120,9 @@ const NOTICES: Record<string, string> = {
   "last-admin": "Il doit rester au moins un administrateur.",
   "blob-missing": "Le stockage de fichiers n'est pas configuré.",
   "invalid-url": "Adresse URL invalide.",
+  imported: "Importation terminée : de nouveaux articles ont été ajoutés.",
+  "import-done": "Importation terminée : aucun nouvel article (voir le résultat ci-dessous).",
+  "demo-removed": "Les articles de démonstration ont été supprimés.",
   "name-required": "Le nom est obligatoire.",
 };
 
@@ -127,7 +130,7 @@ const NOTICES: Record<string, string> = {
 export function AdminNotice({ notice }: { notice?: string }) {
   const text = notice ? NOTICES[notice] : undefined;
   if (!text) return null;
-  const warning = ["no-selection", "slug-taken", "self-protect", "last-admin", "blob-missing", "invalid-url", "name-required"].includes(notice!);
+  const warning = ["no-selection", "slug-taken", "self-protect", "last-admin", "blob-missing", "invalid-url", "name-required", "import-done"].includes(notice!);
   return (
     <p
       role="status"

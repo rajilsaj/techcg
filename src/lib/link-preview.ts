@@ -125,7 +125,15 @@ interface RawResponse {
   body: string;
 }
 
-function request(url: URL): Promise<RawResponse> {
+interface RequestOptions {
+  /** Content types whose body is worth reading (default: HTML). */
+  accept?: RegExp;
+  /** Stop reading after this many bytes. */
+  maxBytes?: number;
+  acceptHeader?: string;
+}
+
+function request(url: URL, { accept = /html/i, maxBytes = MAX_HTML_BYTES, acceptHeader }: RequestOptions = {}): Promise<RawResponse> {
   // A literal IP in the URL never goes through DNS, so check it here.
   const host = url.hostname.replace(/^\[|\]$/g, "");
   if (net.isIP(host) && !isPublicIp(host)) {
@@ -142,7 +150,7 @@ function request(url: URL): Promise<RawResponse> {
         timeout: TIMEOUT_MS,
         headers: {
           "User-Agent": USER_AGENT,
-          Accept: "text/html,application/xhtml+xml;q=0.9,*/*;q=0.5",
+          Accept: acceptHeader ?? "text/html,application/xhtml+xml;q=0.9,*/*;q=0.5",
           "Accept-Encoding": "gzip, deflate, br",
           "Accept-Language": "fr,en;q=0.8",
         },
@@ -154,7 +162,7 @@ function request(url: URL): Promise<RawResponse> {
         const contentLanguage = String(res.headers["content-language"] ?? "");
 
         // Only HTML bodies of successful responses are worth reading.
-        if (status >= 300 || !/html/i.test(contentType)) {
+        if (status >= 300 || !accept.test(contentType)) {
           res.resume();
           return resolve({ status, location, contentType, contentLanguage, body: "" });
         }
@@ -178,7 +186,7 @@ function request(url: URL): Promise<RawResponse> {
         stream.on("data", (chunk: Buffer) => {
           chunks.push(chunk);
           size += chunk.length;
-          if (size >= MAX_HTML_BYTES) finish();
+          if (size >= maxBytes) finish();
         });
         stream.on("end", finish);
         stream.on("error", (err) => (done ? undefined : reject(err)));
@@ -202,7 +210,7 @@ function classifyError(err: unknown): PreviewFailure {
 
 const ENTITIES: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " };
 
-function decodeEntities(value: string): string {
+export function decodeEntities(value: string): string {
   return value.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (match, entity: string) => {
     if (entity[0] === "#") {
       const code = entity[1].toLowerCase() === "x" ? parseInt(entity.slice(2), 16) : parseInt(entity.slice(1), 10);
@@ -238,7 +246,7 @@ function absoluteHttpUrl(value: string | null | undefined, base: URL): string | 
 }
 
 /** Strips tags from an HTML fragment and decodes entities. */
-function plainText(fragment: string): string {
+export function plainText(fragment: string): string {
   return decodeEntities(fragment.replace(/<[^>]+>/g, " ")).replace(/\s+/g, " ").trim();
 }
 
@@ -281,7 +289,7 @@ export function firstContentImage(html: string): string | undefined {
   return undefined;
 }
 
-function primaryLanguage(value: string | undefined | null): string | null {
+export function primaryLanguage(value: string | undefined | null): string | null {
   const lang = value?.trim().toLowerCase().split(/[-_,;\s]/)[0];
   return lang && /^[a-z]{2,3}$/.test(lang) ? lang : null;
 }
@@ -331,6 +339,42 @@ export function parseMetadata(html: string, pageUrl: URL, contentLanguage = ""):
     siteName: clean(meta["og:site_name"] ?? meta["application-name"], 80),
     lang: primaryLanguage(htmlLang) ?? primaryLanguage(meta["og:locale"]) ?? primaryLanguage(contentLanguage),
   };
+}
+
+/* ---------- Generic safe fetch (also used by the importer) ---------- */
+
+export type FetchResult =
+  | { ok: true; url: URL; status: number; contentType: string; contentLanguage: string; body: string }
+  | { ok: false; reason: PreviewFailure; status?: number };
+
+/**
+ * GETs a public page with the same protections as previews (public addresses only,
+ * re-checked on every redirect, timeout, size cap). The body is read only when its
+ * content type matches `accept`.
+ */
+export async function fetchPublic(input: string | URL, options: RequestOptions = {}): Promise<FetchResult> {
+  let url = typeof input === "string" ? normalizeUrl(input) : input;
+  if (!url) return { ok: false, reason: "invalid" };
+
+  for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+    let res: RawResponse;
+    try {
+      res = await request(url, options);
+    } catch (err) {
+      return { ok: false, reason: classifyError(err) };
+    }
+    if (res.status >= 300 && res.status < 400 && res.location) {
+      const next = normalizeUrl(new URL(res.location, url).toString());
+      if (!next) return { ok: false, reason: "unreachable" };
+      url = next;
+      continue;
+    }
+    if (res.status === 404 || res.status === 410) return { ok: false, reason: "not_found", status: res.status };
+    if (res.status >= 500) return { ok: false, reason: "server_error", status: res.status };
+    if (res.status >= 400) return { ok: false, reason: "restricted", status: res.status };
+    return { ok: true, url, status: res.status, contentType: res.contentType, contentLanguage: res.contentLanguage, body: res.body };
+  }
+  return { ok: false, reason: "unreachable" };
 }
 
 /* ---------- Entry point ---------- */
