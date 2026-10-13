@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { ArrowRight, Briefcase, BrainCircuit, LayoutGrid, PartyPopper, Search, SlidersHorizontal, X } from "lucide-react";
-import { TOPICS, type TopicSlug } from "@/lib/topics";
+import { X } from "lucide-react";
+import { TOPICS } from "@/lib/topics";
 import { filtersQuery, hasAdvancedFilters, hasFilters, PERIODS, SORT_PARAM, type StoryFilters } from "@/lib/story-filters";
 import type { StoryOrder } from "@/lib/stories";
 import { t, type Key } from "@/i18n";
@@ -9,22 +9,20 @@ const fieldClass =
   "w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text placeholder:text-text-secondary/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30";
 const labelClass = "mb-1 block text-xs font-medium text-text-secondary";
 
-const TOPIC_ICONS: Record<TopicSlug, typeof Search> = { evenements: PartyPopper, ia: BrainCircuit, entrepreneurs: Briefcase };
-
 function href(filters: StoryFilters, override: Partial<StoryFilters>): string {
   const query = filtersQuery(filters, override).toString();
   return query ? `/?${query}` : "/";
 }
 
 /**
- * One bar above the homepage feed: category pills, the search field, an advanced
- * search toggle and the search button. A plain GET form (the advanced panel opens
+ * One plain text bar above the homepage feed: categories, the search field, an
+ * advanced search toggle and the search button. A plain GET form (the advanced panel opens
  * with a CSS-only checkbox), so it works without JavaScript and every result has a URL.
  */
 export function StoryFilterBar({ filters }: { filters: StoryFilters }) {
   const pill = (active: boolean) =>
-    `inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-all ${
-      active ? "bg-accent text-white shadow-md shadow-accent/30" : "text-text-secondary hover:bg-bg hover:text-accent"
+    `shrink-0 rounded-full px-3 py-1.5 text-sm transition-colors ${
+      active ? "bg-accent font-medium text-white" : "text-text-secondary hover:text-accent"
     }`;
   const advanced = hasAdvancedFilters(filters);
 
@@ -35,55 +33,43 @@ export function StoryFilterBar({ filters }: { filters: StoryFilters }) {
         {/* Checked = advanced panel open. Kept first so the panel can use `peer-checked`. */}
         <input type="checkbox" id="advanced-search" className="peer sr-only" defaultChecked={advanced} />
 
-        <div className="flex flex-col gap-1 rounded-3xl border border-border bg-bg-secondary p-1.5 transition-shadow focus-within:border-accent/60 focus-within:shadow-lg focus-within:shadow-accent/10 md:flex-row md:items-center md:rounded-full">
+        <div className="flex flex-col gap-1 rounded-3xl border border-border p-1 focus-within:border-accent/60 md:flex-row md:items-center md:rounded-full">
           <nav aria-label={t("filters.label")} className="scrollbar-none flex gap-1 overflow-x-auto">
             <Link href={href(filters, { topic: null })} className={pill(!filters.topic)} aria-current={!filters.topic ? "page" : undefined}>
-              <LayoutGrid size={14} aria-hidden />
               {t("filters.all")}
             </Link>
             {TOPICS.map((topic) => {
-              const Icon = TOPIC_ICONS[topic.slug];
               const active = filters.topic === topic.slug;
               return (
                 <Link key={topic.slug} href={href(filters, { topic: topic.slug })} className={pill(active)} aria-current={active ? "page" : undefined}>
-                  <Icon size={14} aria-hidden />
                   {topic.label}
                 </Link>
               );
             })}
           </nav>
 
-          <span className="mx-1 hidden h-6 w-px bg-border md:block" aria-hidden />
+          <span className="mx-2 hidden h-5 w-px bg-border md:block" aria-hidden />
 
           <div className="flex min-w-0 flex-1 items-center gap-1">
-            <label className="relative min-w-0 flex-1">
+            <label className="min-w-0 flex-1">
               <span className="sr-only">{t("filters.search")}</span>
-              <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" aria-hidden />
               <input
                 type="search"
                 name="q"
                 defaultValue={filters.q}
                 maxLength={100}
                 placeholder={t("filters.search")}
-                className="w-full rounded-full bg-transparent py-2 pl-9 pr-2 text-sm text-text placeholder:text-text-secondary/70 focus:outline-none"
+                className="w-full border-0 bg-transparent px-3 py-1.5 text-sm text-text shadow-none placeholder:text-text-secondary/70 focus:outline-none focus:ring-0"
               />
             </label>
             <label
               htmlFor="advanced-search"
-              title={t("filters.advanced")}
-              className={`relative grid h-9 w-9 shrink-0 cursor-pointer place-items-center rounded-full transition-colors hover:bg-bg hover:text-accent ${advanced ? "text-accent" : "text-text-secondary"}`}
+              className={`shrink-0 cursor-pointer rounded-full px-3 py-1.5 text-sm transition-colors hover:text-accent ${advanced ? "text-accent" : "text-text-secondary"}`}
             >
-              <SlidersHorizontal size={16} aria-hidden />
-              <span className="sr-only">{t("filters.advanced")}</span>
-              {advanced && <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-accent ring-2 ring-bg-secondary" aria-hidden />}
+              {t("filters.advancedShort")}
             </label>
-            <button
-              type="submit"
-              title={t("filters.searchButton")}
-              className="group grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent text-white transition hover:scale-105"
-            >
-              <ArrowRight size={17} className="transition-transform group-hover:translate-x-0.5" aria-hidden />
-              <span className="sr-only">{t("filters.searchButton")}</span>
+            <button type="submit" className="shrink-0 rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-white transition-opacity hover:opacity-90">
+              {t("filters.searchButton")}
             </button>
           </div>
         </div>

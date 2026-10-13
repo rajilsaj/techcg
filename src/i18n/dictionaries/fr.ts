@@ -44,7 +44,7 @@ export const fr = {
   "filters.all": "Tout",
   "filters.search": "Rechercher un article, un sujet, un site…",
   "filters.searchButton": "Rechercher",
-  "filters.advanced": "Recherche avancée",
+  "filters.advancedShort": "Avancée",
   "filters.topic": "Catégorie",
   "filters.anyTopic": "Toutes",
   "filters.site": "Site",
