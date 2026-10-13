@@ -141,6 +141,13 @@ textarea:focus {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-6px); }
 }
+/* Orbits keep their centring translate while turning. */
+@keyframes auth-spin {
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+@keyframes auth-spin-reverse {
+  to { transform: translate(-50%, -50%) rotate(-360deg); }
+}
 
 .auth-view {
   animation: auth-view-in 220ms ease-out both;
@@ -152,11 +159,19 @@ textarea:focus {
 .auth-float {
   animation: auth-float 5s ease-in-out infinite;
 }
+.auth-spin {
+  animation: auth-spin 60s linear infinite;
+}
+.auth-spin-reverse {
+  animation: auth-spin-reverse 40s linear infinite;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .auth-view,
   .auth-rise,
-  .auth-float {
+  .auth-float,
+  .auth-spin,
+  .auth-spin-reverse {
     animation: none;
   }
 }
