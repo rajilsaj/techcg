@@ -1,24 +1,12 @@
 import { cache } from "react";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
-import bcrypt from "bcrypt";
 import { prisma } from "./db";
 
 export const SESSION_COOKIE = "session";
 /** Pre-signing cookie that held a bare user id; ignored and cleared on logout. */
 const LEGACY_SESSION_COOKIE = "user_id";
 export const SESSION_MAX_AGE = 30 * 24 * 60 * 60; // 30 days
-
-export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, 10);
-}
-
-export async function verifyPassword(
-  password: string,
-  hash: string
-): Promise<boolean> {
-  return bcrypt.compare(password, hash);
-}
 
 export interface Session {
   userId: number;

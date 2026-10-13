@@ -1,15 +1,16 @@
 # Authentication
 
-Members sign in with **Google** or an **SMS code** (and, for account recovery, an **email link**) through Firebase Auth in the browser. The server never trusts the browser: it verifies the Firebase ID token, then maps it to a row in the `User` table and issues its own session cookie.
+Members sign in with their **Google account** only, through Firebase Auth in the browser (no password, no phone number). The server never trusts the browser: it verifies the Firebase ID token, then maps it to a row in the `User` table and issues its own session cookie.
 
 ```
-Browser (Firebase Auth: Google / SMS / email link)
+Browser (Firebase Auth: Google)
    │  ID token
    ▼
 POST /api/v1/auth/session                       src/app/api/v1/auth/session/route.ts
    1. verifyFirebaseIdToken(idToken)             src/lib/auth-sync/firebase.ts
         Firebase Admin SDK: signature, expiry, audience, revocation
-        → { firebaseUid, provider, email?, phone?, displayName? }
+        Google accounts with a verified email only
+        → { firebaseUid, email, displayName? }
    2. syncIdentity(identity)                     src/lib/auth-sync/identity.ts
         idempotent upsert into "User", keyed by the unique "firebaseUid"
    3. createSession(userId)                      src/lib/auth.ts
@@ -20,15 +21,15 @@ POST /api/v1/auth/session                       src/app/api/v1/auth/session/rout
 
 ## Guarantees
 
-- **Idempotent.** Re-sending the same token returns the same account. Existing email and phone values are never overwritten; missing ones are filled in. Two simultaneous first sign-ins of the same person resolve to one account (unique `firebaseUid`), and username clashes retry with the next free name (`jean`, `jean2`, …).
-- **Only verified data.** Emails are stored only when Firebase vouches for them (verified, or a Google account). Other sign-in methods (anonymous, GitHub…) are refused.
+- **Idempotent.** Re-sending the same token returns the same account. An existing email is never overwritten; a missing one is filled in. Two simultaneous first sign-ins of the same person resolve to one account (unique `firebaseUid`), and username clashes retry with the next free name (`jean`, `jean2`, …).
+- **Google only.** Tokens from any other sign-in method (SMS, email link, anonymous…) or without a verified email are refused.
 - **Suspended accounts** (`banned`, or disabled in Firebase) get no session.
 - **Predictable errors.** Every failure returns `{ "error": { "code", "message" } }` with a fixed status; database and SDK details are logged server-side, never returned.
 
 | `code` | Status | When |
 |---|---|---|
 | `invalid_request` | 400 | missing, empty or oversized `idToken`, malformed JSON |
-| `unsupported_provider` | 400 | token from a sign-in method the site doesn't offer |
+| `unsupported_provider` | 400 | not a Google sign-in, or no verified email |
 | `invalid_token` | 401 | expired, forged or wrong-project token |
 | `token_revoked` | 401 | token revoked in Firebase |
 | `account_suspended` | 403 | member suspended in the admin, or user disabled in Firebase |

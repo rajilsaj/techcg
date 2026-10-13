@@ -53,16 +53,16 @@ beforeEach(() => {
 });
 
 describe("identityFromToken", () => {
-  it("accepts Google, SMS and email-link sign-ins", () => {
-    expect(identityFromToken(token()).provider).toBe("google");
-    expect(identityFromToken(token({ provider: "phone", phone_number: "+242061234567", email: undefined })).phone).toBe("+242061234567");
-    expect(identityFromToken(token({ provider: "password" })).provider).toBe("email_link");
+  it("accepts Google accounts with a verified email", () => {
+    expect(identityFromToken(token())).toEqual({ firebaseUid: "uid-abc123", email: "jean.mabiala@gmail.com", displayName: "Jean Mabiala" });
   });
 
-  it("rejects other providers and ignores unverified emails", () => {
-    expect(() => identityFromToken(token({ provider: "anonymous" }))).toThrow("unsupported_provider");
-    expect(identityFromToken(token({ provider: "password", email_verified: false })).email).toBeNull();
-    expect(identityFromToken(token()).email).toBe("jean.mabiala@gmail.com");
+  it("rejects SMS, email-link and other sign-ins, and unverified emails", () => {
+    for (const provider of ["phone", "password", "anonymous", "github.com"]) {
+      expect(() => identityFromToken(token({ provider }))).toThrow("unsupported_provider");
+    }
+    expect(() => identityFromToken(token({ email_verified: false }))).toThrow("unsupported_provider");
+    expect(() => identityFromToken(token({ email: undefined }))).toThrow("unsupported_provider");
   });
 });
 
@@ -88,11 +88,23 @@ describe("POST /api/v1/auth/session", () => {
     expect(verifyIdToken).toHaveBeenCalledWith("t", true); // revocation checked
   });
 
-  it("fills a missing phone but never overwrites existing values", async () => {
-    users.push({ id: 1, username: "jean", firebaseUid: "uid-abc123", email: "old@x.cg", phone: null, banned: false });
-    verifyIdToken.mockResolvedValue(token({ provider: "phone", phone_number: "+242060000000", email: "new@x.cg" }));
+  it("fills a missing email but never overwrites an existing one", async () => {
+    users.push({ id: 1, username: "jean", firebaseUid: "uid-abc123", email: null, phone: null, banned: false });
+    users.push({ id: 2, username: "paul", firebaseUid: "uid-paul", email: "old@x.cg", phone: null, banned: false });
+    verifyIdToken.mockResolvedValueOnce(token());
     await post({ idToken: "t" });
-    expect(users[0]).toMatchObject({ email: "old@x.cg", phone: "+242060000000" });
+    verifyIdToken.mockResolvedValueOnce(token({ uid: "uid-paul", email: "new@gmail.com" }));
+    await post({ idToken: "t" });
+    expect(users[0].email).toBe("jean.mabiala@gmail.com");
+    expect(users[1].email).toBe("old@x.cg");
+  });
+
+  it("refuses an SMS sign-in", async () => {
+    verifyIdToken.mockResolvedValue(token({ provider: "phone", phone_number: "+242060000000", email: undefined }));
+    const res = await post({ idToken: "t" });
+    expect(res.status).toBe(400);
+    expect((await res.json()).error.code).toBe("unsupported_provider");
+    expect(createSession).not.toHaveBeenCalled();
   });
 
   it("picks a free username when the preferred one is taken", async () => {

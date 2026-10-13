@@ -67,8 +67,6 @@ export const fr = {
 
   "meta.login": "Connexion",
   "meta.register": "Inscription",
-  "meta.recover": "Aide au compte",
-  "meta.authComplete": "Connexion en cours",
 
   "section.top": "À la une",
   "section.newest": "Récents",
@@ -192,84 +190,24 @@ export const fr = {
 
   "auth.google": "Continuer avec Google",
   "auth.googleOpening": "Ouverture de Google…",
-  "auth.or": "ou",
   "auth.finishFailed": "Impossible de finaliser la connexion. Veuillez réessayer.",
-  "auth.invalidPhone": "Saisissez un numéro de téléphone valide, avec le bon indicatif pays.",
-  "auth.trouble": "Un problème pour vous connecter ?",
-  "auth.getHelp": "Obtenir de l'aide",
-  "auth.backToSignin": "Retour à la connexion",
 
   "auth.landing.titleSignin": "Bon retour",
   "auth.landing.titleSignup": "Rejoindre {site}",
-  "auth.landing.subtitle": "Pas de mot de passe ici. Continuez avec Google, ou recevez un code par SMS.",
-  "auth.landing.sendCode": "Recevoir un code par SMS",
-  "auth.landing.sendingCode": "Envoi du code…",
+  "auth.landing.subtitle": "Connectez-vous avec votre compte Google. Pas de mot de passe à retenir.",
   "auth.landing.autoCreate": "Nouveau ici ? La connexion crée votre compte automatiquement.",
-
-  "auth.phone.label": "Numéro de téléphone",
-  "auth.phone.countryCode": "Indicatif pays",
-  "auth.phone.placeholder": "06 123 4567",
-  "auth.phone.hint": "Nous vous enverrons un code à usage unique par SMS. Tarif SMS standard applicable.",
-
-  "auth.otp.title": "Vérifiez votre téléphone",
-  "auth.otp.sentTo": "Saisissez le code à 6 chiffres envoyé au",
-  "auth.otp.digit": "Chiffre {n} sur {total}",
-  "auth.otp.verify": "Vérifier",
-  "auth.otp.verifying": "Vérification…",
-  "auth.otp.signingIn": "Connexion…",
-  "auth.otp.resendIn": "Renvoyer dans {time}",
-  "auth.otp.resend": "Renvoyer le code",
-  "auth.otp.changeNumber": "Changer de numéro",
-
-  "auth.recovery.title": "Impossible de vous connecter ?",
-  "auth.recovery.subtitle":
-    "Les comptes {site} n'ont pas de mot de passe, il n'y a donc rien à réinitialiser. Choisissez l'option qui correspond à votre inscription.",
-  "auth.recovery.google": "Je me suis inscrit avec Gmail",
-  "auth.recovery.lostPhone": "Je n'ai plus accès à mon numéro de téléphone",
-  "auth.recovery.linkSentBefore": "Nous avons envoyé un lien de connexion à",
-  "auth.recovery.linkSentAfter": ". Il expire dans environ une heure.",
-  "auth.recovery.useOtherEmail": "Utiliser une autre adresse",
-  "auth.recovery.emailLabel": "Adresse e-mail",
-  "auth.recovery.emailPlaceholder": "vous@exemple.com",
-  "auth.recovery.sendLink": "M'envoyer un lien de connexion",
-  "auth.recovery.sendingLink": "Envoi du lien…",
-  "auth.recovery.newPhone": "J'ai un nouveau numéro de téléphone",
-  "auth.recovery.otherNumber": "Se connecter avec un autre numéro",
-  "auth.recovery.whyTitle": "Pourquoi n'y a-t-il pas de mot de passe ?",
-  "auth.recovery.whyBody":
-    "Votre compte Google ou votre numéro de téléphone prouve déjà votre identité, nous ne stockons donc jamais de mot de passe susceptible de fuiter ou d'être oublié. Si aucune des options ci-dessus ne fonctionne, connectez-vous avec Google pour repartir de zéro.",
-
-  "auth.magic.invalidPage":
-    "Cette page ne fonctionne qu'en ouvrant le lien de connexion que nous vous avons envoyé par e-mail.",
-  "auth.magic.requestNew": "Demander un nouveau lien",
-  "auth.magic.done": "Connecté. Redirection vers l'accueil…",
-  "auth.magic.working": "Vérification de votre lien de connexion…",
-  "auth.magic.confirmTitle": "Confirmez votre e-mail",
-  "auth.magic.confirmBody":
-    "Il semble que vous ayez ouvert ce lien sur un autre appareil. Saisissez l'adresse e-mail utilisée pour le demander afin de finaliser la connexion.",
-  "auth.magic.finish": "Finaliser la connexion",
-  "auth.magic.failedTitle": "Le lien n'a pas fonctionné",
 
   "authError.popupClosed": "La fenêtre Google a été fermée avant la fin. Réessayez quand vous êtes prêt.",
   "authError.popupCancelled": "Une seule fenêtre de connexion peut être ouverte à la fois.",
   "authError.popupBlocked":
     "Votre navigateur a bloqué la fenêtre de connexion. Autorisez les pop-ups pour ce site et réessayez.",
-  "authError.invalidPhone": "Ce numéro de téléphone semble incorrect. Vérifiez l'indicatif pays et les chiffres.",
-  "authError.missingPhone": "Saisissez votre numéro de téléphone pour continuer.",
   "authError.tooManyRequests": "Trop de tentatives. Patientez quelques minutes avant de réessayer.",
-  "authError.invalidCode": "Ce code est incorrect. Vérifiez le SMS et réessayez.",
-  "authError.codeExpired": "Ce code a expiré. Demandez-en un nouveau.",
   "authError.network": "Erreur réseau. Vérifiez votre connexion et réessayez.",
   "authError.notAllowed": "Cette méthode de connexion n'est pas encore activée. Veuillez contacter le support.",
-  "authError.invalidEmail": "Cette adresse e-mail semble incorrecte.",
-  "authError.invalidLink": "Ce lien de connexion est invalide ou a déjà été utilisé. Demandez-en un nouveau.",
-  "authError.expiredLink": "Ce lien de connexion a expiré. Demandez-en un nouveau.",
   "authError.accountExists":
     "Un compte existe déjà pour cette adresse e-mail avec une autre méthode de connexion.",
   "authError.unauthorizedDomain":
     "Ce domaine n'est pas autorisé pour la connexion. Ajoutez-le dans la console Firebase.",
-  "authError.captcha": "La vérification a échoué. Rechargez la page et réessayez.",
-  "authError.missingEmail": "Saisissez l'adresse e-mail utilisée pour demander le lien.",
   "authError.generic": "Une erreur est survenue. Veuillez réessayer.",
 
   "country.CG": "Congo-Brazzaville",

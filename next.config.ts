@@ -9,13 +9,16 @@ const ENGLISH_PATHS: [string, string][] = [
   ["/comments", "/commentaires"],
   ["/login", "/connexion"],
   ["/register", "/inscription"],
-  ["/recover", "/recuperation"],
+  ["/recover", "/connexion"],
   ["/submit", "/publier"],
   ["/item/:id", "/publication/:id"],
   ["/user/:username", "/profil/:username"],
-  ["/auth/complete", "/connexion/confirmation"],
+  ["/auth/complete", "/connexion"],
+  // Phone and email-link sign-in were removed: Google only.
+  ["/recuperation", "/connexion"],
+  ["/connexion/confirmation", "/connexion"],
   ["/godmod/users", "/godmod/utilisateurs"],
-  ["/godmod/content", "/godmod/moderation"],
+  ["/godmod/content", "/godmod/commentaires"],
   ["/godmod/settings", "/godmod/parametres"],
 ];
 

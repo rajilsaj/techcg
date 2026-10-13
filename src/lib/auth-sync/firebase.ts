@@ -2,39 +2,28 @@ import type { DecodedIdToken } from "firebase-admin/auth";
 import { FirebaseAdminNotConfiguredError, getFirebaseAdminAuth } from "../firebase-admin";
 import { AuthSyncError } from "./errors";
 
-/** Sign-in methods the site offers: Google, SMS, and the email link used for account recovery. */
-const PROVIDERS = { "google.com": "google", phone: "phone", password: "email_link", emailLink: "email_link" } as const;
-export type SignInProvider = (typeof PROVIDERS)[keyof typeof PROVIDERS];
-
-/** What the rest of the backend needs to know about a verified Firebase user. */
+/** What the rest of the backend needs to know about a verified Google user. */
 export interface VerifiedIdentity {
   firebaseUid: string;
-  provider: SignInProvider;
-  /** Only when Firebase vouches for it (verified email or Google account). */
-  email: string | null;
-  /** E.164, from SMS sign-in. */
-  phone: string | null;
+  /** Verified by Google. */
+  email: string;
   displayName: string | null;
 }
 
-/** Maps a decoded token to an identity, rejecting sign-in methods the site doesn't offer. */
+/** Maps a decoded token to an identity. Only Google accounts with a verified email are accepted. */
 export function identityFromToken(token: DecodedIdToken): VerifiedIdentity {
-  const provider = PROVIDERS[token.firebase?.sign_in_provider as keyof typeof PROVIDERS];
-  if (!provider) throw new AuthSyncError("unsupported_provider");
-
-  const emailTrusted = !!token.email && (token.email_verified === true || provider === "google");
+  if (token.firebase?.sign_in_provider !== "google.com") throw new AuthSyncError("unsupported_provider");
+  if (!token.email || token.email_verified !== true) throw new AuthSyncError("unsupported_provider");
   return {
     firebaseUid: token.uid,
-    provider,
-    email: emailTrusted ? token.email!.toLowerCase() : null,
-    phone: token.phone_number ?? null,
+    email: token.email.toLowerCase(),
     displayName: typeof token.name === "string" && token.name.trim() ? token.name.trim() : null,
   };
 }
 
 /**
  * Verifies a client ID token with the Firebase Admin SDK (signature, expiry,
- * audience and revocation) and returns the identity it proves.
+ * audience and revocation) and returns the Google identity it proves.
  */
 export async function verifyFirebaseIdToken(idToken: string): Promise<VerifiedIdentity> {
   let token: DecodedIdToken;
