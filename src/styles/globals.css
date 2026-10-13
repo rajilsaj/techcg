@@ -137,24 +137,63 @@ textarea:focus {
     transform: none;
   }
 }
-
-@keyframes auth-shake {
-  0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-4px); }
-  40%, 80% { transform: translateX(4px); }
+@keyframes auth-twinkle {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+@keyframes auth-flow {
+  0%, 100% { stroke-opacity: 0.12; }
+  50% { stroke-opacity: 0.4; }
+}
+@keyframes auth-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(40px, -30px) scale(1.15); }
 }
 
 .auth-view {
   animation: auth-view-in 220ms ease-out both;
 }
+/* Staggered entrance; each element sets its own animation-delay. */
+.auth-rise {
+  animation: auth-view-in 600ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.auth-dot {
+  animation: auth-twinkle 4s ease-in-out infinite;
+}
+.auth-link {
+  animation: auth-flow 6s ease-in-out infinite;
+}
+.auth-orb {
+  animation: auth-drift 14s ease-in-out infinite;
+}
 
-.auth-shake {
-  animation: auth-shake 360ms ease-in-out;
+/* Footer credits */
+@keyframes credit-shimmer {
+  to { background-position: 200% center; }
+}
+@keyframes credit-spin {
+  to { transform: rotate(360deg); }
+}
+.credit-shimmer {
+  background: linear-gradient(90deg, var(--accent), #22d3ee, #a855f7, var(--accent)) 0 center / 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: credit-shimmer 6s linear infinite;
+}
+.credit-spin {
+  display: inline-block;
+  animation: credit-spin 8s linear infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .auth-view,
-  .auth-shake {
+  .auth-rise,
+  .auth-dot,
+  .auth-link,
+  .auth-orb,
+  .credit-shimmer,
+  .credit-spin {
     animation: none;
   }
 }

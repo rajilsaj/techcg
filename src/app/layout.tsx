@@ -3,6 +3,7 @@ import { Quicksand } from "next/font/google";
 import { getSettings } from "@/lib/settings";
 import { t } from "@/i18n";
 import { VisitTracker } from "@/components/analytics/VisitTracker";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 import "@/styles/globals.css";
 
 const quicksand = Quicksand({ subsets: ["latin"], variable: "--font-quicksand", display: "swap" });
@@ -36,6 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {t("site.skipToContent")}
         </a>
         <main id="main">{children}</main>
+        <SiteFooter />
         <VisitTracker />
       </body>
     </html>
