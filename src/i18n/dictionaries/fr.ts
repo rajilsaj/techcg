@@ -227,6 +227,7 @@ export const fr = {
   "footer.rights": "Tous droits réservés",
   "auth.stage.subtitle": "Lisez, votez et discutez la tech d'Afrique centrale.",
   "auth.stage.subtitleSignup": "Rejoignez la communauté tech d'Afrique centrale.",
+  "auth.stage.back": "Retour au site",
   "auth.stage.signin": "Se connecter",
   "auth.stage.signup": "Créer un compte",
   "auth.stage.withGoogle": "Avec votre compte Google, sans mot de passe",

@@ -4,6 +4,7 @@ import { useState, type CSSProperties, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Briefcase, BrainCircuit, PartyPopper, Rocket } from "lucide-react";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { describeAuthError, signInWithGoogle } from "@/lib/firebase-auth";
 import { establishSession } from "@/lib/session-client";
 import { t } from "@/i18n";
@@ -93,7 +94,15 @@ export function AuthStage({
   const soft = "border border-border bg-bg-secondary text-accent";
 
   return (
-    <div className="flex min-h-[calc(100vh-65px)] flex-col items-center justify-center bg-bg px-4 py-10 text-text">
+    <div className="relative flex min-h-screen flex-col items-center justify-center bg-bg px-4 py-16 text-text">
+      {/* No site header here: just a way home and the theme button */}
+      <div className="absolute inset-x-0 top-0 flex items-center justify-between px-4 py-3 sm:px-6">
+        <Link href="/" className="text-sm text-text-secondary transition-colors hover:text-accent">
+          ← {t("auth.stage.back")}
+        </Link>
+        <ThemeToggle />
+      </div>
+
       {/* The cluster */}
       <div className="auth-rise relative aspect-[10/9] w-full max-w-[22rem]" aria-hidden="true">
         {/* Orbits the bubbles seem to travel on */}

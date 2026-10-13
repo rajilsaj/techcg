@@ -4,10 +4,11 @@ import { usePathname } from "next/navigation";
 import { SITE } from "@/lib/site";
 import { t } from "@/i18n";
 
-/** Site-wide footer with the project credits. Not shown in the admin. */
+/** Site-wide footer with the project credits. */
 export function SiteFooter() {
   const pathname = usePathname();
-  if (pathname?.startsWith("/godmod")) return null;
+  // Not in the admin, nor on the full-screen sign-in pages.
+  if (pathname?.startsWith("/godmod") || pathname === "/connexion" || pathname === "/inscription") return null;
 
   return (
     <footer className="mt-12 border-t border-border">
