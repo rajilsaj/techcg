@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireAdminPage } from "@/lib/admin";
 import { formatLocalDateTime } from "@/lib/local-time";
 import { listCategories } from "@/lib/taxonomy";
-import { SubmitButton } from "@/components/admin/FormControls";
+import { PendingNotice, SubmitButton } from "@/components/admin/FormControls";
 import { AdminHeader, AdminNotice, Card, buttonClass, inputClass, primaryButtonClass, tdClass, thClass } from "@/components/admin/ui";
 import { createSourceAction, deleteSourceAction, removeDemoAction, runImportAction, updateSourceAction } from "./actions";
 
@@ -12,6 +12,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 const label = "mb-1 block text-sm font-medium text-text";
+const IMPORT_NOTICE = "Importation en cours… Cela peut prendre jusqu'à une minute, gardez cette page ouverte.";
 
 interface PageProps {
   searchParams: Promise<Record<string, string | undefined>>;
@@ -51,9 +52,10 @@ export default async function ImportPage({ searchParams }: PageProps) {
         actions={
           sources.some((s) => s.enabled) && (
             <form action={runImportAction}>
-              <SubmitButton name="run" value="all" className={primaryButtonClass}>
+              <SubmitButton name="run" value="all" className={primaryButtonClass} pendingLabel="Importation…">
                 Tout importer maintenant
               </SubmitButton>
+              <PendingNotice>{IMPORT_NOTICE}</PendingNotice>
             </form>
           )
         }
@@ -76,6 +78,7 @@ export default async function ImportPage({ searchParams }: PageProps) {
       )}
 
       <form className="mb-6">
+        <PendingNotice>{IMPORT_NOTICE}</PendingNotice>
         <div className="overflow-x-auto rounded-xl border border-border bg-bg">
           <table className="w-full min-w-[760px] border-collapse">
             <thead>
@@ -142,7 +145,7 @@ export default async function ImportPage({ searchParams }: PageProps) {
                     </Link>
                   </td>
                   <td className={`${tdClass} text-right`}>
-                    <SubmitButton formAction={runImportAction} name="run" value={String(s.id)} className={buttonClass}>
+                    <SubmitButton formAction={runImportAction} name="run" value={String(s.id)} className={buttonClass} pendingLabel="Importation…">
                       Importer maintenant
                     </SubmitButton>
                   </td>
