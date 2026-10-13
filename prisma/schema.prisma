@@ -97,6 +97,8 @@ model Vote {
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
   itemId Int
   item   Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  /// +1 = upvote, -1 = downvote.
+  value  Int  @default(1)
 
   @@unique([userId, itemId])
   @@index([userId])

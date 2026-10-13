@@ -219,36 +219,24 @@ Response: 201 Created`}
           <Endpoint
             method="POST"
             path="/votes"
-            title="Vote/Unvote"
-            description="Upvote or unvote a story/comment"
-            body="{ itemId: number }"
-            example={`POST /api/v1/votes
+            title="Vote"
+            description="Upvote or downvote a story/comment (signed in)"
+            body="{ itemId: number, value?: 1 | -1 }"
+            example={`POST /api/v1/votes   (signed in)
 
 {
-  "itemId": 1
+  "itemId": 1,
+  "value": 1        // 1 = upvote (default), -1 = downvote
 }
-
-Response: 201 Created
-{
-  "success": true,
-  "data": {
-    "id": 42,
-    "itemId": 1,
-    "userId": 5,
-    "voted": true,
-    "createdAt": "2026-09-21T23:00:00Z"
-  }
-}
-
-// Posting again unvotes
-POST /api/v1/votes
-{ "itemId": 1 }
 
 Response: 200 OK
 {
   "success": true,
-  "data": { "voted": false }
-}`}
+  "data": { "itemId": 1, "vote": 1, "points": 13 }
+}
+
+// Sending the same value again removes the vote ("vote": 0);
+// the other value switches it.`}
           />
         </section>
 

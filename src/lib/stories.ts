@@ -3,6 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import { enrichStories, needsEnrichment } from "./enrich-story";
 import { publiclyVisible } from "./content-status";
+import { viewerVotes, type VoteValue } from "./votes";
 
 export const STORIES_PER_PAGE = 30;
 /** Previews fetched per page view for stories that don't have one yet. */
@@ -30,7 +31,7 @@ const storySelect = {
 } satisfies Prisma.ItemSelect;
 
 export type StoryRecord = Prisma.ItemGetPayload<{ select: typeof storySelect }>;
-export type ListedStory = StoryRecord & { voted: boolean };
+export type ListedStory = StoryRecord & { vote: VoteValue };
 
 export type StoryOrder = "rank" | "newest" | "points";
 
@@ -109,14 +110,7 @@ export async function listStories({
   const hasNext = rows.length > take;
   const page = rows.slice(0, take);
 
-  const votedIds = new Set<number>();
-  if (viewerId && page.length > 0) {
-    const votes = await prisma.vote.findMany({
-      where: { userId: viewerId, itemId: { in: page.map((s) => s.id) } },
-      select: { itemId: true },
-    });
-    for (const vote of votes) votedIds.add(vote.itemId);
-  }
+  const votes = await viewerVotes(viewerId, page.map((s) => s.id));
 
   const pending = page.filter((s) => needsEnrichment(s)).map((s) => s.id).slice(0, ENRICH_PER_VIEW);
   if (pending.length > 0) after(() => enrichStories(pending));
@@ -124,7 +118,7 @@ export async function listStories({
   const last = page[page.length - 1];
   const field = ORDER[order].field;
   return {
-    stories: page.map((s): ListedStory => ({ ...s, voted: votedIds.has(s.id) })),
+    stories: page.map((s): ListedStory => ({ ...s, vote: votes.get(s.id) ?? 0 })),
     nextCursor: hasNext && last ? encodeCursor({ key: field === "id" ? last.id : last[field], id: last.id }) : undefined,
   };
 }

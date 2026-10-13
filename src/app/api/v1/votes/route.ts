@@ -1,61 +1,33 @@
-import { prisma } from "@/lib/db";
 import { createSuccessResponse, createErrorResponse, handleApiError } from "@/lib/api-utils";
-import { API_ERRORS, VoteResponse } from "@/types/api";
+import { API_ERRORS } from "@/types/api";
+import { getSession } from "@/lib/auth";
+import { castVote, isVoteDirection } from "@/lib/votes";
 import { NextRequest } from "next/server";
 
+/**
+ * POST { itemId, value?: 1 | -1 } — upvote (default) or downvote as the signed-in
+ * user. Sending the same value again removes the vote.
+ */
 export async function POST(request: NextRequest) {
   try {
-    // TODO: Add authentication
-    const body = await request.json();
-    const { itemId } = body;
+    const session = await getSession();
+    if (!session) return createErrorResponse(API_ERRORS.UNAUTHORIZED, 401);
 
-    if (!itemId) {
-      return createErrorResponse(API_ERRORS.VALIDATION_ERROR, 400, { message: "itemId required" });
+    const body = await request.json().catch(() => null);
+    const itemId = body?.itemId;
+    const value = body?.value ?? 1;
+    if (!Number.isInteger(itemId) || !isVoteDirection(value)) {
+      return createErrorResponse(API_ERRORS.VALIDATION_ERROR, 400, { message: "itemId (integer) required; value must be 1 or -1" });
     }
 
-    // TODO: Get userId from auth
-    const userId = 1; // Placeholder
-
-    // Check if vote already exists
-    const existingVote = await prisma.vote.findUnique({
-      where: { userId_itemId: { userId, itemId } },
-    });
-
-    if (existingVote) {
-      // Delete vote (unvote)
-      await prisma.vote.delete({
-        where: { id: existingVote.id },
-      });
-
-      // Decrease points
-      await prisma.item.update({
-        where: { id: itemId },
-        data: { points: { decrement: 1 } },
-      });
-
-      return createSuccessResponse({ voted: false });
-    } else {
-      // Create vote
-      const vote = await prisma.vote.create({
-        data: { userId, itemId },
-      });
-
-      // Increase points
-      await prisma.item.update({
-        where: { id: itemId },
-        data: { points: { increment: 1 } },
-      });
-
-      return createSuccessResponse(
-        {
-          id: vote.id,
-          itemId: vote.itemId,
-          userId: vote.userId,
-          voted: true,
-        },
-        201
-      );
+    const result = await castVote(session.userId, itemId, value);
+    if (!result.ok) {
+      if (result.reason === "itemNotFound") return createErrorResponse(API_ERRORS.NOT_FOUND, 404);
+      if (result.reason === "tooNew") return createErrorResponse(API_ERRORS.FORBIDDEN, 403, { message: "New accounts must wait 24 hours before voting" });
+      return createErrorResponse(API_ERRORS.UNAUTHORIZED, 401);
     }
+
+    return createSuccessResponse({ itemId, vote: result.vote, points: result.points });
   } catch (error) {
     return handleApiError(error);
   }

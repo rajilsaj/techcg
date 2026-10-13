@@ -26,8 +26,9 @@ export const fr = {
 
   "story.by": "par",
   "story.in": "dans",
-  "story.like": "J'aime",
-  "story.liked": "Aimé",
+  "vote.label": "Vote",
+  "vote.up": "Vote positif",
+  "vote.down": "Vote négatif",
   "story.hide": "Masquer",
   "story.hidden": "Publication masquée.",
   "story.undoHide": "Annuler",

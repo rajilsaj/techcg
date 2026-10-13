@@ -42,10 +42,10 @@ export async function getSiteStats(now = Date.now()): Promise<SiteStats> {
       (createdAt) => prisma.item.count({ where: { ...live, type: "comment", createdAt } }),
       prisma.item.count({ where: { ...live, type: "comment" } })
     ),
-    // Votes have no timestamp; count them by the age of the liked item instead.
+    // Upvotes ("J'aime"); votes have no timestamp, so count them by the age of the liked item instead.
     windowed(
-      (createdAt) => prisma.vote.count({ where: { item: { createdAt } } }),
-      prisma.vote.count()
+      (createdAt) => prisma.vote.count({ where: { value: 1, item: { createdAt } } }),
+      prisma.vote.count({ where: { value: 1 } })
     ),
     prisma.$queryRaw<{ day: string; count: bigint }[]>`
       SELECT to_char(("createdAt" + make_interval(hours => ${UTC_OFFSET_HOURS}::int))::date, 'YYYY-MM-DD') AS day,

@@ -3,7 +3,7 @@ import { History, MessageSquare } from "lucide-react";
 import { getDomain } from "@/lib/utils";
 import type { ListedStory } from "@/lib/stories";
 import { formatRelativeTime, pluralize, t } from "@/i18n";
-import { HideableStory, HideButton, LikeButton } from "./StoryActions";
+import { HideableStory, HideButton, VoteButtons } from "./StoryActions";
 import { CoverImage } from "@/components/media/CoverImage";
 import { isTopic } from "@/lib/topics";
 
@@ -84,11 +84,8 @@ export function StoryItem({ rank, story, isLoggedIn }: StoryItemProps) {
             </ul>
           )}
 
-          <p className="mt-2 text-sm font-semibold text-text">
-            {story.points} {pluralize(story.points, t("unit.point"), t("unit.points"))}
-          </p>
-
-          <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1">
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
+            <VoteButtons itemId={story.id} vote={story.vote} points={story.points} isLoggedIn={isLoggedIn} />
             <span className="text-xs text-text-secondary">
               {t("story.by")}{" "}
               <Link
@@ -108,7 +105,6 @@ export function StoryItem({ rank, story, isLoggedIn }: StoryItemProps) {
                 </>
               )}
             </span>
-            <LikeButton itemId={story.id} voted={story.voted} isLoggedIn={isLoggedIn} />
             <HideButton itemId={story.id} isLoggedIn={isLoggedIn} />
             {domain && (
               <Link href={`/site/${domain}`} className={actionClass}>
