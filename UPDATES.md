@@ -6,6 +6,7 @@ Every change requested in a Claude Code session, newest first, with when it was 
 
 | Date & time (UTC-4) | Update | Pushed |
 | --- | --- | --- |
+| 2026-10-12 23:59 | Site activity stats (members, publications, comments, likes, daily chart, top sites, active members, engagement) removed from the public Indicateurs page and moved to the admin: new **Statistiques** page at `/godmod/statistiques`. Public Indicateurs now shows only "Le numérique au Congo". Engagement shows two decimals. | Yes (da4c2bd) |
 | 2026-10-12 16:41 | WordPress-style admin at `/godmod` (administrators only; `rajil_vembe` made admin): dashboard, Articles (statuses, scheduling, bulk actions, edit screen), Commentaires (moderation queue, approve/spam/trash, reply, edit), Catégories & Étiquettes (+ public pages `/categorie/…`, `/etiquette/…`), Médias (Vercel Blob uploads — needs Blob connected in Vercel), Utilisateurs (admin, suspend, hide, delete), Réglages (site name, description, comment moderation, open/close publishing, default category), Journal. The "Publier" form gets Catégorie + Étiquettes fields. Database: new statuses, categories, tags, settings, activity log, media. | Yes (ffc8ace) |
 | 2026-10-12 16:41 | Fixed: comments never appeared on story pages (they were stored but dropped when building the thread). | Yes (e7e2c94) |
 | 2026-10-12 16:02 | Added 500 fake articles (from 25 fake members, spread over the last 60 days, with images and French excerpts) to the live database. Remove them all with `npm run demo:remove`; add them again with `npm run demo:seed`. | Yes (c67b4b8) |
