@@ -2,7 +2,8 @@ import { prisma } from "../db";
 import { fetchPublic, getLinkPreview, type PreviewFailure } from "../link-preview";
 import { calculateRankScore } from "../ranking";
 import { slugify } from "../taxonomy";
-import { translateToFrench } from "../translate";
+import { frenchTitle, translateToFrench } from "../translate";
+import { addTopicTags, detectTopics } from "../topics";
 import { discoverFeeds, looksLikeFeed, parseFeed, scrapeArticleLinks, type FoundArticle } from "./parse";
 
 const FEED_BYTES = 3 * 1024 * 1024;
@@ -74,6 +75,8 @@ export async function findArticles(sourceUrl: string, limit: number): Promise<{ 
       publishedAt: null,
       summary: preview.ok ? preview.preview.description : null,
       image: preview.ok ? preview.preview.image : null,
+      keywords: preview.ok ? preview.preview.keywords : [],
+      language: preview.ok ? preview.preview.lang : null,
     });
   }
   return { mode: "page", language: null, articles };
@@ -142,8 +145,9 @@ async function importFrom(source: { id: number; name: string; url: string; maxIt
   let created = 0;
 
   for (const article of fresh) {
+    const language = article.language ?? found.language ?? null;
     let excerpt = article.summary;
-    let excerptLang: string | null = excerpt ? found.language ?? null : null;
+    let excerptLang: string | null = excerpt ? language : null;
     if (excerpt && excerptLang !== "fr") {
       const translation = await translateToFrench(excerpt, excerptLang);
       if (translation) {
@@ -152,12 +156,19 @@ async function importFrom(source: { id: number; name: string; url: string; maxIt
       }
     }
 
+    const title = await frenchTitle(article.title, language);
+    // Topics from the original wording too: keyword lists are often in the source language.
+    const topics = detectTopics({ title: `${title.title} . ${title.originalTitle ?? ""}`, excerpt: `${excerpt ?? ""} . ${article.summary ?? ""}`, keywords: article.keywords, url: article.url });
+
     // Never date an article in the future; feeds sometimes do.
     const createdAt = article.publishedAt && article.publishedAt.getTime() <= now ? article.publishedAt : new Date(now);
     const story = await prisma.item.create({
       data: {
         type: "story",
-        title: article.title,
+        title: title.title,
+        titleLang: title.titleLang,
+        originalTitle: title.originalTitle,
+        keywords: article.keywords,
         url: article.url,
         excerpt,
         excerptLang: excerpt ? excerptLang ?? "und" : null,
@@ -174,6 +185,7 @@ async function importFrom(source: { id: number; name: string; url: string; maxIt
       select: { id: true },
     });
     await prisma.item.update({ where: { id: story.id }, data: { path: String(story.id).padStart(6, "0") } });
+    await addTopicTags(story.id, topics);
     created++;
   }
 

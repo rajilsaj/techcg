@@ -1,4 +1,4 @@
-import { decodeEntities, plainText, primaryLanguage } from "../link-preview";
+import { cleanKeywords, decodeEntities, plainText, primaryLanguage } from "../link-preview";
 import { stripLeadingTitle } from "../excerpt";
 
 /** One article found on a source, before it becomes a story. */
@@ -8,6 +8,10 @@ export interface FoundArticle {
   publishedAt: Date | null;
   summary: string | null;
   image: string | null;
+  /** Categories/tags the source gives the article. */
+  keywords: string[];
+  /** Language of this article when known per article (page scraping). */
+  language?: string | null;
 }
 
 export interface ParsedFeed {
@@ -65,6 +69,17 @@ function itemImage(item: string, html: string, base: URL): string | null {
   return absolute(img, base);
 }
 
+/** RSS <category>/<dc:subject> texts and Atom <category term|label>. */
+function itemCategories(item: string): string[] {
+  const found: string[] = [];
+  for (const m of item.matchAll(/<(category|dc:subject)\b([^>]*?)(?:\/>|>([\s\S]*?)<\/\1>)/gi)) {
+    const text = m[3] !== undefined ? plainText(decodeEntities(unwrapCdata(m[3]))) : "";
+    const tag = `<x ${m[2]}>`;
+    found.push(text || attr(tag, "label") || attr(tag, "term") || "");
+  }
+  return cleanKeywords(found.flatMap((value) => value.split(/[,;]/)));
+}
+
 /* ---------- Feeds ---------- */
 
 export function looksLikeFeed(body: string): boolean {
@@ -95,6 +110,7 @@ export function parseFeed(xml: string, feedUrl: URL): ParsedFeed {
       publishedAt: parseDate(tagText(block, "pubDate") ?? tagText(block, "published") ?? tagText(block, "updated") ?? tagText(block, "dc:date")),
       summary: summary ? clip(summary, 300) : null,
       image: itemImage(block, html + (tagText(block, "content:encoded") ?? ""), feedUrl),
+      keywords: itemCategories(block),
     });
   }
   return { language, articles };

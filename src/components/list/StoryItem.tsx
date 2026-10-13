@@ -5,6 +5,7 @@ import type { ListedStory } from "@/lib/stories";
 import { formatRelativeTime, pluralize, t } from "@/i18n";
 import { HideableStory, HideButton, LikeButton } from "./StoryActions";
 import { CoverImage } from "@/components/media/CoverImage";
+import { isTopic } from "@/lib/topics";
 
 export interface StoryItemProps {
   rank: number;
@@ -21,6 +22,8 @@ export function StoryItem({ rank, story, isLoggedIn }: StoryItemProps) {
   const href = story.url || `/publication/${story.id}`;
   // Link posts show the article's excerpt; text posts show the start of their text.
   const excerpt = story.excerpt ?? (story.url ? null : story.text);
+  // Headline topics (IA, Startups…) first, then the other tags.
+  const tags = story.tags.map((t) => t.tag).sort((a, b) => Number(isTopic(b.slug)) - Number(isTopic(a.slug)));
 
   return (
     <HideableStory itemId={story.id}>
@@ -35,6 +38,7 @@ export function StoryItem({ rank, story, isLoggedIn }: StoryItemProps) {
               href={href}
               {...(story.url ? { target: "_blank", rel: "noopener noreferrer" } : {})}
               className="text-text hover:underline"
+              title={story.originalTitle ? t("story.originalTitle", { title: story.originalTitle }) : undefined}
             >
               {title}
             </a>
@@ -59,6 +63,25 @@ export function StoryItem({ rank, story, isLoggedIn }: StoryItemProps) {
                 <p className="line-clamp-3 text-sm leading-5 text-text-secondary">{excerpt}</p>
               )}
             </div>
+          )}
+
+          {tags.length > 0 && (
+            <ul className="mt-2 flex flex-wrap gap-1.5" aria-label={t("story.tags")}>
+              {tags.map((tag) => (
+                <li key={tag.slug}>
+                  <Link
+                    href={isTopic(tag.slug) ? `/?sujet=${tag.slug}` : `/etiquette/${tag.slug}`}
+                    className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium leading-4 transition-colors ${
+                      isTopic(tag.slug)
+                        ? "border-accent/30 bg-accent/10 text-accent hover:bg-accent/20"
+                        : "border-border text-text-secondary hover:border-accent hover:text-accent"
+                    }`}
+                  >
+                    #{tag.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           )}
 
           <p className="mt-2 text-sm font-semibold text-text">

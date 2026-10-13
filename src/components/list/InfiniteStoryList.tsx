@@ -15,6 +15,10 @@ export interface InfiniteStoryListProps {
   fallbackHref?: string;
   /** Rank of the first story, when the page was opened past page 1. */
   firstRank?: number;
+  /** The page's search filters (URL parameters), applied to the next pages too. */
+  filters?: Record<string, string>;
+  /** Shown instead of the default when there's nothing to list. */
+  emptyMessage?: string;
 }
 
 /** Story list that loads the next page when its end scrolls into view. */
@@ -25,6 +29,8 @@ export function InfiniteStoryList({
   isLoggedIn,
   fallbackHref,
   firstRank = 1,
+  filters,
+  emptyMessage,
 }: InfiniteStoryListProps) {
   const [stories, setStories] = useState(initialStories);
   const [cursor, setCursor] = useState(initialCursor);
@@ -37,7 +43,7 @@ export function InfiniteStoryList({
     loading.current = true;
     setStatus("loading");
     try {
-      const page = await loadMoreStoriesAction(feed, cursor);
+      const page = await loadMoreStoriesAction(feed, cursor, filters);
       // Rankings can shift between loads; never show a story twice.
       setStories((current) => {
         const seen = new Set(current.map((s) => s.id));
@@ -50,7 +56,7 @@ export function InfiniteStoryList({
     } finally {
       loading.current = false;
     }
-  }, [feed, cursor]);
+  }, [feed, cursor, filters]);
 
   useEffect(() => {
     const node = sentinel.current;
@@ -64,7 +70,7 @@ export function InfiniteStoryList({
   }, [cursor, status, loadMore]);
 
   if (stories.length === 0) {
-    return <p className="py-12 text-center text-sm text-text-secondary">{t("story.empty")}</p>;
+    return <p className="py-12 text-center text-sm text-text-secondary">{emptyMessage ?? t("story.empty")}</p>;
   }
 
   return (

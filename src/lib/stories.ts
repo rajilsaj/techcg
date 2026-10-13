@@ -12,6 +12,8 @@ const storySelect = {
   id: true,
   type: true,
   title: true,
+  titleLang: true,
+  originalTitle: true,
   url: true,
   text: true,
   excerpt: true,
@@ -24,6 +26,7 @@ const storySelect = {
   createdAt: true,
   author: { select: { username: true } },
   category: { select: { name: true, slug: true } },
+  tags: { select: { tag: { select: { name: true, slug: true } } }, take: 6 },
 } satisfies Prisma.ItemSelect;
 
 export type StoryRecord = Prisma.ItemGetPayload<{ select: typeof storySelect }>;

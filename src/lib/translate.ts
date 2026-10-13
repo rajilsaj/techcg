@@ -74,3 +74,20 @@ export async function translateToFrench(text: string, sourceLang?: string | null
     return null;
   }
 }
+
+export interface FrenchTitle {
+  title: string;
+  /** "fr" once the title is French; otherwise its language (or "und"), retried later. */
+  titleLang: string;
+  /** The title before translation, when it was translated. */
+  originalTitle: string | null;
+}
+
+/** A story title in French. Keeps the original when it's already French or translation fails. */
+export async function frenchTitle(title: string, lang: string | null | undefined): Promise<FrenchTitle> {
+  if (lang === "fr") return { title, titleLang: "fr", originalTitle: null };
+  const translation = await translateToFrench(title, lang);
+  if (!translation) return { title, titleLang: lang || "und", originalTitle: null };
+  if (translation.sourceLang === "fr" || translation.text === title) return { title, titleLang: "fr", originalTitle: null };
+  return { title: translation.text.replace(/…$/, ""), titleLang: "fr", originalTitle: title };
+}

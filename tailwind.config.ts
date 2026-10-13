@@ -18,7 +18,8 @@ const config: Config = {
         text: "var(--text)",
         "text-secondary": "var(--text-secondary)",
         border: "var(--border)",
-        accent: "var(--accent)",
+        // color-mix lets opacity modifiers (bg-accent/10) work with a CSS variable.
+        accent: "color-mix(in srgb, var(--accent) calc(<alpha-value> * 100%), transparent)",
       },
       screens: {
         xs: "375px",

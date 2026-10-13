@@ -52,7 +52,18 @@ describe("parseMetadata", () => {
       image: "https://www.exemple.com/img/cover.jpg",
       siteName: "Exemple",
       lang: "fr",
+      keywords: [],
     });
+  });
+
+  it("collects the page's declared tags and keywords", () => {
+    const html = `<head>
+      <meta property="article:tag" content="Intelligence artificielle">
+      <meta property="article:tag" content="OpenAI">
+      <meta name="keywords" content="startup, levée de fonds, openai">
+      <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"NewsArticle","keywords":["Robotique"],"articleSection":"Tech"}]}</script>
+    </head>`;
+    expect(parseMetadata(html, page).keywords).toEqual(["Intelligence artificielle", "OpenAI", "startup", "levée de fonds", "Robotique", "Tech"]);
   });
 
   it("falls back to <title>, meta description and the icon", () => {

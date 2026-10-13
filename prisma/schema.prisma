@@ -41,12 +41,15 @@ model Item {
   text  String?
 
   // Link preview, filled in after submission (see src/lib/enrich-story.ts)
-  excerpt     String? // in French when translation succeeded
-  excerptLang String? // language of `excerpt`, e.g. "fr", "en"
-  imageUrl    String?
-  previewAt   DateTime? // last preview attempt; null = never tried
-  authorId    Int
-  author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  titleLang     String? // language `title` is in; "fr" once translated (see src/lib/enrich-story.ts)
+  originalTitle String? // the title before translation, kept for search
+  keywords      String[]  @default([]) // tags/keywords the article declares (feed categories, meta tags)
+  excerpt       String? // in French when translation succeeded
+  excerptLang   String? // language of `excerpt`, e.g. "fr", "en"
+  imageUrl      String?
+  previewAt     DateTime? // last preview attempt; null = never tried
+  authorId      Int
+  author        User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
   parentId Int?
   parent   Item?  @relation("Comments", fields: [parentId], references: [id], onDelete: Cascade)

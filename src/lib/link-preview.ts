@@ -29,6 +29,8 @@ export interface LinkPreview {
   siteName: string | null;
   /** Page language from <html lang>, og:locale or Content-Language, e.g. "en". */
   lang: string | null;
+  /** Topics the page declares: article:tag, keywords, news_keywords, section, JSON-LD keywords. */
+  keywords: string[];
 }
 
 export type PreviewResult =
@@ -302,11 +304,15 @@ export function primaryLanguage(value: string | undefined | null): string | null
 export function parseMetadata(html: string, pageUrl: URL, contentLanguage = ""): LinkPreview {
   const head = html.slice(0, MAX_HTML_BYTES);
   const meta: Record<string, string> = {};
+  // Tag-like metas repeat (one <meta property="article:tag"> per tag): keep them all.
+  const declared: string[] = [];
   for (const m of head.matchAll(/<meta\b[^>]*>/gi)) {
     const attrs = attributes(m[0]);
     const key = (attrs.property || attrs.name || "").toLowerCase();
     if (key && attrs.content !== undefined && !(key in meta)) meta[key] = attrs.content;
+    if (attrs.content && KEYWORD_METAS.has(key)) declared.push(...attrs.content.split(/[,;|]/));
   }
+  declared.push(...jsonLdKeywords(head));
 
   let icon: string | undefined;
   for (const m of head.matchAll(/<link\b[^>]*>/gi)) {
@@ -338,7 +344,52 @@ export function parseMetadata(html: string, pageUrl: URL, contentLanguage = ""):
       absoluteHttpUrl(icon, pageUrl),
     siteName: clean(meta["og:site_name"] ?? meta["application-name"], 80),
     lang: primaryLanguage(htmlLang) ?? primaryLanguage(meta["og:locale"]) ?? primaryLanguage(contentLanguage),
+    keywords: cleanKeywords(declared),
   };
+}
+
+const KEYWORD_METAS = new Set(["article:tag", "article:section", "keywords", "news_keywords", "parsely-tags", "sailthru.tags", "dc.subject"]);
+const MAX_KEYWORDS = 15;
+
+/** "keywords" and "articleSection" from JSON-LD blocks (schema.org Article), as a string or a list. */
+function jsonLdKeywords(html: string): string[] {
+  const found: string[] = [];
+  for (const m of html.matchAll(/<script\b[^>]*application\/ld\+json[^>]*>([\s\S]*?)<\/script>/gi)) {
+    let data: unknown;
+    try {
+      data = JSON.parse(m[1]);
+    } catch {
+      continue;
+    }
+    const visit = (node: unknown, depth: number): void => {
+      if (!node || typeof node !== "object" || depth > 4) return;
+      if (Array.isArray(node)) return node.forEach((n) => visit(n, depth + 1));
+      const record = node as Record<string, unknown>;
+      for (const key of ["keywords", "articleSection"]) {
+        const value = record[key];
+        if (typeof value === "string") found.push(...value.split(","));
+        else if (Array.isArray(value)) found.push(...value.filter((v): v is string => typeof v === "string"));
+      }
+      if (record["@graph"]) visit(record["@graph"], depth + 1);
+    };
+    visit(data, 0);
+  }
+  return found;
+}
+
+/** Trimmed, decoded, de-duplicated (case-insensitively) and capped keywords. */
+export function cleanKeywords(values: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of values) {
+    const value = decodeEntities(raw).replace(/\s+/g, " ").trim();
+    const key = value.toLowerCase();
+    if (value.length < 2 || value.length > 50 || seen.has(key) || /^https?:/i.test(value)) continue;
+    seen.add(key);
+    out.push(value);
+    if (out.length >= MAX_KEYWORDS) break;
+  }
+  return out;
 }
 
 /* ---------- Generic safe fetch (also used by the importer) ---------- */
@@ -429,6 +480,7 @@ async function resolvePreview(start: URL): Promise<PreviewResult> {
           image: /^image\//i.test(res.contentType) ? url.toString() : null,
           siteName: null,
           lang: primaryLanguage(res.contentLanguage),
+          keywords: [],
         },
       };
     }
