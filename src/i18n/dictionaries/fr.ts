@@ -44,7 +44,6 @@ export const fr = {
 
   "indicators.heading": "Indicateurs",
   "indicators.empty": "Pas encore de données.",
-  "indicators.site.heading": "Activité de Tech.cg",
   "indicators.site.subtitle": "Chiffres en direct de la communauté.",
   "indicators.site.members": "Membres",
   "indicators.site.posts": "Publications",
