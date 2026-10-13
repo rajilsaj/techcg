@@ -167,33 +167,12 @@ textarea:focus {
   animation: auth-drift 14s ease-in-out infinite;
 }
 
-/* Footer credits */
-@keyframes credit-shimmer {
-  to { background-position: 200% center; }
-}
-@keyframes credit-spin {
-  to { transform: rotate(360deg); }
-}
-.credit-shimmer {
-  background: linear-gradient(90deg, var(--accent), #22d3ee, #a855f7, var(--accent)) 0 center / 200% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: credit-shimmer 6s linear infinite;
-}
-.credit-spin {
-  display: inline-block;
-  animation: credit-spin 8s linear infinite;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .auth-view,
   .auth-rise,
   .auth-dot,
   .auth-link,
-  .auth-orb,
-  .credit-shimmer,
-  .credit-spin {
+  .auth-orb {
     animation: none;
   }
 }
