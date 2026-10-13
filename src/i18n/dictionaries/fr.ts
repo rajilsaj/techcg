@@ -52,7 +52,7 @@ export const fr = {
 
   "filters.label": "Filtrer par catégorie",
   "filters.all": "Tout",
-  "filters.search": "Rechercher un article, un sujet, un site…",
+  "filters.search": "Article, sujet, site…",
   "filters.searchButton": "Rechercher",
   "filters.advancedShort": "Avancée",
   "filters.topic": "Catégorie",
