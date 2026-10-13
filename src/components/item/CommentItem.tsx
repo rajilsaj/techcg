@@ -5,6 +5,7 @@ import { useState } from "react";
 import { formatRelativeTime, pluralize, t } from "@/i18n";
 import { CommentNode } from "@/lib/thread";
 import { CommentThread } from "./CommentThread";
+import { Avatar } from "@/components/user/Avatar";
 
 export interface CommentItemProps {
   comment: CommentNode;
@@ -55,8 +56,9 @@ export function CommentItem({ comment, depth }: CommentItemProps) {
             <div className="flex items-center gap-2 text-xs mb-1">
               <a
                 href={`/profil/${comment.authorUsername}`}
-                className="font-medium text-text hover:underline"
+                className="inline-flex items-center gap-1.5 font-medium text-text hover:underline"
               >
+                {comment.authorAvatar && <Avatar src={comment.authorAvatar} size={18} />}
                 {comment.authorUsername}
               </a>
               <span className="text-text-secondary">

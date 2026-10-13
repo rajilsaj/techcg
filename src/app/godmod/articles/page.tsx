@@ -20,6 +20,7 @@ import {
   thClass,
 } from "@/components/admin/ui";
 import { bulkArticlesAction } from "./actions";
+import { Flag } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -174,7 +175,7 @@ export default async function ArticlesAdminPage({ searchParams }: PageProps) {
                       {a.status !== "published" && <StatusBadge status={a.status} label={STATUS_LABELS[a.status as ItemStatus] ?? a.status} />}
                       {a.type !== "story" && <span>{TYPE_LABELS[a.type] ?? a.type}</span>}
                       {a.url && <span>{getDomain(a.url)}</span>}
-                      {a.flagCount > 0 && <span className="text-red-500">⚑ {a.flagCount}</span>}
+                      {a.flagCount > 0 && <span className="inline-flex items-center gap-1 text-red-500" title="Signalements"><Flag size={12} aria-hidden />{a.flagCount}</span>}
                     </div>
                     <div className="mt-1 flex gap-3 text-xs opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
                       <Link href={`/godmod/articles/${a.id}`} className="text-accent hover:underline">

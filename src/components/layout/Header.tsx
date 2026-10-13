@@ -5,6 +5,7 @@ import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { LogoutButton } from "@/components/layout/LogoutButton";
 import { NavLinks } from "@/components/layout/NavLinks";
 import { MobileTabBar } from "@/components/layout/MobileTabBar";
+import { Avatar } from "@/components/user/Avatar";
 import { t } from "@/i18n";
 
 export async function Header() {
@@ -41,8 +42,9 @@ export async function Header() {
                 </Link>
                 <Link
                   href={`/profil/${session.username}`}
-                  className="hidden font-medium text-text hover:text-accent transition-colors md:inline"
+                  className="hidden items-center gap-2 font-medium text-text hover:text-accent transition-colors md:inline-flex"
                 >
+                  <Avatar src={session.avatarUrl} size={26} />
                   {session.username}{" "}
                   <span className="text-text-secondary" title={t("nav.karmaTitle")}>
                     ({session.karma})
@@ -61,7 +63,7 @@ export async function Header() {
           </div>
         </div>
       </header>
-      <MobileTabBar username={session?.username ?? null} />
+      <MobileTabBar username={session?.username ?? null} avatarUrl={session?.avatarUrl ?? null} />
     </>
   );
 }

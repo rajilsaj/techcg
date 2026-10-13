@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Globe } from "lucide-react";
+import { Clock, Globe, Link2Off, ServerCrash, ShieldAlert, WifiOff, type LucideIcon } from "lucide-react";
 import { t, type Key } from "@/i18n";
 import type { LinkPreview as Preview, PreviewFailure, PreviewResult } from "@/lib/link-preview";
 import { CoverImage } from "@/components/media/CoverImage";
@@ -80,14 +80,14 @@ function useLinkPreview(rawUrl: string): State {
   return state;
 }
 
-const FAILURES: Record<PreviewFailure, { title: Key; body: Key; tone: "error" | "warning" }> = {
-  not_found: { title: "preview.notFound.title", body: "preview.notFound.body", tone: "error" },
-  server_error: { title: "preview.serverError.title", body: "preview.serverError.body", tone: "error" },
-  timeout: { title: "preview.timeout.title", body: "preview.timeout.body", tone: "error" },
-  unreachable: { title: "preview.unreachable.title", body: "preview.unreachable.body", tone: "error" },
-  restricted: { title: "preview.restricted.title", body: "preview.restricted.body", tone: "warning" },
-  blocked: { title: "preview.blocked.title", body: "preview.blocked.body", tone: "warning" },
-  invalid: { title: "preview.unreachable.title", body: "preview.unreachable.body", tone: "error" },
+const FAILURES: Record<PreviewFailure, { title: Key; body: Key; tone: "error" | "warning"; icon: LucideIcon }> = {
+  not_found: { title: "preview.notFound.title", body: "preview.notFound.body", tone: "error", icon: Link2Off },
+  server_error: { title: "preview.serverError.title", body: "preview.serverError.body", tone: "error", icon: ServerCrash },
+  timeout: { title: "preview.timeout.title", body: "preview.timeout.body", tone: "error", icon: Clock },
+  unreachable: { title: "preview.unreachable.title", body: "preview.unreachable.body", tone: "error", icon: WifiOff },
+  restricted: { title: "preview.restricted.title", body: "preview.restricted.body", tone: "warning", icon: ShieldAlert },
+  blocked: { title: "preview.blocked.title", body: "preview.blocked.body", tone: "warning", icon: ShieldAlert },
+  invalid: { title: "preview.unreachable.title", body: "preview.unreachable.body", tone: "error", icon: WifiOff },
 };
 
 export function LinkPreview({ url }: { url: string }) {
@@ -118,7 +118,19 @@ export function LinkPreview({ url }: { url: string }) {
               FAILURES[state.reason].tone === "error" ? "border-l-red-500" : "border-l-amber-500"
             }`}
           >
-            <p className="text-sm font-medium text-text">{t(FAILURES[state.reason].title)}</p>
+            <p className="flex items-center gap-2 text-sm font-medium text-text">
+              {(() => {
+                const Icon = FAILURES[state.reason].icon;
+                return (
+                  <Icon
+                    size={16}
+                    className={FAILURES[state.reason].tone === "error" ? "shrink-0 text-red-500" : "shrink-0 text-amber-500"}
+                    aria-hidden
+                  />
+                );
+              })()}
+              {t(FAILURES[state.reason].title)}
+            </p>
             <p className="mt-1 text-xs text-text-secondary">
               {t(FAILURES[state.reason].body, { status: state.httpStatus ?? "" })}
             </p>

@@ -5,6 +5,7 @@ import { loadMoreStoriesAction, type Feed } from "@/app/api/actions/stories";
 import type { ListedStory } from "@/lib/stories";
 import { t } from "@/i18n";
 import { StoryItem } from "./StoryItem";
+import { CircleCheck } from "lucide-react";
 
 export interface InfiniteStoryListProps {
   feed: Feed;
@@ -93,7 +94,12 @@ export function InfiniteStoryList({
             {t("feed.retry")}
           </button>
         )}
-        {status === "idle" && !cursor && <span>{t("feed.end")}</span>}
+        {status === "idle" && !cursor && (
+          <span className="inline-flex items-center gap-1.5">
+            <CircleCheck size={16} className="text-accent" aria-hidden />
+            {t("feed.end")}
+          </span>
+        )}
         {status === "idle" && cursor && fallbackHref && (
           <noscript>
             <a href={fallbackHref} className="text-accent">

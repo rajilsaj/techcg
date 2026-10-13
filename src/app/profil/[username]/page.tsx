@@ -6,6 +6,8 @@ import { StoryList } from "@/components/list/StoryList";
 import { listStories } from "@/lib/stories";
 import { formatRelativeTime, pluralize, t } from "@/i18n";
 import { publiclyVisible } from "@/lib/content-status";
+import { avatarUrl } from "@/lib/gravatar";
+import { Avatar } from "@/components/user/Avatar";
 
 interface PageProps {
   params: Promise<{ username: string }>;
@@ -22,6 +24,7 @@ export default async function UserPage({ params }: PageProps) {
     select: {
       id: true,
       username: true,
+      email: true,
       about: true,
       karma: true,
       createdAt: true,
@@ -31,6 +34,7 @@ export default async function UserPage({ params }: PageProps) {
   if (!user) {
     notFound();
   }
+  const avatar = (size: number) => avatarUrl(user.email, user.username, size);
 
   // Fetch user's stories
   const { stories } = await listStories({
@@ -78,10 +82,15 @@ export default async function UserPage({ params }: PageProps) {
       <div className="max-w-3xl mx-auto px-4 py-8">
         {/* Profile header */}
         <div className="border-b border-border pb-8 mb-8">
-          <h1 className="text-3xl font-bold text-text mb-2">{user.username}</h1>
-          <p className="text-sm text-text-secondary mb-4">
-            {t("user.karmaJoined", { karma: user.karma, time: formatRelativeTime(user.createdAt) })}
-          </p>
+          <div className="mb-4 flex items-center gap-4">
+            <Avatar src={avatar(72)} size={72} className="ring-2 ring-border" />
+            <div className="min-w-0">
+              <h1 className="mb-1 break-words text-3xl font-bold text-text">{user.username}</h1>
+              <p className="text-sm text-text-secondary">
+                {t("user.karmaJoined", { karma: user.karma, time: formatRelativeTime(user.createdAt) })}
+              </p>
+            </div>
+          </div>
 
           {user.about && (
             <p className="text-base text-text mb-4 whitespace-pre-wrap">
@@ -125,7 +134,8 @@ export default async function UserPage({ params }: PageProps) {
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-2 text-xs">
-                      <span className="font-medium text-text">
+                      <span className="inline-flex items-center gap-1.5 font-medium text-text">
+                        <Avatar src={avatar(18)} size={18} />
                         {comment.author.username}
                       </span>
                       <span className="text-text-secondary">

@@ -7,6 +7,8 @@ export interface CommentData {
   id: number;
   text: string | null;
   authorUsername: string;
+  /** Gravatar URL (never the email itself). */
+  authorAvatar?: string;
   points: number;
   createdAt: Date;
   depth: number;

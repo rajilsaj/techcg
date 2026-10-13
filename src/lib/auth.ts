@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { avatarUrl } from "./gravatar";
 import { cookies } from "next/headers";
 import { prisma } from "./db";
 
@@ -11,6 +12,8 @@ export const SESSION_MAX_AGE = 30 * 24 * 60 * 60; // 30 days
 export interface Session {
   userId: number;
   username: string;
+  /** Gravatar URL for the header (the email itself is never exposed). */
+  avatarUrl: string;
   karma: number;
   isAdmin: boolean;
   createdAt: Date;
@@ -90,6 +93,7 @@ export const getSession = cache(async (): Promise<Session | null> => {
       select: {
         id: true,
         username: true,
+        email: true,
         karma: true,
         isAdmin: true,
         banned: true,
@@ -103,6 +107,7 @@ export const getSession = cache(async (): Promise<Session | null> => {
     return {
       userId: user.id,
       username: user.username,
+      avatarUrl: avatarUrl(user.email, user.username, 36),
       karma: user.karma,
       isAdmin: user.isAdmin,
       createdAt: user.createdAt,

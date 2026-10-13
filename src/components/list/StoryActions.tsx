@@ -100,34 +100,35 @@ export function VoteButtons({
     });
   };
 
-  const arrow = (active: boolean, activeClass: string) =>
-    `grid h-7 w-7 place-items-center rounded-full transition-colors disabled:opacity-50 ${
-      active ? activeClass : "text-text-secondary hover:bg-bg hover:text-text"
-    }`;
+  // Two separate buttons: light green to upvote, red to downvote; solid once chosen.
+  const button =
+    "grid h-8 w-9 place-items-center rounded-full transition-colors disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-offset-bg";
+  const up =
+    state.vote === 1
+      ? "bg-green-500 text-white shadow-sm shadow-green-500/30 focus-visible:ring-green-500"
+      : "bg-green-100 text-green-700 hover:bg-green-200 focus-visible:ring-green-500 dark:bg-green-500/15 dark:text-green-400 dark:hover:bg-green-500/25";
+  const down =
+    state.vote === -1
+      ? "bg-red-500 text-white shadow-sm shadow-red-500/30 focus-visible:ring-red-500"
+      : "bg-red-100 text-red-600 hover:bg-red-200 focus-visible:ring-red-500 dark:bg-red-500/15 dark:text-red-400 dark:hover:bg-red-500/25";
 
   return (
     <>
-      <div
-        role="group"
-        aria-label={t("vote.label")}
-        className={`inline-flex items-center rounded-full border p-0.5 transition-colors ${
-          state.vote === 1 ? "border-accent/40 bg-accent/10" : state.vote === -1 ? "border-red-500/40 bg-red-500/10" : "border-border bg-bg-secondary"
-        }`}
-      >
+      <div role="group" aria-label={t("vote.label")} className="inline-flex items-center gap-1.5">
         <button
           type="button"
           disabled={pending}
           aria-pressed={state.vote === 1}
           aria-label={t("vote.up")}
           title={t("vote.up")}
-          className={arrow(state.vote === 1, "text-accent hover:bg-accent/15")}
+          className={`${button} ${up}`}
           onClick={() => cast(1)}
         >
           <ArrowBigUp size={18} fill={state.vote === 1 ? "currentColor" : "none"} aria-hidden />
         </button>
         <span
-          className={`min-w-[2ch] px-1 text-center text-sm font-semibold tabular-nums ${
-            state.vote === 1 ? "text-accent" : state.vote === -1 ? "text-red-500" : "text-text"
+          className={`min-w-[2ch] text-center text-sm font-bold tabular-nums ${
+            state.vote === 1 ? "text-green-600 dark:text-green-400" : state.vote === -1 ? "text-red-500" : "text-text"
           }`}
           aria-live="polite"
           title={`${state.points} ${pluralize(state.points, t("unit.point"), t("unit.points"))}`}
@@ -140,7 +141,7 @@ export function VoteButtons({
           aria-pressed={state.vote === -1}
           aria-label={t("vote.down")}
           title={t("vote.down")}
-          className={arrow(state.vote === -1, "text-red-500 hover:bg-red-500/15")}
+          className={`${button} ${down}`}
           onClick={() => cast(-1)}
         >
           <ArrowBigDown size={18} fill={state.vote === -1 ? "currentColor" : "none"} aria-hidden />

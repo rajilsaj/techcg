@@ -4,6 +4,7 @@ import { prisma } from "./db";
 import { enrichStories, needsEnrichment } from "./enrich-story";
 import { publiclyVisible } from "./content-status";
 import { viewerVotes, type VoteValue } from "./votes";
+import { avatarUrl } from "./gravatar";
 
 export const STORIES_PER_PAGE = 30;
 /** Previews fetched per page view for stories that don't have one yet. */
@@ -25,12 +26,14 @@ const storySelect = {
   rankScore: true,
   commentCount: true,
   createdAt: true,
-  author: { select: { username: true } },
+  author: { select: { username: true, email: true } },
   category: { select: { name: true, slug: true } },
   tags: { select: { tag: { select: { name: true, slug: true } } }, take: 6 },
 } satisfies Prisma.ItemSelect;
 
-export type StoryRecord = Prisma.ItemGetPayload<{ select: typeof storySelect }>;
+type StoryRow = Prisma.ItemGetPayload<{ select: typeof storySelect }>;
+/** A story as sent to pages: the author's email is replaced by their avatar URL. */
+export type StoryRecord = Omit<StoryRow, "author"> & { author: { username: string; avatarUrl: string } };
 export type ListedStory = StoryRecord & { vote: VoteValue };
 
 export type StoryOrder = "rank" | "newest" | "points";
@@ -118,7 +121,11 @@ export async function listStories({
   const last = page[page.length - 1];
   const field = ORDER[order].field;
   return {
-    stories: page.map((s): ListedStory => ({ ...s, vote: votes.get(s.id) ?? 0 })),
+    stories: page.map((s): ListedStory => ({
+      ...s,
+      author: { username: s.author.username, avatarUrl: avatarUrl(s.author.email, s.author.username) },
+      vote: votes.get(s.id) ?? 0,
+    })),
     nextCursor: hasNext && last ? encodeCursor({ key: field === "id" ? last.id : last[field], id: last.id }) : undefined,
   };
 }

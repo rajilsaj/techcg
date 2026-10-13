@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { BarChart3, Home, LogIn, SquarePen, UserRound, type LucideIcon } from "lucide-react";
 import { t } from "@/i18n";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
+import { Avatar } from "@/components/user/Avatar";
 
 interface Tab {
   href: string;
@@ -17,7 +18,7 @@ interface Tab {
  * App-style bottom navigation on phones (hidden from `md` up, where the header
  * shows the same links). The page keeps room for it (body:has(#mobile-tabbar) in globals.css).
  */
-export function MobileTabBar({ username }: { username: string | null }) {
+export function MobileTabBar({ username, avatarUrl }: { username: string | null; avatarUrl: string | null }) {
   const pathname = usePathname() ?? "/";
 
   const tabs: Tab[] = [
@@ -56,7 +57,11 @@ export function MobileTabBar({ username }: { username: string | null }) {
                 <span
                   className={`grid h-7 w-12 place-items-center rounded-full transition-colors ${active ? "bg-accent/10" : ""}`}
                 >
-                  <Icon size={21} strokeWidth={active ? 2.4 : 1.8} aria-hidden />
+                  {avatarUrl && username && href === `/profil/${username}` ? (
+                    <Avatar src={avatarUrl} size={24} className={active ? "ring-2 ring-accent" : ""} />
+                  ) : (
+                    <Icon size={21} strokeWidth={active ? 2.4 : 1.8} aria-hidden />
+                  )}
                 </span>
                 <span className="max-w-full truncate px-1">{label}</span>
               </Link>

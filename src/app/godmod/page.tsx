@@ -4,6 +4,7 @@ import { requireAdminPage } from "@/lib/admin";
 import { STATUS_LABELS, type ItemStatus } from "@/lib/content-status";
 import { AdminHeader, Card, StatusBadge } from "@/components/admin/ui";
 import { formatRelativeTime } from "@/i18n";
+import { Flag } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -156,7 +157,7 @@ export default async function AdminDashboard() {
                       <Link href={`/godmod/articles/${f.id}`} className="truncate text-text hover:text-accent">
                         {f.title || "Sans titre"}
                       </Link>
-                      <span className="shrink-0 text-red-500">⚑ {f.flagCount}</span>
+                      <span className="shrink-0 inline-flex items-center gap-1 text-red-500" title="Signalements"><Flag size={12} aria-hidden />{f.flagCount}</span>
                     </li>
                   ))}
                 </ul>

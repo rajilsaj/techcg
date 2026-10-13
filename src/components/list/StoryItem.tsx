@@ -6,6 +6,7 @@ import { formatRelativeTime, pluralize, t } from "@/i18n";
 import { HideableStory, HideButton, VoteButtons } from "./StoryActions";
 import { CoverImage } from "@/components/media/CoverImage";
 import { isTopic } from "@/lib/topics";
+import { Avatar } from "@/components/user/Avatar";
 
 export interface StoryItemProps {
   rank: number;
@@ -90,8 +91,9 @@ export function StoryItem({ rank, story, isLoggedIn }: StoryItemProps) {
               {t("story.by")}{" "}
               <Link
                 href={`/profil/${story.author.username}`}
-                className="text-text-secondary underline underline-offset-2 hover:text-accent"
+                className="inline-flex items-center gap-1 align-middle text-text-secondary underline underline-offset-2 hover:text-accent"
               >
+                <Avatar src={story.author.avatarUrl} size={16} />
                 {story.author.username}
               </Link>{" "}
               · {formatRelativeTime(story.createdAt)}

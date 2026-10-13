@@ -11,6 +11,8 @@ import { buildCommentTree, CommentData } from "@/lib/thread";
 import { enrichStory, needsEnrichment } from "@/lib/enrich-story";
 import { VoteButtons } from "@/components/list/StoryActions";
 import { viewerVotes } from "@/lib/votes";
+import { avatarUrl } from "@/lib/gravatar";
+import { Avatar } from "@/components/user/Avatar";
 import { STATUS_LABELS, isItemStatus, isPubliclyVisible, publiclyVisible } from "@/lib/content-status";
 import { CoverImage } from "@/components/media/CoverImage";
 
@@ -47,6 +49,7 @@ export default async function ItemPage({ params }: PageProps) {
       author: {
         select: {
           username: true,
+          email: true,
         },
       },
       points: true,
@@ -78,6 +81,7 @@ export default async function ItemPage({ params }: PageProps) {
       author: {
         select: {
           username: true,
+          email: true,
         },
       },
       points: true,
@@ -95,6 +99,7 @@ export default async function ItemPage({ params }: PageProps) {
     id: row.id,
     text: row.text,
     authorUsername: row.author.username,
+    authorAvatar: avatarUrl(row.author.email, row.author.username),
     points: row.points,
     createdAt: row.createdAt,
     depth: row.depth,
@@ -171,7 +176,8 @@ export default async function ItemPage({ params }: PageProps) {
 
           <div className="flex flex-wrap items-center gap-4 text-xs text-text-secondary">
             <VoteButtons itemId={story.id} vote={vote} points={story.points} isLoggedIn={!!session} />
-            <a href={`/profil/${story.author.username}`} className="text-accent hover:underline">
+            <a href={`/profil/${story.author.username}`} className="inline-flex items-center gap-1.5 text-accent hover:underline">
+              <Avatar src={avatarUrl(story.author.email, story.author.username)} size={20} />
               {story.author.username}
             </a>
             <span>{formatRelativeTime(story.createdAt)}</span>
