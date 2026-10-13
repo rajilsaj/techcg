@@ -6,6 +6,7 @@ Every change requested in a Claude Code session, newest first, with when it was 
 
 | Date & time (UTC-4) | Update | Pushed |
 | --- | --- | --- |
+| 2026-10-13 11:48 | Footer simplified to two small lines: "Fièrement propulsé par IALab · BantuHub Foundation · Entièrement généré avec Claude AI" and "© 2026 Tech.cg · Tous droits réservés" (no card, logo or animations). | Yes (b86ff7f) |
 | 2026-10-13 02:29 | New sign-in/sign-up page: blue showcase panel (animated community network, live member/article counts, current headlines) next to a card with the Google button and three reassurances. Footer on every public page: "Fièrement propulsé par IALab · BantuHub Foundation — Entièrement généré avec Claude AI". | Yes (4bbe7e1) |
 | 2026-10-13 02:29 | Article images: photos fill their frame, logos/small images are shown whole over a blurred backdrop, slow or broken images get a placeholder. Excerpts no longer repeat the article title (17 stored excerpts repaired). | Yes (e8f2eb4) |
 | 2026-10-13 02:12 | Sign-in is Google only: minimal page (title, one line, "Continuer avec Google"); the server refuses SMS, email-link and any non-Google sign-in or unverified email. Removed phone/SMS, email-link recovery (old links redirect to `/connexion`), unused password code and the old seed script. | Yes (c273f41) |
