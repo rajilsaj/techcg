@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireAdminPage } from "@/lib/admin";
 import { formatLocalDateTime } from "@/lib/local-time";
 import { listCategories } from "@/lib/taxonomy";
+import { IMPORT_INTERVAL_MINUTES } from "@/lib/importer/schedule";
 import { PendingNotice, SubmitButton } from "@/components/admin/FormControls";
 import { AdminHeader, AdminNotice, Card, buttonClass, inputClass, primaryButtonClass, tdClass, thClass } from "@/components/admin/ui";
 import { createSourceAction, deleteSourceAction, removeDemoAction, runImportAction, updateSourceAction } from "./actions";
@@ -48,7 +49,7 @@ export default async function ImportPage({ searchParams }: PageProps) {
     <>
       <AdminHeader
         title="Importation"
-        description="Récupère les derniers articles de sites d'actualité : titre, image, court extrait et lien vers l'article d'origine."
+        description={`Récupère les derniers articles de sites d'actualité : titre, image, court extrait et lien vers l'article d'origine. Automatique : chaque source active est relue toutes les ${IMPORT_INTERVAL_MINUTES} minutes au fil des visites, et au moins une fois par jour (6 h, heure de Kinshasa).`}
         actions={
           sources.some((s) => s.enabled) && (
             <form action={runImportAction}>

@@ -1,5 +1,5 @@
 import { prisma } from "../db";
-import { fetchPublic, getLinkPreview, type PreviewFailure } from "../link-preview";
+import { decodeEntities, fetchPublic, getLinkPreview, type PreviewFailure } from "../link-preview";
 import { calculateRankScore } from "../ranking";
 import { slugify } from "../taxonomy";
 import { frenchTitle, translateToFrench } from "../translate";
@@ -27,6 +27,17 @@ const FAILURES: Record<PreviewFailure, string> = {
   timeout: "le site ne répond pas (délai dépassé)",
   unreachable: "connexion impossible",
 };
+
+/** Feed categories that mark something other than a news article. */
+const NOT_NEWS = /^(newsletters?|podcasts?|sponsored|sponsoris[ée]e?s?|publi-?reportages?|publireportage|partner content|tc daily)$/i;
+
+/** Decodes leftover HTML entities (some sites encode twice) and drops leading emoji. */
+export function cleanTitle(raw: string): string {
+  return decodeEntities(decodeEntities(raw))
+    .replace(/^[\p{Extended_Pictographic}\p{Emoji_Modifier}\u200d\ufe0f\s]+/u, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
 /** Drops tracking parameters and fragments so the same article isn't imported twice. */
 export function canonicalUrl(raw: string): string {
@@ -120,10 +131,11 @@ async function importFrom(source: { id: number; name: string; url: string; maxIt
   const found = await findArticles(source.url, limit);
   if ("error" in found) return { ok: false, found: 0, created: 0, skipped: 0, message: `Échec : ${found.error}.` };
 
-  // Newest first, unique by canonical URL.
+  // Newest first, unique by canonical URL; no newsletters, podcasts or sponsored posts.
   const seen = new Set<string>();
   const articles = found.articles
-    .map((a) => ({ ...a, url: canonicalUrl(a.url) }))
+    .map((a) => ({ ...a, url: canonicalUrl(a.url), title: cleanTitle(a.title) }))
+    .filter((a) => a.title && !a.keywords.some((k) => NOT_NEWS.test(k.trim())))
     .filter((a) => !seen.has(a.url) && seen.add(a.url))
     .sort((a, b) => (b.publishedAt?.getTime() ?? 0) - (a.publishedAt?.getTime() ?? 0))
     .slice(0, limit);
