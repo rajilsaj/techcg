@@ -6,6 +6,7 @@ Every change requested in a Claude Code session, newest first, with when it was 
 
 | Date & time (UTC-4) | Update | Pushed |
 | --- | --- | --- |
+| 2026-10-13 17:10 | Mobile app (PWA): Tech.cg can be installed on phones (home-screen icon, opens full screen, blue "T" app icon); "Installer l'application" strip on phones (one tap on Android, instructions on iPhone). Bottom tab bar on phones (À la une, Indicateurs, Publier, Profil/Connexion) with a compact header. Works on a weak connection: the homepage and opened articles stay readable offline, other pages show an offline screen. iPhone notch/home-bar spacing, no zoom when tapping a field. Admin pages no longer overflow on phones. | Yes (66d2367) |
 | 2026-10-13 16:20 | Upvote and downvote on every article (homepage list and article page): ▲ score ▼ pill, blue when upvoted, red when downvoted; clicking the same arrow again removes the vote, the other arrow switches it. Existing likes count as upvotes. Fixed: the `/api/v1/votes` endpoint let anyone vote as user #1 — it now requires sign-in. | Yes (3396d28) |
 | 2026-10-13 14:50 | Sign-in and sign-up pages are full screen: no site header (menu) and no footer; just "← Retour au site" top left and the sun theme button top right. | Yes (c9b4986) |
 | 2026-10-13 14:35 | Homepage filter bar simplified: text only, no icons or shadows — "Tout · Événements · IA · Entrepreneurs", plain search field, "Avancée" and a "Rechercher" button, in one thin rounded line. | Yes (0f76075) |
