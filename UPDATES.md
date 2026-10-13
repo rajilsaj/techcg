@@ -6,6 +6,7 @@ Every change requested in a Claude Code session, newest first, with when it was 
 
 | Date & time (UTC-4) | Update | Pushed |
 | --- | --- | --- |
+| 2026-10-13 14:35 | Homepage filter bar simplified: text only, no icons or shadows — "Tout · Événements · IA · Entrepreneurs", plain search field, "Avancée" and a "Rechercher" button, in one thin rounded line. | Yes (0f76075) |
 | 2026-10-13 14:05 | Light/dark mode follows the device by default (and live when the device switches); the "Clair/Sombre" toggle is replaced by a rising-sun button (sun up = light, sun set with stars = dark). A visitor's choice is remembered only when it differs from the device. | Yes (12ff3cb) |
 | 2026-10-13 14:05 | Homepage: category pills (Tout, Événements, IA, Entrepreneurs, with icons), search field, advanced-search button and search button now sit in one rounded bar; the advanced panel opens below it. | Yes (8dea47f) |
 | 2026-10-13 14:05 | Sign-in/sign-up page uses the site's colours (light and dark) and keeps the floating animation; bubbles are only today's date, IA, Startups, Entrepreneurs and Événements, around the Tech.cg mark, on two slowly turning orbits. Blue pill button. | Yes (e504b6e) |
