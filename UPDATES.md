@@ -6,6 +6,7 @@ Every change requested in a Claude Code session, newest first, with when it was 
 
 | Date & time (UTC-4) | Update | Pushed |
 | --- | --- | --- |
+| 2026-10-13 16:20 | Upvote and downvote on every article (homepage list and article page): ▲ score ▼ pill, blue when upvoted, red when downvoted; clicking the same arrow again removes the vote, the other arrow switches it. Existing likes count as upvotes. Fixed: the `/api/v1/votes` endpoint let anyone vote as user #1 — it now requires sign-in. | Yes (3396d28) |
 | 2026-10-13 14:50 | Sign-in and sign-up pages are full screen: no site header (menu) and no footer; just "← Retour au site" top left and the sun theme button top right. | Yes (c9b4986) |
 | 2026-10-13 14:35 | Homepage filter bar simplified: text only, no icons or shadows — "Tout · Événements · IA · Entrepreneurs", plain search field, "Avancée" and a "Rechercher" button, in one thin rounded line. | Yes (0f76075) |
 | 2026-10-13 14:05 | Light/dark mode follows the device by default (and live when the device switches); the "Clair/Sombre" toggle is replaced by a rising-sun button (sun up = light, sun set with stars = dark). A visitor's choice is remembered only when it differs from the device. | Yes (12ff3cb) |
