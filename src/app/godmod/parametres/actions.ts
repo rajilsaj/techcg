@@ -9,6 +9,7 @@ import { sanitizeSettings, saveSettings } from "@/lib/settings";
 export async function saveSettingsAction(formData: FormData) {
   const admin = await requireAdminAction();
   const categoryId = parseInt(String(formData.get("defaultCategoryId") ?? ""), 10);
+  const retention = parseInt(String(formData.get("analyticsRetentionDays") ?? ""), 10);
 
   await saveSettings(
     sanitizeSettings({
@@ -17,6 +18,7 @@ export async function saveSettingsAction(formData: FormData) {
       commentModeration: formData.get("commentModeration"),
       submissionsOpen: formData.get("submissionsOpen") === "on",
       defaultCategoryId: Number.isInteger(categoryId) ? categoryId : null,
+      analyticsRetentionDays: retention,
     })
   );
 

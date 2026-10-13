@@ -188,3 +188,42 @@ model ImportSource {
   createdAt  DateTime  @default(now())
   items      Item[]
 }
+
+/// One page view, recorded by the tracker in the root layout (see src/lib/analytics).
+/// Deleted after the retention period set in the admin.
+model PageView {
+  id         Int      @id @default(autoincrement())
+  createdAt  DateTime @default(now())
+  path       String
+  referrer   String? // external referring site only
+  // Network & location (Vercel geolocation headers)
+  ip         String
+  country    String? // ISO 3166-1 alpha-2
+  region     String?
+  city       String?
+  postalCode String?
+  latitude   Float?
+  longitude  Float?
+  timezone   String?
+  // Device (parsed from the user agent, plus what the browser reports)
+  userAgent  String
+  browser    String?
+  browserVer String?
+  os         String?
+  osVer      String?
+  device     String // desktop | mobile | tablet | bot
+  isBot      Boolean  @default(false)
+  screen     String? // e.g. "1920x1080"
+  language   String?
+  clientTz   String?
+  // Who
+  visitorId  String // first-party cookie, ~1 year
+  sessionId  String // per browser tab session
+  userId     Int?
+  durationMs Int? // time on page, reported when the visitor leaves
+
+  @@index([createdAt])
+  @@index([ip, createdAt])
+  @@index([visitorId])
+  @@index([sessionId])
+}

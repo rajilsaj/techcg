@@ -95,6 +95,25 @@ export default async function SettingsPage({ searchParams }: PageProps) {
           <p className={hint}>Les commentaires en attente apparaissent dans Commentaires → En attente.</p>
         </Card>
 
+        <Card title="Visiteurs">
+          <label htmlFor="analyticsRetentionDays" className={label}>
+            Durée de conservation des visites (jours)
+          </label>
+          <input
+            id="analyticsRetentionDays"
+            name="analyticsRetentionDays"
+            type="number"
+            min={1}
+            max={730}
+            defaultValue={settings.analyticsRetentionDays}
+            className={`${inputClass} w-32`}
+          />
+          <p className={hint}>
+            Les adresses IP, localisations et appareils plus anciens sont supprimés automatiquement. Ce sont des données personnelles :
+            mentionnez leur collecte dans votre politique de confidentialité.
+          </p>
+        </Card>
+
         <SubmitButton className={primaryButtonClass}>Enregistrer les réglages</SubmitButton>
       </form>
     </>

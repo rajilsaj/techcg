@@ -16,6 +16,8 @@ export interface SiteSettings {
   submissionsOpen: boolean;
   /** Category given to new posts that don't pick one. */
   defaultCategoryId: number | null;
+  /** Visit data (IPs, locations…) older than this many days is deleted. */
+  analyticsRetentionDays: number;
 }
 
 export const DEFAULT_SETTINGS: SiteSettings = {
@@ -24,6 +26,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   commentModeration: "none",
   submissionsOpen: true,
   defaultCategoryId: null,
+  analyticsRetentionDays: 90,
 };
 
 const MODERATION_VALUES: CommentModeration[] = ["none", "first", "all"];
@@ -41,6 +44,10 @@ export function sanitizeSettings(raw: Record<string, unknown>): SiteSettings {
     submissionsOpen: typeof raw.submissionsOpen === "boolean" ? raw.submissionsOpen : DEFAULT_SETTINGS.submissionsOpen,
     defaultCategoryId:
       typeof raw.defaultCategoryId === "number" && Number.isInteger(raw.defaultCategoryId) ? raw.defaultCategoryId : null,
+    analyticsRetentionDays:
+      typeof raw.analyticsRetentionDays === "number" && Number.isInteger(raw.analyticsRetentionDays) && raw.analyticsRetentionDays >= 1 && raw.analyticsRetentionDays <= 730
+        ? raw.analyticsRetentionDays
+        : DEFAULT_SETTINGS.analyticsRetentionDays,
   };
 }
 
