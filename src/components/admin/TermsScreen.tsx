@@ -37,7 +37,7 @@ export function TermsScreen({
       <AdminHeader title={title} description={description} />
       <AdminNotice notice={notice} />
 
-      <div className="grid gap-4 xl:grid-cols-[320px_1fr]">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[320px_1fr]">
         <Card title={`Ajouter une ${noun}`}>
           <form action={createTermAction} className="space-y-3">
             <input type="hidden" name="kind" value={kind} />

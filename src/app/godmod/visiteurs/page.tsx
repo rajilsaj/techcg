@@ -96,7 +96,7 @@ export default async function VisitorsPage({ searchParams }: PageProps) {
         </Card>
       </div>
 
-      <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         <Card title="Pages les plus vues">
           <RankedBars empty="Aucune visite." items={ranked(pages, (path) => <Link href={path} className="text-text hover:text-accent">{path}</Link>)} />
         </Card>

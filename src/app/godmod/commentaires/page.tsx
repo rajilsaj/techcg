@@ -204,7 +204,7 @@ export default async function CommentsAdminPage({ searchParams }: PageProps) {
                     </div>
 
                     {!removed && (
-                      <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                      <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
                         <details>
                           <summary className="cursor-pointer text-xs text-accent hover:underline">Répondre</summary>
                           <textarea name={`reply-${c.id}`} rows={3} placeholder={`Répondre à ${c.author.username}…`} className={`${inputClass} mt-1`} />

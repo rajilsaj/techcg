@@ -80,7 +80,7 @@ export default async function EditArticlePage({ params, searchParams }: PageProp
       />
       <AdminNotice notice={notice} />
 
-      <form action={updateArticleAction} className="grid gap-4 xl:grid-cols-[1fr_320px]">
+      <form action={updateArticleAction} className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_320px]">
         <input type="hidden" name="id" value={article.id} />
 
         <div className="space-y-4">

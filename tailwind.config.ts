@@ -1,5 +1,7 @@
 import type { Config } from "tailwindcss";
 
+const withAlpha = (variable: string) => `color-mix(in srgb, var(${variable}) calc(<alpha-value> * 100%), transparent)`;
+
 const config: Config = {
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
@@ -13,13 +15,13 @@ const config: Config = {
         sans: ["system-ui", "sans-serif"],
       },
       colors: {
-        bg: "var(--bg)",
+        // color-mix lets opacity modifiers (bg-accent/10, bg-bg/90) work with a CSS variable.
+        bg: withAlpha("--bg"),
         "bg-secondary": "var(--bg-secondary)",
         text: "var(--text)",
-        "text-secondary": "var(--text-secondary)",
+        "text-secondary": withAlpha("--text-secondary"),
         border: "var(--border)",
-        // color-mix lets opacity modifiers (bg-accent/10) work with a CSS variable.
-        accent: "color-mix(in srgb, var(--accent) calc(<alpha-value> * 100%), transparent)",
+        accent: withAlpha("--accent"),
       },
       screens: {
         xs: "375px",

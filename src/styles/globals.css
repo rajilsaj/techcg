@@ -183,6 +183,35 @@ textarea:focus {
   }
 }
 
+/* Room at the bottom of the page for the phone tab bar (hidden from md up). */
+@media (max-width: 767px) {
+  body:has(#mobile-tabbar) {
+    padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* Phones and tablets (app-like touch). */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+@media (pointer: coarse) {
+  /* iOS zooms into any field under 16px on focus; keep fields at 16px on touch screens. */
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+  /* No 300ms delay / double-tap zoom on controls. */
+  a,
+  button,
+  label,
+  summary {
+    touch-action: manipulation;
+  }
+}
+
 /* Horizontally scrollable rows (mobile nav) without a visible scrollbar */
 .scrollbar-none {
   scrollbar-width: none;

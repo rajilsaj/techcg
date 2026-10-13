@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { logoutAction } from "@/app/api/actions/auth";
 import { t } from "@/i18n";
+import { clearOfflinePages } from "@/components/pwa/ServiceWorker";
 
 export function LogoutButton() {
   const [pending, startTransition] = useTransition();
@@ -16,6 +17,7 @@ export function LogoutButton() {
       } catch {
         // Not signed in through Firebase, or Firebase isn't configured.
       }
+      await clearOfflinePages();
       await logoutAction();
     });
 

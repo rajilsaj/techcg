@@ -108,7 +108,7 @@ export default async function ImportPage({ searchParams }: PageProps) {
                     </div>
                     <details className="mt-1">
                       <summary className="cursor-pointer text-xs text-accent hover:underline">Modifier</summary>
-                      <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                      <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
                         <input name={`name-${s.id}`} defaultValue={s.name} aria-label="Nom" className={inputClass} />
                         <input name={`url-${s.id}`} defaultValue={s.url} aria-label="Adresse" className={inputClass} />
                         <input name={`maxItems-${s.id}`} type="number" min={1} max={100} defaultValue={s.maxItems} aria-label="Articles max" className={inputClass} />
@@ -156,7 +156,7 @@ export default async function ImportPage({ searchParams }: PageProps) {
         </div>
       </form>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card title="Ajouter une source">
           <form action={createSourceAction} className="space-y-3">
             <div>

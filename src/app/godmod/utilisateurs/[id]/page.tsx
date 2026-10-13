@@ -69,7 +69,7 @@ export default async function EditUserPage({ params, searchParams }: PageProps) 
       />
       <AdminNotice notice={notice} />
 
-      <div className="grid gap-4 xl:grid-cols-[1fr_320px]">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_320px]">
         <form action={updateUserAction} className="space-y-4">
           <input type="hidden" name="id" value={user.id} />
           <Card title="Profil">

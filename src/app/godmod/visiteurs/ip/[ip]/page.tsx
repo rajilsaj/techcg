@@ -59,7 +59,7 @@ export default async function IpDetailPage({ params }: PageProps) {
         }
       />
 
-      <div className="grid gap-4 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <Card title="Résumé">
           <dl className="grid grid-cols-2 gap-y-1.5 text-sm">
             <dt className="text-text-secondary">Pages vues</dt>

@@ -68,7 +68,7 @@ export default async function AdminDashboard() {
     <>
       <AdminHeader title="Tableau de bord" description="Vue d'ensemble du site et de ce qui demande votre attention." />
 
-      <div className="grid gap-4 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <div className="space-y-4 xl:col-span-2">
           <Card title="En un coup d'œil">
             <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">

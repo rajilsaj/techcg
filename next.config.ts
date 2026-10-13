@@ -24,6 +24,18 @@ const ENGLISH_PATHS: [string, string][] = [
 
 const config: NextConfig = {
   reactStrictMode: true,
+  async headers() {
+    // The service worker must never be served stale, or fixes to it would take days to reach phones.
+    return [
+      {
+        source: "/sw.js",
+        headers: [
+          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+        ],
+      },
+    ];
+  },
   async redirects() {
     return ENGLISH_PATHS.map(([source, destination]) => ({ source, destination, permanent: true }));
   },
