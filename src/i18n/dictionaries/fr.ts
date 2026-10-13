@@ -16,9 +16,8 @@ export const fr = {
   "nav.admin": "Admin",
   "nav.karmaTitle": "Karma",
 
-  "theme.toggle": "Changer de thème",
-  "theme.light": "Clair",
-  "theme.dark": "Sombre",
+  "theme.toLight": "Passer en mode clair",
+  "theme.toDark": "Passer en mode sombre",
 
   "archives.heading": "Archives",
   "archives.previousDay": "Jour précédent",

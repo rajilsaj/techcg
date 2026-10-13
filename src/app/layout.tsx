@@ -22,11 +22,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
-                const theme = localStorage.getItem('theme');
-                const isDark = theme === 'dark' ||
-                  (theme !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-                if (isDark) document.documentElement.setAttribute('data-theme', 'dark');
-                else document.documentElement.setAttribute('data-theme', 'light');
+                // The device setting, unless the visitor picked a theme with the sun button.
+                var choice = null;
+                try { choice = localStorage.getItem('theme-choice'); localStorage.removeItem('theme'); } catch (e) {}
+                var isDark = choice === 'dark' ||
+                  (choice !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
               })();
             `,
           }}
