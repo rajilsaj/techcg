@@ -40,12 +40,21 @@ export function SubmitButton({
   formAction?: (formData: FormData) => void | Promise<void>;
 }) {
   const { pending } = useFormStatus();
+  // When a button has its own formAction, React builds the FormData without the
+  // button's name/value, so add them back before calling the action.
+  const action =
+    formAction && name
+      ? (formData: FormData) => {
+          formData.set(name, value ?? "");
+          return formAction(formData);
+        }
+      : formAction;
   return (
     <button
       type="submit"
       name={name}
       value={value}
-      formAction={formAction}
+      formAction={action}
       disabled={pending}
       className={className}
       onClick={(e) => {
