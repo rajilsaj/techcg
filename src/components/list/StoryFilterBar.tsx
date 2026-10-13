@@ -1,13 +1,15 @@
 import Link from "next/link";
-import { Search, SlidersHorizontal, X } from "lucide-react";
-import { TOPICS } from "@/lib/topics";
+import { ArrowRight, Briefcase, BrainCircuit, LayoutGrid, PartyPopper, Search, SlidersHorizontal, X } from "lucide-react";
+import { TOPICS, type TopicSlug } from "@/lib/topics";
 import { filtersQuery, hasAdvancedFilters, hasFilters, PERIODS, SORT_PARAM, type StoryFilters } from "@/lib/story-filters";
 import type { StoryOrder } from "@/lib/stories";
 import { t, type Key } from "@/i18n";
 
 const fieldClass =
-  "w-full rounded-md border border-border bg-bg px-3 py-2 text-sm text-text placeholder:text-text-secondary/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30";
+  "w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text placeholder:text-text-secondary/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30";
 const labelClass = "mb-1 block text-xs font-medium text-text-secondary";
+
+const TOPIC_ICONS: Record<TopicSlug, typeof Search> = { evenements: PartyPopper, ia: BrainCircuit, entrepreneurs: Briefcase };
 
 function href(filters: StoryFilters, override: Partial<StoryFilters>): string {
   const query = filtersQuery(filters, override).toString();
@@ -15,107 +17,128 @@ function href(filters: StoryFilters, override: Partial<StoryFilters>): string {
 }
 
 /**
- * Topic chips, a search box and an advanced search panel above the homepage feed.
- * A plain GET form: works without JavaScript and every result has a shareable URL.
+ * One bar above the homepage feed: category pills, the search field, an advanced
+ * search toggle and the search button. A plain GET form (the advanced panel opens
+ * with a CSS-only checkbox), so it works without JavaScript and every result has a URL.
  */
 export function StoryFilterBar({ filters }: { filters: StoryFilters }) {
-  const chip = (active: boolean) =>
-    `shrink-0 rounded-full border px-3 py-1 text-sm font-medium transition-colors ${
-      active ? "border-accent bg-accent text-white" : "border-border text-text-secondary hover:border-accent hover:text-accent"
+  const pill = (active: boolean) =>
+    `inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-all ${
+      active ? "bg-accent text-white shadow-md shadow-accent/30" : "text-text-secondary hover:bg-bg hover:text-accent"
     }`;
+  const advanced = hasAdvancedFilters(filters);
 
   return (
     <section className="space-y-4 border-b border-border pb-4">
       <h1 className="pt-2 text-4xl font-extrabold leading-none tracking-tight text-accent sm:text-6xl">{t("home.headline")}</h1>
+      <form action="/" method="get" role="search">
+        {/* Checked = advanced panel open. Kept first so the panel can use `peer-checked`. */}
+        <input type="checkbox" id="advanced-search" className="peer sr-only" defaultChecked={advanced} />
 
-      <nav aria-label={t("filters.label")} className="scrollbar-none -mx-4 flex gap-2 overflow-x-auto px-4">
-        <Link href={href(filters, { topic: null })} className={chip(!filters.topic)} aria-current={!filters.topic ? "page" : undefined}>
-          {t("filters.all")}
-        </Link>
-        {TOPICS.map((topic) => (
-          <Link
-            key={topic.slug}
-            href={href(filters, { topic: topic.slug })}
-            className={chip(filters.topic === topic.slug)}
-            aria-current={filters.topic === topic.slug ? "page" : undefined}
-          >
-            {topic.label}
-          </Link>
-        ))}
-      </nav>
+        <div className="flex flex-col gap-1 rounded-3xl border border-border bg-bg-secondary p-1.5 transition-shadow focus-within:border-accent/60 focus-within:shadow-lg focus-within:shadow-accent/10 md:flex-row md:items-center md:rounded-full">
+          <nav aria-label={t("filters.label")} className="scrollbar-none flex gap-1 overflow-x-auto">
+            <Link href={href(filters, { topic: null })} className={pill(!filters.topic)} aria-current={!filters.topic ? "page" : undefined}>
+              <LayoutGrid size={14} aria-hidden />
+              {t("filters.all")}
+            </Link>
+            {TOPICS.map((topic) => {
+              const Icon = TOPIC_ICONS[topic.slug];
+              const active = filters.topic === topic.slug;
+              return (
+                <Link key={topic.slug} href={href(filters, { topic: topic.slug })} className={pill(active)} aria-current={active ? "page" : undefined}>
+                  <Icon size={14} aria-hidden />
+                  {topic.label}
+                </Link>
+              );
+            })}
+          </nav>
 
-      <form action="/" method="get" role="search" className="space-y-3">
-        <div className="flex gap-2">
-          <label className="relative flex-1">
-            <span className="sr-only">{t("filters.search")}</span>
-            <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" aria-hidden />
-            <input type="search" name="q" defaultValue={filters.q} maxLength={100} placeholder={t("filters.search")} className={`${fieldClass} pl-9`} />
-          </label>
-          <button type="submit" className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:opacity-90">
-            {t("filters.searchButton")}
-          </button>
+          <span className="mx-1 hidden h-6 w-px bg-border md:block" aria-hidden />
+
+          <div className="flex min-w-0 flex-1 items-center gap-1">
+            <label className="relative min-w-0 flex-1">
+              <span className="sr-only">{t("filters.search")}</span>
+              <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" aria-hidden />
+              <input
+                type="search"
+                name="q"
+                defaultValue={filters.q}
+                maxLength={100}
+                placeholder={t("filters.search")}
+                className="w-full rounded-full bg-transparent py-2 pl-9 pr-2 text-sm text-text placeholder:text-text-secondary/70 focus:outline-none"
+              />
+            </label>
+            <label
+              htmlFor="advanced-search"
+              title={t("filters.advanced")}
+              className={`relative grid h-9 w-9 shrink-0 cursor-pointer place-items-center rounded-full transition-colors hover:bg-bg hover:text-accent ${advanced ? "text-accent" : "text-text-secondary"}`}
+            >
+              <SlidersHorizontal size={16} aria-hidden />
+              <span className="sr-only">{t("filters.advanced")}</span>
+              {advanced && <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-accent ring-2 ring-bg-secondary" aria-hidden />}
+            </label>
+            <button
+              type="submit"
+              title={t("filters.searchButton")}
+              className="group grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent text-white transition hover:scale-105"
+            >
+              <ArrowRight size={17} className="transition-transform group-hover:translate-x-0.5" aria-hidden />
+              <span className="sr-only">{t("filters.searchButton")}</span>
+            </button>
+          </div>
         </div>
 
-        <details className="group rounded-md border border-border" open={hasAdvancedFilters(filters)}>
-          <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-sm font-medium text-text-secondary hover:text-accent [&::-webkit-details-marker]:hidden">
-            <SlidersHorizontal size={15} aria-hidden />
-            {t("filters.advanced")}
-            <span className="ml-auto text-xs transition-transform group-open:rotate-180" aria-hidden>
-              ▾
-            </span>
-          </summary>
-
-          <div className="grid gap-3 border-t border-border p-3 sm:grid-cols-2 lg:grid-cols-3">
-            <label>
-              <span className={labelClass}>{t("filters.topic")}</span>
-              <select name="sujet" defaultValue={filters.topic ?? ""} className={fieldClass}>
-                <option value="">{t("filters.anyTopic")}</option>
-                {TOPICS.map((topic) => (
-                  <option key={topic.slug} value={topic.slug}>
-                    {topic.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span className={labelClass}>{t("filters.site")}</span>
-              <input name="site" defaultValue={filters.site} maxLength={120} placeholder={t("filters.sitePlaceholder")} className={fieldClass} />
-            </label>
-            <label>
-              <span className={labelClass}>{t("filters.author")}</span>
-              <input name="auteur" defaultValue={filters.author} maxLength={40} placeholder={t("filters.authorPlaceholder")} className={fieldClass} />
-            </label>
-            <label>
-              <span className={labelClass}>{t("filters.period")}</span>
-              <select name="periode" defaultValue={filters.period ?? ""} className={fieldClass}>
-                <option value="">{t("filters.anyPeriod")}</option>
-                {Object.keys(PERIODS).map((period) => (
-                  <option key={period} value={period}>
-                    {t(`filters.period.${period}` as Key)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span className={labelClass}>{t("filters.sort")}</span>
-              <select name="tri" defaultValue={SORT_PARAM[filters.sort]} className={fieldClass}>
-                {(Object.keys(SORT_PARAM) as StoryOrder[]).map((sort) => (
-                  <option key={sort} value={SORT_PARAM[sort]}>
-                    {t(`filters.sort.${sort}` as Key)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <div className="flex items-end gap-3 sm:col-span-2 lg:col-span-3">
-              <button type="submit" className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:opacity-90">
-                {t("filters.apply")}
-              </button>
-              <Link href="/" className="text-sm text-text-secondary hover:text-accent">
-                {t("filters.reset")}
-              </Link>
-            </div>
+        {/* Advanced search */}
+        <div className="auth-view mt-2 hidden gap-3 rounded-2xl border border-border bg-bg-secondary p-3 peer-checked:grid sm:grid-cols-2 lg:grid-cols-5">
+          <label>
+            <span className={labelClass}>{t("filters.topic")}</span>
+            <select name="sujet" defaultValue={filters.topic ?? ""} className={fieldClass}>
+              <option value="">{t("filters.anyTopic")}</option>
+              {TOPICS.map((topic) => (
+                <option key={topic.slug} value={topic.slug}>
+                  {topic.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span className={labelClass}>{t("filters.site")}</span>
+            <input name="site" defaultValue={filters.site} maxLength={120} placeholder={t("filters.sitePlaceholder")} className={fieldClass} />
+          </label>
+          <label>
+            <span className={labelClass}>{t("filters.author")}</span>
+            <input name="auteur" defaultValue={filters.author} maxLength={40} placeholder={t("filters.authorPlaceholder")} className={fieldClass} />
+          </label>
+          <label>
+            <span className={labelClass}>{t("filters.period")}</span>
+            <select name="periode" defaultValue={filters.period ?? ""} className={fieldClass}>
+              <option value="">{t("filters.anyPeriod")}</option>
+              {Object.keys(PERIODS).map((period) => (
+                <option key={period} value={period}>
+                  {t(`filters.period.${period}` as Key)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span className={labelClass}>{t("filters.sort")}</span>
+            <select name="tri" defaultValue={SORT_PARAM[filters.sort]} className={fieldClass}>
+              {(Object.keys(SORT_PARAM) as StoryOrder[]).map((sort) => (
+                <option key={sort} value={SORT_PARAM[sort]}>
+                  {t(`filters.sort.${sort}` as Key)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="flex items-center gap-3 sm:col-span-2 lg:col-span-5">
+            <button type="submit" className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white hover:opacity-90">
+              {t("filters.apply")}
+            </button>
+            <Link href="/" className="text-sm text-text-secondary hover:text-accent">
+              {t("filters.reset")}
+            </Link>
           </div>
-        </details>
+        </div>
       </form>
 
       {hasFilters(filters) && (
