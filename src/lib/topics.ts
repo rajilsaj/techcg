@@ -26,14 +26,14 @@ const AI_WORDS =
   "ia|iag|intelligence artificielle|artificial intelligence|machine learning|apprentissage (automatique|profond)|deep learning|reseaux? de neurones|neural networks?|chatgpt|openai|anthropic|claude (ai|haiku|sonnet|opus|code)|gemini|mistral ai|deepseek|copilot|gpt ?\\d|grand modele de langage|large language models?|modeles? de langage|ia generative|generative ai|agents? (ia|d'ia|ai)|chatbots?|midjourney|stable diffusion|nvidia h\\d+|hugging ?face|llama \\d|ai accelerated|ai powered";
 
 const TECH_WORDS =
-  "tech|techs|technologies?|technologiques?|technology|numeriques?|digital(e|es|s)?|digitalisation|transformation digitale|informatiques?|logiciels?|software|applications? mobiles?|apps?|smartphones?|telephones? mobiles?|internet|web|cloud|data|donnees|big data|cybersecurite|cybersecurity|cyberattaques?|hackers?|piratage|fintech|fintechs|mobile money|paiements? (mobiles?|numeriques?|digitaux)|e commerce|ecommerce|telecoms?|telecommunications?|operateurs? (telecoms?|mobiles?)|4g|5g|fibre optique|haut debit|broadband|satellites?|starlink|data centers?|centres? de donnees|semi conducteurs?|semiconductors?|puces?|chips?|processeurs?|gpu|robots?|robotique|drones?|blockchain|crypto(monnaies?|currency|currencies)?|bitcoin|developpeurs?|developers?|programmation|programming|open source|github|linux|windows|android|ios|iphone|ipad|apple|google|microsoft|meta|amazon|samsung|huawei|nvidia|tesla|spacex|tiktok|whatsapp|facebook|instagram|youtube|reseaux sociaux|social media|startup|start up|e gov|e gouvernance|identite numerique|gadgets?|ordinateurs?|laptops?|consoles?|jeux video|gaming|streaming|vr|realite (virtuelle|augmentee)|metaverse|quantique|quantum|edtech|healthtech|agritech|insurtech|proptech|cleantech|climate tech|e sante|e education";
+  "tech|techs|technologies?|technologiques?|technology|numeriques?|digital(e|es|s)?|digitalisation|transformation digitale|informatiques?|logiciels?|software|applications? mobiles?|apps?|smartphones?|telephones? mobiles?|internet|web|cloud|data|donnees (personnelles|massives|ouvertes)|protection des donnees|science des donnees|big data|cybersecurite|cybersecurity|cyberattaques?|hackers?|piratage|fintech|fintechs|mobile money|paiements? (mobiles?|numeriques?|digitaux)|e commerce|ecommerce|telecoms?|telecommunications?|operateurs? (telecoms?|mobiles?)|4g|5g|fibre optique|haut debit|broadband|satellites?|starlink|data centers?|centres? de donnees|semi conducteurs?|semiconductors?|puces?|chips?|processeurs?|gpu|robots?|robotique|drones?|blockchain|crypto(monnaies?|currency|currencies)?|bitcoin|developpeurs?|developers?|programmation|programming|open source|github|linux|windows|android|ios|iphone|ipad|apple|google|microsoft|meta|amazon|samsung|huawei|nvidia|tesla|spacex|tiktok|whatsapp|facebook|instagram|youtube|reseaux sociaux|social media|startup|start up|e gov|e gouvernance|identite numerique|gadgets?|ordinateurs?|laptops?|consoles?|jeux video|gaming|streaming|vr|realite (virtuelle|augmentee)|metaverse|quantique|quantum|edtech|healthtech|agritech|insurtech|proptech|cleantech|climate tech|e sante|e education";
 
 /**
  * Patterns run on the normalized text (lowercase, no accents, words padded with
  * spaces), except `exact`, which runs on the original text: it's for acronyms
  * like "IA"/"AI" that would otherwise match French words ("j'ai", "via").
  */
-const RULES: Record<TopicSlug, { exact?: RegExp; words: RegExp }> = {
+const RULES: Record<TopicSlug, { exact?: RegExp; words: RegExp; contextual?: RegExp }> = {
   startups: {
     words:
       / (start ?ups?|jeunes? pousses?|licornes?|unicorns?|levee de fonds|leve \d+|levees? de fonds|tour de table|seed round|pre seed|serie [abc]|series [abc]|incubateurs?|accelerateurs?|y combinator|techstars|capital risque|venture capital|vc funding|vcs|business angels?|french tech|station f|fundraising|raises \$?\d+|raised \$?\d+|valorisation de \d+|pre seed|seed funding|acquisition|rachat|rachetee?s?|acquired|exits?|ipo|entree en bourse) /,
@@ -47,8 +47,12 @@ const RULES: Record<TopicSlug, { exact?: RegExp; words: RegExp }> = {
     words: new RegExp(`( |')(${AI_WORDS}|${TECH_WORDS}) `),
   },
   evenements: {
+    // Tech events and explicit event categories: enough on their own.
     words:
-      / (evenements?|evenementiel(le|s)?|tech events?|conferences?|sommets?|summit|salons? (de|du|des|international)|hackathons?|webinaires?|webinars?|meetups?|festivals?|keynotes?|forum (economique|mondial|international|africain)|forums?|vivatech|viva technology|web summit|ces \d{4}|ces de las vegas|mwc|mobile world congress|wwdc|google i o|microsoft build|aws re invent|devfest|gitex|africatech|ai summit|dreamforce|ouverture des inscriptions|inscriptions ouvertes|date limite des inscriptions|save the date|competitions?|concours|awards?|ceremonie|journee (mondiale|internationale|nationale)) /,
+      / (evenements?|evenementiel(le|s)?|tech events?|hackathons?|webinaires?|webinars?|meetups?|keynotes?|vivatech|viva technology|web summit|ces \d{4}|ces de las vegas|mwc|mobile world congress|wwdc|google i o|microsoft build|aws re invent|devfest|gitex|africatech|ai summit|dreamforce|startup (week|weekend|day)|demo day|pitch(ing)? (day|night|competition)) /,
+    // Generic event words (a congress, a contest, a football match day…) count only with a tech, startup or entrepreneur angle.
+    contextual:
+      / (conferences?|congres|sommets?|summit|salons? (de|du|des|international)|festivals?|forum (economique|mondial|international|africain)|forums?|ouverture des inscriptions|inscriptions ouvertes|date limite des inscriptions|save the date|competitions?|concours|awards?|prix de l'innovation|ceremonie|journee (mondiale|internationale|nationale)|editions?) /,
   },
 };
 
@@ -102,10 +106,12 @@ export function detectTopics(parts: { title?: string | null; excerpt?: string | 
   }
   const normalized = normalize(`${text} ${urlText}`);
 
-  const topics: AutoTagSlug[] = TOPICS.map((topic) => topic.slug).filter((slug) => {
-    const rule = RULES[slug];
-    return rule.words.test(normalized) || (rule.exact?.test(text) ?? false);
-  });
+  const matches = (slug: TopicSlug) => RULES[slug].words.test(normalized) || (RULES[slug].exact?.test(text) ?? false);
+  const found = new Set(TOPICS.map((topic) => topic.slug).filter(matches));
+  // "Concours", "congrès", "forum"… are events for this site only around tech, startups or entrepreneurs.
+  const ecosystem = found.has("tech") || found.has("startups") || found.has("entrepreneurs");
+  if (!found.has("evenements") && ecosystem && RULES.evenements.contextual?.test(normalized)) found.add("evenements");
+  const topics: AutoTagSlug[] = TOPICS.map((topic) => topic.slug).filter((slug) => found.has(slug));
   const region = detectRegion(text, parts.url);
   return region ? [...topics, region] : topics;
 }

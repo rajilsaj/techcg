@@ -29,3 +29,19 @@ describe("decodeEntities", () => {
     );
   });
 });
+
+describe("withoutSiteWideKeywords", () => {
+  it("drops keywords most articles of a batch share, keeps the specific ones", async () => {
+    const { withoutSiteWideKeywords } = await import("@/lib/importer/run");
+    const article = (keywords: string[]) => ({ title: "t", url: "https://x.cd/a", publishedAt: null, summary: null, image: null, keywords });
+    const out = withoutSiteWideKeywords([
+      article(["streaming RTNC TV", "Congo", "Mines"]),
+      article(["streaming RTNC TV", "congo", "Banques"]),
+      article(["Streaming RTNC TV", "Congo", "Fintech"]),
+      article(["streaming RTNC TV", "Congo"]),
+    ]);
+    expect(out.map((a) => a.keywords)).toEqual([["Mines"], ["Banques"], ["Fintech"], []]);
+    // Two articles: too few to tell boilerplate from a shared topic.
+    expect(withoutSiteWideKeywords([article(["Tech"]), article(["Tech"])])[0].keywords).toEqual(["Tech"]);
+  });
+});

@@ -79,3 +79,13 @@ describe("isCongoStory", () => {
     expect(isCongoStory("Le Cameroun lance son identité numérique", "https://www.digitalbusiness.africa/x")).toBe(false);
   });
 });
+
+describe("events need a tech angle unless they are tech events", () => {
+  it("tags a contest or congress as an event only around tech, startups or entrepreneurs", async () => {
+    const { detectTopics } = await import("@/lib/topics");
+    expect(detectTopics({ title: "10e Congrès de cardiologie à Bujumbura" })).not.toContain("evenements");
+    expect(detectTopics({ title: "Primus Ligue : le concours des supporters" })).not.toContain("evenements");
+    expect(detectTopics({ title: "Concours d'innovation pour les startups de Kinshasa" })).toContain("evenements");
+    expect(detectTopics({ title: "GITEX Africa ouvre ses portes à Marrakech" })).toContain("evenements");
+  });
+});

@@ -64,6 +64,20 @@ export function canonicalUrl(raw: string): string {
   }
 }
 
+/**
+ * Drops keywords most articles of a batch share: a site's SEO boilerplate
+ * ("streaming RTNC TV" on every page) or word-frequency lists ("des, les, pour"),
+ * which say nothing about the article and would tag it wrongly.
+ */
+export function withoutSiteWideKeywords(articles: FoundArticle[]): FoundArticle[] {
+  if (articles.length < 3) return articles;
+  const counts = new Map<string, number>();
+  for (const a of articles) for (const k of new Set(a.keywords.map((k) => k.toLowerCase()))) counts.set(k, (counts.get(k) ?? 0) + 1);
+  const threshold = Math.max(3, Math.ceil(articles.length * 0.6));
+  const common = new Set([...counts].filter(([, n]) => n >= threshold).map(([k]) => k));
+  return common.size === 0 ? articles : articles.map((a) => ({ ...a, keywords: a.keywords.filter((k) => !common.has(k.toLowerCase())) }));
+}
+
 /** Runs `fn` over `items`, 4 at a time, keeping the order. */
 async function inBatches<T, R>(items: T[], fn: (item: T) => Promise<R>): Promise<R[]> {
   const out: R[] = [];
@@ -194,7 +208,7 @@ async function importFrom(source: { id: number; name: string; url: string; maxIt
   const now = Date.now();
   let created = 0;
   // Every new article page is analysed (feeds give little text and often small or no pictures).
-  const toCreate = await analyzeAll(fresh);
+  const toCreate = withoutSiteWideKeywords(await analyzeAll(fresh));
 
   for (const article of toCreate) {
     const language = article.language ?? found.language ?? null;
