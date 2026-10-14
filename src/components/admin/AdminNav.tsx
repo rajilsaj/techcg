@@ -12,6 +12,7 @@ import {
   History,
   Image as ImageIcon,
   LayoutDashboard,
+  Menu,
   MessageSquare,
   Settings,
   Sparkles,
@@ -33,6 +34,7 @@ const ITEMS: { href: string; label: string; icon: LucideIcon; badge?: "comments"
   { href: "/godmod/medias", label: "Médias", icon: ImageIcon },
   { href: "/godmod/profils", label: "Profiles.CG", icon: Contact },
   { href: "/godmod/utilisateurs", label: "Utilisateurs", icon: Users },
+  { href: "/godmod/menu", label: "Menu", icon: Menu },
   { href: "/godmod/parametres", label: "Réglages", icon: Settings },
   { href: "/godmod/journal", label: "Journal", icon: History },
 ];

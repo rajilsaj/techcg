@@ -3,6 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import { SITE } from "./site";
 import { t } from "@/i18n";
+import { DEFAULT_VISIBLE_MENUS, isMenuId, type MenuId } from "./menu";
 
 /** Who must wait for an admin before their comment appears. */
 export type CommentModeration = "none" | "first" | "all";
@@ -18,6 +19,8 @@ export interface SiteSettings {
   defaultCategoryId: number | null;
   /** Visit data (IPs, locations…) older than this many days is deleted. */
   analyticsRetentionDays: number;
+  /** Sections shown in the main menu (see MENU_ITEMS); the others stay reachable by their address. */
+  visibleMenus: MenuId[];
 }
 
 export const DEFAULT_SETTINGS: SiteSettings = {
@@ -27,6 +30,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   submissionsOpen: true,
   defaultCategoryId: null,
   analyticsRetentionDays: 90,
+  visibleMenus: DEFAULT_VISIBLE_MENUS,
 };
 
 const MODERATION_VALUES: CommentModeration[] = ["none", "first", "all"];
@@ -48,6 +52,7 @@ export function sanitizeSettings(raw: Record<string, unknown>): SiteSettings {
       typeof raw.analyticsRetentionDays === "number" && Number.isInteger(raw.analyticsRetentionDays) && raw.analyticsRetentionDays >= 1 && raw.analyticsRetentionDays <= 730
         ? raw.analyticsRetentionDays
         : DEFAULT_SETTINGS.analyticsRetentionDays,
+    visibleMenus: Array.isArray(raw.visibleMenus) ? [...new Set(raw.visibleMenus.filter(isMenuId))] : DEFAULT_SETTINGS.visibleMenus,
   };
 }
 

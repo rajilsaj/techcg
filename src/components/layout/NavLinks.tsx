@@ -3,17 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { t, type Key } from "@/i18n";
+import { visibleMenuItems, type MenuId } from "@/lib/menu";
 
-// Récents, Questions, Vitrine, Emplois and Commentaires still exist but are left out of the menu.
-const NAV: { href: string; key: Key; match?: string[] }[] = [
-  { href: "/", key: "nav.top", match: ["/", "/archives"] },
-  { href: "/indicateurs", key: "nav.indicators" },
-  { href: "/profils", key: "nav.profiles" },
-];
-
-/** Section links; the current one is underlined like in the design. */
-export function NavLinks() {
+/** Section links; the current one is underlined like in the design. Admins choose which appear (Admin › Menu). */
+export function NavLinks({ visible }: { visible: MenuId[] }) {
   const pathname = usePathname();
+  const NAV: { href: string; key: Key; match?: string[] }[] = [
+    { href: "/", key: "nav.top", match: ["/", "/archives"] },
+    ...visibleMenuItems(visible).map((m) => ({ href: m.href, key: m.label })),
+  ];
 
   return (
     <div className="scrollbar-none flex items-center gap-4 overflow-x-auto text-sm">

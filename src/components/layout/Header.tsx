@@ -9,7 +9,7 @@ import { Avatar } from "@/components/user/Avatar";
 import { t } from "@/i18n";
 
 export async function Header() {
-  const [session, { siteName }] = await Promise.all([getSession(), getSettings()]);
+  const [session, { siteName, visibleMenus }] = await Promise.all([getSession(), getSettings()]);
 
   // On phones the section links, Publier and the profile move to the bottom tab bar.
   return (
@@ -26,7 +26,7 @@ export async function Header() {
           <ThemeToggle />
 
           <nav className="hidden md:ml-auto md:block">
-            <NavLinks />
+            <NavLinks visible={visibleMenus} />
           </nav>
 
           <div className="ml-auto flex items-center gap-4 text-sm md:ml-0">
@@ -63,7 +63,7 @@ export async function Header() {
           </div>
         </div>
       </header>
-      <MobileTabBar username={session?.username ?? null} avatarUrl={session?.avatarUrl ?? null} />
+      <MobileTabBar username={session?.username ?? null} avatarUrl={session?.avatarUrl ?? null} visible={visibleMenus} />
     </>
   );
 }

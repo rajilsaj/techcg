@@ -16,6 +16,7 @@ export const fr = {
   "nav.admin": "Admin",
   "nav.profiles": "Profiles.CG",
   "nav.profilesShort": "Profils",
+  "nav.comments": "Commentaires",
   "profiles.kicker": "Profiles.CG",
   "profiles.title1": "(dites bonjour)",
   "profiles.title2": "aux talents du Congo",

@@ -39,6 +39,12 @@ describe("sanitizeSettings", () => {
     const s = sanitizeSettings({ siteName: "  Kongo Tech ", commentModeration: "first", submissionsOpen: false, defaultCategoryId: 3 });
     expect(s).toMatchObject({ siteName: "Kongo Tech", commentModeration: "first", submissionsOpen: false, defaultCategoryId: 3 });
   });
+
+  it("hides Indicateurs by default and keeps only known menu sections", () => {
+    expect(DEFAULT_SETTINGS.visibleMenus).toEqual(["profils"]);
+    expect(sanitizeSettings({ visibleMenus: ["indicateurs", "admin", "indicateurs", 3] }).visibleMenus).toEqual(["indicateurs"]);
+    expect(sanitizeSettings({ visibleMenus: [] }).visibleMenus).toEqual([]);
+  });
 });
 
 describe("taxonomy", () => {

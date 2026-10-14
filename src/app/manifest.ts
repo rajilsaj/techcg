@@ -23,7 +23,7 @@ export default function manifest(): MetadataRoute.Manifest {
     ],
     shortcuts: [
       { name: "Publier", url: "/publier", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
-      { name: "Indicateurs", url: "/indicateurs", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
+      { name: "Profiles.CG", url: "/profils", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
     ],
   };
 }
