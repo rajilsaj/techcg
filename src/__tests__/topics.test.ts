@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/db", () => ({ prisma: {} }));
 
-const { detectTopics } = await import("@/lib/topics");
+const { detectTopics, isCongoStory } = await import("@/lib/topics");
 const { parseStoryFilters, filtersQuery, filtersWhere } = await import("@/lib/story-filters");
 const { parseFeed } = await import("@/lib/importer/parse");
 
@@ -17,9 +17,9 @@ describe("detectTopics", () => {
   });
 
   it("files startups and founders under Entrepreneurs, and spots events", () => {
-    expect(detectTopics({ title: "Une start-up congolaise lève 2 millions de dollars" })).toEqual(["entrepreneurs"]);
-    expect(detectTopics({ title: "Rencontre avec la fondatrice de Kinshasa Digital" })).toEqual(["entrepreneurs"]);
-    expect(detectTopics({ title: "Le hackathon de Brazzaville ouvre ses inscriptions" })).toEqual(["evenements"]);
+    expect(detectTopics({ title: "Une start-up congolaise lève 2 millions de dollars" })).toEqual(["entrepreneurs", "congo"]);
+    expect(detectTopics({ title: "Rencontre avec la fondatrice de Kinshasa Digital" })).toEqual(["entrepreneurs", "congo"]);
+    expect(detectTopics({ title: "Le hackathon de Brazzaville ouvre ses inscriptions" })).toEqual(["evenements", "congo"]);
     expect(detectTopics({ title: "VivaTech 2026 : les startups africaines de l'IA à l'honneur" })).toEqual(["evenements", "ia", "entrepreneurs"]);
   });
 
@@ -52,5 +52,21 @@ describe("story filters", () => {
     const where = filtersWhere(parseStoryFilters({ q: "rust wasm" }));
     expect((where.AND as unknown[]).length).toBe(2);
     expect(filtersWhere(parseStoryFilters({}))).toEqual({});
+  });
+});
+
+describe("isCongoStory", () => {
+  it("spots both Congos, their cities and .cg/.cd sites", () => {
+    expect(isCongoStory("RDC : la 5G en préparation")).toBe(true);
+    expect(isCongoStory("Fibre optique : après le Cameroun et le Congo, la Centrafrique veut s'interconnecter")).toBe(true);
+    expect(isCongoStory("Pointe-Noire accueille un nouveau data center")).toBe(true);
+    expect(isCongoStory("Les opérateurs congolais baissent leurs prix")).toBe(true);
+    expect(isCongoStory("Une annonce", "https://www.adiac-congo.cg/article/1")).toBe(true);
+    expect(isCongoStory("Une annonce", "https://actualite.cd/2026/10/13/x")).toBe(true);
+  });
+  it("leaves other countries alone", () => {
+    expect(isCongoStory("Kenya : Microsoft ferme son centre de Nairobi")).toBe(false);
+    expect(isCongoStory("Oyo State launches a tech hub in Nigeria")).toBe(false);
+    expect(isCongoStory("Le Cameroun lance son identité numérique", "https://www.digitalbusiness.africa/x")).toBe(false);
   });
 });

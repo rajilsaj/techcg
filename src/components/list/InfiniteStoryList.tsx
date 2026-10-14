@@ -18,6 +18,8 @@ export interface InfiniteStoryListProps {
   firstRank?: number;
   /** The page's search filters (URL parameters), applied to the next pages too. */
   filters?: Record<string, string>;
+  /** Story ids shown above the list (Congo block), left out of the next pages. */
+  excludeIds?: number[];
   /** Shown instead of the default when there's nothing to list. */
   emptyMessage?: string;
 }
@@ -31,6 +33,7 @@ export function InfiniteStoryList({
   fallbackHref,
   firstRank = 1,
   filters,
+  excludeIds,
   emptyMessage,
 }: InfiniteStoryListProps) {
   const [stories, setStories] = useState(initialStories);
@@ -44,7 +47,7 @@ export function InfiniteStoryList({
     loading.current = true;
     setStatus("loading");
     try {
-      const page = await loadMoreStoriesAction(feed, cursor, filters);
+      const page = await loadMoreStoriesAction(feed, cursor, filters, excludeIds);
       // Rankings can shift between loads; never show a story twice.
       setStories((current) => {
         const seen = new Set(current.map((s) => s.id));
@@ -57,7 +60,7 @@ export function InfiniteStoryList({
     } finally {
       loading.current = false;
     }
-  }, [feed, cursor, filters]);
+  }, [feed, cursor, filters, excludeIds]);
 
   useEffect(() => {
     const node = sentinel.current;

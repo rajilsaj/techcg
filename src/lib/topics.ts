@@ -48,8 +48,32 @@ const RULES: Record<TopicSlug, { exact?: RegExp; words: RegExp }> = {
   },
 };
 
-/** Topics a story is about, from its title, excerpt, declared keywords and URL. */
-export function detectTopics(parts: { title?: string | null; excerpt?: string | null; keywords?: string[] | null; url?: string | null }): TopicSlug[] {
+/** Local news: stories about Congo get this tag too and lead the homepage. */
+export const LOCAL_TAG = { slug: "congo", label: "Congo" } as const;
+/** Tags added automatically: the topics plus the local tag. */
+export type AutoTagSlug = TopicSlug | typeof LOCAL_TAG.slug;
+
+/**
+ * Both Congos: places, people and institutions on the normalized text. "Congo"
+ * alone is enough; the city list catches stories that only name a city.
+ */
+const CONGO_WORDS =
+  / (congo|congos|congolais|congolaise|congolaises|rdc|r d c|brazzaville|brazza|pointe noire|dolisie|nkayi|ouesso|owando|impfondo|kinshasa|lubumbashi|goma|bukavu|kisangani|mbuji mayi|kananga|matadi|kolwezi|mbandaka) /;
+
+/** Whether a story is about Congo: the words above, or a .cg / .cd website. */
+export function isCongoStory(text: string, url?: string | null): boolean {
+  if (url) {
+    try {
+      if (/\.(cg|cd)$/i.test(new URL(url).hostname)) return true;
+    } catch {
+      // ignore malformed URLs
+    }
+  }
+  return CONGO_WORDS.test(normalize(text));
+}
+
+/** Topics a story is about (plus "congo" for local news), from its title, excerpt, declared keywords and URL. */
+export function detectTopics(parts: { title?: string | null; excerpt?: string | null; keywords?: string[] | null; url?: string | null }): AutoTagSlug[] {
   const text = [parts.title, parts.excerpt, ...(parts.keywords ?? [])].filter(Boolean).join(" . ");
   // Section subdomains and paths ("intelligence-artificielle.developpez.com", "/startups/") count too.
   let urlText = "";
@@ -63,18 +87,19 @@ export function detectTopics(parts: { title?: string | null; excerpt?: string | 
   }
   const normalized = normalize(`${text} ${urlText}`);
 
-  return TOPICS.map((topic) => topic.slug).filter((slug) => {
+  const topics: AutoTagSlug[] = TOPICS.map((topic) => topic.slug).filter((slug) => {
     const rule = RULES[slug];
     return rule.words.test(normalized) || (rule.exact?.test(text) ?? false);
   });
+  return isCongoStory(text, parts.url) ? [...topics, LOCAL_TAG.slug] : topics;
 }
 
 /** Adds topic tags to a story, keeping the tags it already has. */
-export async function addTopicTags(itemId: number, topics: TopicSlug[]): Promise<void> {
+export async function addTopicTags(itemId: number, topics: AutoTagSlug[]): Promise<void> {
   if (topics.length === 0) return;
   const tags = await Promise.all(
     topics.map((slug) => {
-      const name = TOPICS.find((topic) => topic.slug === slug)!.label;
+      const name = [...TOPICS, LOCAL_TAG].find((tag) => tag.slug === slug)!.label;
       return prisma.tag.upsert({ where: { slug }, create: { name, slug }, update: {}, select: { id: true } });
     })
   );

@@ -5,7 +5,7 @@ import type { ListedStory } from "@/lib/stories";
 import { formatRelativeTime, pluralize, t } from "@/i18n";
 import { HideableStory, HideButton, VoteButtons } from "./StoryActions";
 import { CoverImage } from "@/components/media/CoverImage";
-import { isTopic } from "@/lib/topics";
+import { isTopic, LOCAL_TAG } from "@/lib/topics";
 import { Avatar } from "@/components/user/Avatar";
 
 export interface StoryItemProps {
@@ -73,9 +73,11 @@ export function StoryItem({ rank, story, isLoggedIn }: StoryItemProps) {
                   <Link
                     href={isTopic(tag.slug) ? `/?sujet=${tag.slug}` : `/etiquette/${tag.slug}`}
                     className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium leading-4 transition-colors ${
-                      isTopic(tag.slug)
-                        ? "border-accent/30 bg-accent/10 text-accent hover:bg-accent/20"
-                        : "border-border text-text-secondary hover:border-accent hover:text-accent"
+                      tag.slug === LOCAL_TAG.slug
+                        ? "border-green-600/30 bg-green-500/10 text-green-700 hover:bg-green-500/20 dark:text-green-400"
+                        : isTopic(tag.slug)
+                          ? "border-accent/30 bg-accent/10 text-accent hover:bg-accent/20"
+                          : "border-border text-text-secondary hover:border-accent hover:text-accent"
                     }`}
                   >
                     #{tag.name}

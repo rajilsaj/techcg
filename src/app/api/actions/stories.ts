@@ -18,15 +18,18 @@ export type Feed = keyof typeof FEEDS;
 export async function loadMoreStoriesAction(
   feed: Feed,
   cursor: string,
-  filters: Record<string, string> = {}
+  filters: Record<string, string> = {},
+  /** Stories already shown above the list (the Congo block). */
+  excludeIds: number[] = []
 ): Promise<{ stories: ListedStory[]; nextCursor?: string }> {
   const config = FEEDS[feed];
   if (!config || typeof cursor !== "string" || cursor.length > 200) return { stories: [] };
 
   const f = parseStoryFilters(filters && typeof filters === "object" ? filters : {});
   const session = await getSession();
+  const exclude = Array.isArray(excludeIds) ? excludeIds.filter((id) => Number.isInteger(id) && id > 0).slice(0, 10) : [];
   return listStories({
-    where: { AND: [config.where, filtersWhere(f)] },
+    where: { AND: [config.where, filtersWhere(f), exclude.length ? { id: { notIn: exclude } } : {}] },
     order: f.sort,
     cursor,
     viewerId: session?.userId,
