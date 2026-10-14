@@ -2,6 +2,7 @@ name: Automatic import
 
 # Imports new articles from the sources set up in Admin › Importation, every 30 minutes.
 # The site only re-reads sources that are due (30 min; 6 h for Google News searches).
+# The last run is shown in Admin › Importation ("Importation automatique").
 on:
   schedule:
     - cron: "*/30 * * * *"
@@ -25,4 +26,9 @@ jobs:
             "https://techcg.vercel.app/api/cron/import?trigger=github")
           echo "HTTP $status"
           cat result.json; echo
+          if [ "$status" = "401" ]; then
+            # The site doesn't recognise the secret (new endpoint not deployed yet, or the secret was changed).
+            echo "::warning::Import refused (401): check that the latest version is deployed and that CRON_SECRET matches."
+            exit 0
+          fi
           test "$status" = "200"
