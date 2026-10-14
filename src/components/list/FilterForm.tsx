@@ -3,6 +3,7 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { Check, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { startNavigation } from "@/components/layout/LoadingBar";
 
 /** Values that are the defaults and so stay out of the URL. */
 const DEFAULTS: Record<string, string> = { tri: "recents" };
@@ -29,7 +30,9 @@ export function FilterForm({ children, className }: { children: ReactNode; class
           if (v && DEFAULTS[key] !== v) params.set(key, v);
         }
         const query = params.toString();
-        router.push(query ? `/?${query}` : "/");
+        const next = query ? `/?${query}` : "/";
+        if (next !== `${location.pathname}${location.search}`) startNavigation();
+        router.push(next);
       }}
     >
       {children}

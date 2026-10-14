@@ -242,3 +242,32 @@ html {
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
+
+/* Loading bar under the header (LoadingBar.tsx): Congolese green, yellow, red sliding back and forth. */
+.loading-bar {
+  background: linear-gradient(90deg, #009543 0 33.3%, #fbde4a 33.3% 66.6%, #dc241f 66.6% 100%);
+  border-radius: 9999px;
+  animation: loading-bar-slide 1.1s ease-in-out infinite alternate;
+}
+@keyframes loading-bar-slide {
+  from {
+    transform: translateX(-10%);
+  }
+  to {
+    transform: translateX(160%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .loading-bar {
+    width: 100%;
+    animation: loading-bar-pulse 1.4s ease-in-out infinite alternate;
+  }
+  @keyframes loading-bar-pulse {
+    from {
+      opacity: 0.4;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}

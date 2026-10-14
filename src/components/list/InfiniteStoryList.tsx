@@ -5,6 +5,7 @@ import { loadMoreStoriesAction, type Feed } from "@/app/api/actions/stories";
 import type { ListedStory } from "@/lib/stories";
 import { t } from "@/i18n";
 import { StoryItem } from "./StoryItem";
+import { startLoading } from "@/components/layout/LoadingBar";
 import { CircleCheck } from "lucide-react";
 
 export interface InfiniteStoryListProps {
@@ -46,6 +47,7 @@ export function InfiniteStoryList({
     if (!cursor || loading.current) return;
     loading.current = true;
     setStatus("loading");
+    const stopBar = startLoading();
     try {
       const page = await loadMoreStoriesAction(feed, cursor, filters, excludeIds);
       // Rankings can shift between loads; never show a story twice.
@@ -59,6 +61,7 @@ export function InfiniteStoryList({
       setStatus("error");
     } finally {
       loading.current = false;
+      stopBar();
     }
   }, [feed, cursor, filters, excludeIds]);
 

@@ -5,6 +5,7 @@ import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { LogoutButton } from "@/components/layout/LogoutButton";
 import { NavLinks } from "@/components/layout/NavLinks";
 import { MobileTabBar } from "@/components/layout/MobileTabBar";
+import { LoadingBar } from "@/components/layout/LoadingBar";
 import { Avatar } from "@/components/user/Avatar";
 import { t } from "@/i18n";
 
@@ -62,6 +63,7 @@ export async function Header() {
             )}
           </div>
         </div>
+        <LoadingBar />
       </header>
       <MobileTabBar username={session?.username ?? null} avatarUrl={session?.avatarUrl ?? null} visible={visibleMenus} />
     </>

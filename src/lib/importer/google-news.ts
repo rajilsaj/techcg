@@ -48,7 +48,7 @@ export function cleanGoogleNewsUrl(raw: string): string {
 /** "Congo startup · cg · fr" for the admin list. */
 export function describeGoogleNews(raw: string): string {
   const u = new URL(cleanGoogleNewsUrl(raw));
-  const what = u.searchParams.get("q")?.replace(/\s*bwhen:\S+/gi, "").trim() || (u.searchParams.get("topic_token") ? "rubrique Google News" : "à la une");
+  const what = u.searchParams.get("q")?.replace(/\s*\bwhen:\S+/gi, "").trim() || (u.searchParams.get("topic_token") ? "rubrique Google News" : "à la une");
   return [`« ${what} »`, u.searchParams.get("gl")?.toUpperCase(), u.searchParams.get("hl"), u.searchParams.get("so") === "1" ? "par date" : null]
     .filter(Boolean)
     .join(" · ");
