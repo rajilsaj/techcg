@@ -5,7 +5,7 @@ import { prisma } from "@/lib/db";
 import { HOME_STORIES } from "@/lib/story-filters";
 import { isGoogleNewsSource } from "@/lib/importer/google-news";
 import { displayName, sourceCountry } from "@/lib/source-profile";
-import { Header } from "@/components/layout/Header";
+import { ProfilesBar } from "@/components/profiles/ProfilesBar";
 import { SourceLogo } from "@/components/sources/SourceLogo";
 import { t } from "@/i18n";
 
@@ -55,8 +55,15 @@ export default async function SourcesPage() {
 
   return (
     <>
-      <Header />
-      <div className="mx-auto max-w-6xl px-4 pb-16 pt-8 sm:pt-12">
+      <ProfilesBar
+        href="/sources"
+        brand={
+          <>
+            Tech.cg <span className="text-accent">Sources</span>
+          </>
+        }
+      />
+      <div className="px-5 pb-16 pt-8 sm:px-8 sm:pt-12 lg:px-12 2xl:px-16">
         <header className="text-center">
           <p className="text-sm font-medium uppercase tracking-[0.2em] text-accent">{t("sources.kicker")}</p>
           <h1 className="mt-3 text-5xl font-medium leading-[0.92] tracking-tight text-text sm:text-7xl lg:text-8xl">
@@ -70,7 +77,7 @@ export default async function SourcesPage() {
           </p>
         </header>
 
-        <ul className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           {sources.map((s) => (
             <li key={s.id} className="group flex flex-col rounded-2xl border border-border bg-bg p-5 transition-colors hover:border-text-secondary/50">
               <div className="flex items-center gap-4">
