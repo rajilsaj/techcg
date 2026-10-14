@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Home, LogIn, SquarePen, UserRound, type LucideIcon } from "lucide-react";
+import { BarChart3, Home, LogIn, SquarePen, UserRound, Users, type LucideIcon } from "lucide-react";
 import { t } from "@/i18n";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { Avatar } from "@/components/user/Avatar";
@@ -24,6 +24,7 @@ export function MobileTabBar({ username, avatarUrl }: { username: string | null;
   const tabs: Tab[] = [
     { href: "/", label: t("nav.top"), icon: Home, match: (p) => p === "/" || p === "/archives" },
     { href: "/indicateurs", label: t("nav.indicators"), icon: BarChart3, match: (p) => p.startsWith("/indicateurs") },
+    { href: "/profils", label: t("nav.profilesShort"), icon: Users, match: (p) => p.startsWith("/profils") },
     { href: "/publier", label: t("nav.submit"), icon: SquarePen, match: (p) => p.startsWith("/publier") },
     username
       ? {
@@ -42,7 +43,7 @@ export function MobileTabBar({ username, avatarUrl }: { username: string | null;
       className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-bg/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden"
     >
       <InstallPrompt />
-      <ul className="mx-auto grid h-16 max-w-md grid-cols-4">
+      <ul className="mx-auto grid h-16 max-w-md grid-cols-5">
         {tabs.map(({ href, label, icon: Icon, match }) => {
           const active = match(pathname);
           return (

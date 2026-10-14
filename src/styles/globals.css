@@ -203,6 +203,17 @@ textarea:focus {
   .local-halo { animation: none; }
 }
 
+/* Profiles.CG: the hovered profile's photo fades in. */
+.profile-photo {
+  animation: profile-in 0.35s ease-out;
+}
+@keyframes profile-in {
+  from { opacity: 0; transform: scale(0.97); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .profile-photo { animation: none; }
+}
+
 /* Room at the bottom of the page for the phone tab bar (hidden from md up). */
 @media (max-width: 767px) {
   body:has(#mobile-tabbar) {

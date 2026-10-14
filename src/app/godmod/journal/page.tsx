@@ -24,6 +24,7 @@ function targetHref(type: string | null, id: number | null): string | null {
   if (type === "item") return `/godmod/articles/${id}`;
   if (type === "user") return `/godmod/utilisateurs/${id}`;
   if (type === "comment") return `/godmod/commentaires`;
+  if (type === "profile") return `/godmod/profils/${id}`;
   return null;
 }
 

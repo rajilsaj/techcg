@@ -8,6 +8,7 @@ import { t, type Key } from "@/i18n";
 const NAV: { href: string; key: Key; match?: string[] }[] = [
   { href: "/", key: "nav.top", match: ["/", "/archives"] },
   { href: "/indicateurs", key: "nav.indicators" },
+  { href: "/profils", key: "nav.profiles" },
 ];
 
 /** Section links; the current one is underlined like in the design. */

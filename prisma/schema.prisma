@@ -232,3 +232,24 @@ model PageView {
   @@index([visitorId])
   @@index([sessionId])
 }
+
+/// Profiles.CG: Congolese people in tech, curated by admins (not member accounts).
+model Profile {
+  id           Int      @id @default(autoincrement())
+  slug         String   @unique
+  name         String
+  role         String   @default("") // e.g. "Fondatrice"
+  organization String?
+  city         String?
+  country      String   @default("CG") // CG = Congo-Brazzaville, CD = RD Congo
+  photoUrl     String?
+  bio          String?
+  website      String?
+  linkedin     String?
+  twitter      String?
+  published    Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([published, name])
+}

@@ -1,7 +1,7 @@
 import { prisma } from "./db";
 
 export interface ActivityTarget {
-  type: "item" | "comment" | "user" | "category" | "tag" | "media" | "settings";
+  type: "item" | "comment" | "user" | "category" | "tag" | "media" | "settings" | "profile";
   id?: number;
 }
 

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BarChart3,
+  Contact,
   Download,
   Eye,
   FileText,
@@ -28,6 +29,7 @@ const ITEMS: { href: string; label: string; icon: LucideIcon; badge?: "comments"
   { href: "/godmod/categories", label: "Catégories", icon: FolderTree },
   { href: "/godmod/etiquettes", label: "Étiquettes", icon: Tags },
   { href: "/godmod/medias", label: "Médias", icon: ImageIcon },
+  { href: "/godmod/profils", label: "Profiles.CG", icon: Contact },
   { href: "/godmod/utilisateurs", label: "Utilisateurs", icon: Users },
   { href: "/godmod/parametres", label: "Réglages", icon: Settings },
   { href: "/godmod/journal", label: "Journal", icon: History },
