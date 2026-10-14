@@ -87,8 +87,8 @@ export function StoryItem({ rank, story, isLoggedIn }: StoryItemProps) {
             </ul>
           )}
 
-          {/* Action pills: ↑ score ↓ · comments · share */}
-          <div className="mt-3 flex flex-wrap items-center gap-2">
+          {/* One line: ↑ score ↓ · comments · share · author and date · hide · history */}
+          <div className="mt-3 flex items-center gap-2">
             <VoteButtons itemId={story.id} vote={story.vote} points={story.points} isLoggedIn={isLoggedIn} />
             <Link
               href={`/publication/${story.id}#commentaires`}
@@ -98,12 +98,9 @@ export function StoryItem({ rank, story, isLoggedIn }: StoryItemProps) {
               <MessageCircle size={16} aria-hidden />
               <span className="tabular-nums">{story.commentCount}</span>
             </Link>
-            <ShareButton path={`/publication/${story.id}`} title={title} className={pillClass} />
-          </div>
-
-          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
-            <span className="text-xs text-text-secondary">
-              {t("story.by")}{" "}
+            <ShareButton path={`/publication/${story.id}`} title={title} className={pillClass} labelClassName="hidden sm:inline" />
+            <span className="ml-1 min-w-0 flex-1 truncate text-xs text-text-secondary">
+              <span className="hidden sm:inline">{t("story.by")} </span>
               <Link
                 href={`/profil/${story.author.username}`}
                 className="inline-flex items-center gap-1 align-middle text-text-secondary underline underline-offset-2 hover:text-accent"
@@ -124,9 +121,9 @@ export function StoryItem({ rank, story, isLoggedIn }: StoryItemProps) {
             </span>
             <HideButton itemId={story.id} isLoggedIn={isLoggedIn} />
             {domain && (
-              <Link href={`/site/${domain}`} className={actionClass}>
+              <Link href={`/site/${domain}`} className={`${actionClass} shrink-0`} aria-label={t("story.history")} title={t("story.history")}>
                 <History size={14} aria-hidden />
-                {t("story.history")}
+                <span className="hidden lg:inline">{t("story.history")}</span>
               </Link>
             )}
           </div>

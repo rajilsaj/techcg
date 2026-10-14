@@ -51,7 +51,9 @@ export function HideButton({ itemId, isLoggedIn }: { itemId: number; isLoggedIn:
     <button
       type="button"
       disabled={pending}
-      className={actionClass}
+      className={`${actionClass} shrink-0`}
+      aria-label={t("story.hide")}
+      title={t("story.hide")}
       onClick={() => {
         if (!isLoggedIn) return router.push("/connexion");
         startTransition(async () => {
@@ -61,7 +63,7 @@ export function HideButton({ itemId, isLoggedIn }: { itemId: number; isLoggedIn:
       }}
     >
       <EyeOff size={14} aria-hidden />
-      {t("story.hide")}
+      <span className="hidden lg:inline">{t("story.hide")}</span>
     </button>
   );
 }
@@ -102,7 +104,7 @@ export function VoteButtons({
 
   // One pill: ↑ score ↓. Grey at rest; solid black (white in dark mode) once the reader has voted.
   const voted = state.vote !== 0;
-  const button = `grid h-9 w-9 place-items-center rounded-full transition-colors disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-text/40 ${
+  const button = `grid h-8 w-8 place-items-center rounded-full transition-colors disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-text/40 ${
     voted ? "hover:bg-bg/15" : "text-text-secondary hover:bg-border hover:text-text"
   }`;
 
@@ -111,7 +113,7 @@ export function VoteButtons({
       <div
         role="group"
         aria-label={t("vote.label")}
-        className={`inline-flex h-9 items-center rounded-full transition-colors ${voted ? "bg-text text-bg" : "bg-bg-secondary text-text"}`}
+        className={`inline-flex h-8 shrink-0 items-center rounded-full transition-colors ${voted ? "bg-text text-bg" : "bg-bg-secondary text-text"}`}
       >
         <button
           type="button"
