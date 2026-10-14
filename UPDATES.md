@@ -6,6 +6,7 @@ Every change requested in a Claude Code session, newest first, with when it was 
 
 | Date & time (UTC-4) | Update | Pushed |
 | --- | --- | --- |
+| 2026-10-14 17:45 | Importer reliability: retries, unchanged feeds skipped (ETag/Last-Modified), one request per 0.5 s per site, TechCGBot user agent + /robot page, robots.txt respected, optional « Navigateur » (headless browser) per source, « En panne » alerts after 3 failures, one import per source at a time. Duplicates: same address (variants) or same headline within 14 days skipped on import and member submissions; Admin › Articles › Doublons to merge (18 existing duplicates merged to the trash). Admin › Importation › Guide de configuration. Ver Angola now via Google News (direct source disabled). Intégrations no longer deletes site: Google News sources | Yes (23d1bf3) |
 | 2026-10-14 16:10 | Import source added in the live database (no code change): TechCentral (Afrique du Sud), RSS feed, 10 articles imported | Yes (data only) |
 | 2026-10-14 16:05 | Import source added in the live database (no code change): ITWeb Africa, read from its homepage (its /rss feed is ITWeb South Africa), 10 articles imported | Yes (data only) |
 | 2026-10-14 15:55 | Import sources added in the live database (no code change): VC4A (feed, 6 articles imported), Lionesses of Africa (blog feed, 10 imported), Techpoint Africa through Google News `site:techpoint.africa` (the site blocks robots, 403). StartupList Africa not added: a startup directory, not news | Yes (data only) |
