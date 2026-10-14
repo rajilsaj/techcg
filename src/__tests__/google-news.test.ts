@@ -81,3 +81,10 @@ describe("Google News search parameters", () => {
     expect(new URL(googleNewsSourceUrl({ topic_token: "abc", so: "1" })).searchParams.get("so")).toBe("1");
   });
 });
+
+describe("describeGoogleNews", () => {
+  it("shows the subject without the when: operator", async () => {
+    const { describeGoogleNews } = await import("@/lib/importer/google-news");
+    expect(describeGoogleNews("https://serpapi.com/search?engine=google_news&q=startups+when:7d&gl=cg&hl=fr&so=1")).toBe("« startups » · CG · fr");
+  });
+});
