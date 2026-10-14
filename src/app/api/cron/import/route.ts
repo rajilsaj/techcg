@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runDueImports } from "@/lib/importer/schedule";
 import { isCronAuthorized, recordAutoImport } from "@/lib/cron-auth";
+import { refreshDueProfiles } from "@/lib/source-profile";
 
 // Imports can take a while (fetching feeds, analysing pages, translating titles).
 export const maxDuration = 300;
@@ -16,7 +17,9 @@ export async function GET(request: NextRequest) {
   }
   const trigger = request.nextUrl.searchParams.get("trigger") === "github" ? "GitHub Actions" : "Vercel Cron";
   try {
-    const tick = await runDueImports({ budgetMs: 240_000 });
+    const tick = await runDueImports({ budgetMs: 220_000 });
+    // Fill the /sources cards (logo, description) of new sources, a few at a time.
+    await refreshDueProfiles(25_000).catch((err) => console.error("[cron/import] profiles:", err));
     await recordAutoImport({ at: new Date().toISOString(), trigger, ...tick });
     return NextResponse.json({ ok: true, ...tick });
   } catch (err) {

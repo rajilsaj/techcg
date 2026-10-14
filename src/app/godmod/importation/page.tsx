@@ -164,6 +164,17 @@ export default async function ImportPage({ searchParams }: PageProps) {
                           <input type="checkbox" name={`enabled-${s.id}`} defaultChecked={s.enabled} className="h-4 w-4 accent-[var(--accent)]" />
                           Active
                         </label>
+                        {!isGoogleNewsSource(s.url) && (
+                          <fieldset className="grid grid-cols-1 gap-2 rounded-md border border-border p-3 sm:col-span-2 sm:grid-cols-2">
+                            <legend className="px-1 text-xs font-medium text-text-secondary">
+                              Fiche publique (page Sources) — laissez vide pour la remplir depuis le site
+                            </legend>
+                            <input name={`siteName-${s.id}`} defaultValue={s.siteName ?? ""} placeholder="Nom affiché" aria-label="Nom affiché" className={inputClass} />
+                            <input name={`country-${s.id}`} defaultValue={s.country ?? ""} placeholder="Pays" aria-label="Pays" className={inputClass} />
+                            <input name={`logoUrl-${s.id}`} defaultValue={s.logoUrl ?? ""} placeholder="Adresse du logo (https://…)" aria-label="Logo" className={`${inputClass} sm:col-span-2`} />
+                            <textarea name={`description-${s.id}`} defaultValue={s.description ?? ""} rows={2} maxLength={280} placeholder="Ce que publie ce site" aria-label="Description" className={`${inputClass} sm:col-span-2`} />
+                          </fieldset>
+                        )}
                         <label className="flex items-center gap-2 text-sm text-text sm:col-span-2">
                           <input type="checkbox" name={`strict-${s.id}`} defaultChecked={s.strict} className="h-4 w-4 accent-[var(--accent)]" />
                           Filtrer : n&apos;importer que les articles sur les startups, l&apos;entrepreneuriat et la tech

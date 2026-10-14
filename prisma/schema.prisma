@@ -197,6 +197,12 @@ model ImportSource {
   topic      String?
   /// « Filtrer »: keep only articles clearly about startups, entrepreneurs or tech (general-news sites).
   strict     Boolean   @default(true)
+  /// Public card on /sources (read from the site's homepage, editable in the admin).
+  siteName    String?
+  description String?
+  logoUrl     String?
+  country     String?
+  profiledAt  DateTime?
   lastRunAt  DateTime?
   lastResult String? // human-readable summary of the last run
   createdAt  DateTime  @default(now())

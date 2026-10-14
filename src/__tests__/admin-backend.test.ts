@@ -41,7 +41,7 @@ describe("sanitizeSettings", () => {
   });
 
   it("hides Indicateurs by default and keeps only known menu sections", () => {
-    expect(DEFAULT_SETTINGS.visibleMenus).toEqual(["profils"]);
+    expect(DEFAULT_SETTINGS.visibleMenus).toEqual(["profils", "sources"]);
     expect(sanitizeSettings({ visibleMenus: ["indicateurs", "admin", "indicateurs", 3] }).visibleMenus).toEqual(["indicateurs"]);
     expect(sanitizeSettings({ visibleMenus: [] }).visibleMenus).toEqual([]);
   });

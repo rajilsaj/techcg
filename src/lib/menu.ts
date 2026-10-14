@@ -4,6 +4,7 @@ import type { Key } from "@/i18n";
 export const MENU_ITEMS = [
   { id: "indicateurs", href: "/indicateurs", label: "nav.indicators", short: "nav.indicators" },
   { id: "profils", href: "/profils", label: "nav.profiles", short: "nav.profilesShort" },
+  { id: "sources", href: "/sources", label: "nav.sources", short: "nav.sources" },
   { id: "recents", href: "/recents", label: "section.newest", short: "section.newest" },
   { id: "questions", href: "/questions", label: "section.ask", short: "section.ask" },
   { id: "vitrine", href: "/vitrine", label: "section.show", short: "section.show" },
@@ -14,8 +15,8 @@ export const MENU_ITEMS = [
 export type MenuId = (typeof MENU_ITEMS)[number]["id"];
 export type MenuItem = (typeof MENU_ITEMS)[number];
 
-/** Shown until an admin changes it: only Profiles.CG (Indicateurs and the older sections are hidden). */
-export const DEFAULT_VISIBLE_MENUS: MenuId[] = ["profils"];
+/** Shown until an admin changes it: Profiles.CG and Sources (Indicateurs and the older sections are hidden). */
+export const DEFAULT_VISIBLE_MENUS: MenuId[] = ["profils", "sources"];
 
 export const isMenuId = (value: unknown): value is MenuId => MENU_ITEMS.some((m) => m.id === value);
 

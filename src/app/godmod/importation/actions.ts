@@ -50,6 +50,18 @@ function sourceFields(formData: FormData, suffix = "") {
   };
 }
 
+/** The public card on /sources (edit form only). Empty fields are filled again from the site's homepage. */
+function cardFields(formData: FormData, suffix: string) {
+  const text = (name: string, max: number) => String(formData.get(`${name}${suffix}`) ?? "").replace(/\s+/g, " ").trim().slice(0, max) || null;
+  const logo = text("logoUrl", 500);
+  return {
+    siteName: text("siteName", 80),
+    description: text("description", 280),
+    logoUrl: logo && /^https?:\/\//i.test(logo) ? logo : null,
+    country: text("country", 40),
+  };
+}
+
 export async function createSourceAction(formData: FormData) {
   const admin = await requireAdminAction();
   const { url, ...fields } = sourceFields(formData);
@@ -67,7 +79,8 @@ export async function updateSourceAction(formData: FormData) {
   const { url, ...fields } = sourceFields(formData, `-${id}`);
   if (!fields.name) redirect(withNotice(PAGE, "name-required"));
   if (!url) redirect(withNotice(PAGE, "invalid-url"));
-  await prisma.importSource.update({ where: { id }, data: { ...fields, url } });
+  await prisma.importSource.update({ where: { id }, data: { ...fields, ...cardFields(formData, `-${id}`), url } });
+  revalidatePath("/sources");
   await logActivity(admin.userId, "import.source", `Source d'import « ${fields.name} » modifiée`, { type: "settings", id });
   redirect(withNotice(PAGE, "saved"));
 }

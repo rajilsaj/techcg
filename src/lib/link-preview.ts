@@ -190,7 +190,7 @@ function request(url: URL, { accept = /html/i, maxBytes = MAX_HTML_BYTES, accept
           done = true;
           req.destroy();
           const data = Buffer.concat(chunks);
-          resolve({ status, contentType, contentLanguage, body: binary ? "" : data.toString("utf8"), bytes: binary ? data : undefined });
+          resolve({ status, contentType, contentLanguage, body: binary ? "" : decodeBody(data, contentType), bytes: binary ? data : undefined });
         };
         stream.on("data", (chunk: Buffer) => {
           chunks.push(chunk);
@@ -205,6 +205,25 @@ function request(url: URL, { accept = /html/i, maxBytes = MAX_HTML_BYTES, accept
     req.on("error", reject);
     req.end();
   });
+}
+
+/**
+ * Text of a page in its own encoding: the Content-Type charset, else the
+ * <meta charset> / http-equiv in the first bytes, else UTF-8. Older French sites
+ * (ISO-8859-1, Windows-1252) would otherwise show "d�veloppeurs".
+ */
+export function decodeBody(data: Buffer, contentType: string): string {
+  const declared =
+    contentType.match(/charset=["']?([\w-]+)/i)?.[1] ??
+    data.subarray(0, 2048).toString("latin1").match(/<meta[^>]+charset=["']?([\w-]+)/i)?.[1] ??
+    "utf-8";
+  const charset = declared.toLowerCase();
+  if (charset === "utf-8" || charset === "utf8") return data.toString("utf8");
+  try {
+    return new TextDecoder(charset === "iso-8859-1" || charset === "latin1" ? "windows-1252" : charset).decode(data);
+  } catch {
+    return data.toString("utf8"); // unknown charset name
+  }
 }
 
 function classifyError(err: unknown): PreviewFailure {

@@ -11,6 +11,7 @@ import {
   LogIn,
   MessageCircleQuestion,
   MessageSquare,
+  Newspaper,
   SquarePen,
   UserRound,
   Users,
@@ -24,6 +25,7 @@ import { visibleMenuItems, type MenuId } from "@/lib/menu";
 const ICONS: Record<MenuId, LucideIcon> = {
   indicateurs: BarChart3,
   profils: Users,
+  sources: Newspaper,
   recents: Clock,
   questions: MessageCircleQuestion,
   vitrine: LayoutGrid,
