@@ -1,6 +1,7 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { Check, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 /** Values that are the defaults and so stay out of the URL. */
@@ -37,8 +38,9 @@ export function FilterForm({ children, className }: { children: ReactNode; class
 }
 
 /**
- * A select that reads as a word in a sentence: as wide as its chosen option
- * (a native select is as wide as its longest one) and applied as soon as it changes.
+ * A choice that reads as a word in a sentence: the chosen option in blue, which
+ * opens a small menu (title, options, check mark on the current one). Applies as
+ * soon as an option is picked. Keyboard: arrows, Home/End, Enter, Esc.
  */
 export function SentenceSelect({
   name,
@@ -52,36 +54,135 @@ export function SentenceSelect({
   options: { value: string; label: string }[];
 }) {
   const [value, setValue] = useState(defaultValue);
-  const measure = useRef<HTMLSpanElement>(null);
-  const [width, setWidth] = useState<number>();
-  const chosen = options.find((o) => o.value === value)?.label ?? options[0]?.label ?? "";
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(0);
+  const [alignRight, setAlignRight] = useState(false);
+  const root = useRef<HTMLSpanElement>(null);
+  const button = useRef<HTMLButtonElement>(null);
+  const list = useRef<HTMLUListElement>(null);
+  const input = useRef<HTMLInputElement>(null);
+  const id = useId();
+  const selectedIndex = Math.max(0, options.findIndex((o) => o.value === value));
+  const chosen = options[selectedIndex]?.label ?? "";
 
+  // Close on a click outside.
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (event: PointerEvent) => {
+      if (!root.current?.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener("pointerdown", onDown);
+    return () => document.removeEventListener("pointerdown", onDown);
+  }, [open]);
+
+  // Keep the menu on screen: open it to the left when it would overflow on the right.
   useLayoutEffect(() => {
-    if (measure.current) setWidth(measure.current.offsetWidth + 1);
-  }, [chosen]);
+    if (!open || !list.current) return;
+    setAlignRight(false);
+    const rect = list.current.getBoundingClientRect();
+    if (rect.right > window.innerWidth - 8) setAlignRight(true);
+    list.current.focus();
+  }, [open]);
+
+  const show = () => {
+    setActive(selectedIndex);
+    setOpen(true);
+  };
+  const close = (refocus = true) => {
+    setOpen(false);
+    if (refocus) button.current?.focus();
+  };
+  const pick = (index: number) => {
+    const option = options[index];
+    close();
+    if (!option || option.value === value) return;
+    setValue(option.value);
+    if (input.current) input.current.value = option.value;
+    input.current?.form?.requestSubmit();
+  };
+
+  const onListKey = (event: React.KeyboardEvent) => {
+    const last = options.length - 1;
+    const moves: Record<string, () => number> = {
+      ArrowDown: () => Math.min(last, active + 1),
+      ArrowUp: () => Math.max(0, active - 1),
+      Home: () => 0,
+      End: () => last,
+    };
+    if (moves[event.key]) {
+      event.preventDefault();
+      setActive(moves[event.key]());
+    } else if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      pick(active);
+    } else if (event.key === "Escape" || event.key === "Tab") {
+      if (event.key === "Escape") event.preventDefault();
+      close(event.key === "Escape");
+    }
+  };
 
   return (
-    <span className="relative inline-block">
-      <span ref={measure} aria-hidden className="invisible absolute left-0 top-0 whitespace-pre font-bold">
-        {chosen}
-      </span>
-      <select
-        name={name}
-        aria-label={label}
-        value={value}
-        style={width ? { width } : undefined}
-        onChange={(event) => {
-          setValue(event.target.value);
-          event.target.form?.requestSubmit();
+    <span ref={root} className="relative inline-block">
+      <input ref={input} type="hidden" name={name} defaultValue={value} />
+      <button
+        ref={button}
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={`${id}-list`}
+        aria-label={`${label} : ${chosen}`}
+        onClick={() => (open ? close() : show())}
+        onKeyDown={(event) => {
+          if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+            event.preventDefault();
+            show();
+          }
         }}
-        className="sentence-select cursor-pointer appearance-none rounded-none border-0 border-b-2 border-dotted border-accent/60 bg-transparent p-0 font-bold text-accent hover:border-solid focus:border-solid focus:outline-none focus:ring-0"
+        className={`inline-flex items-baseline gap-1 rounded-sm border-b-2 font-bold text-accent transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
+          open ? "border-solid border-accent" : "border-dotted border-accent/60 hover:border-solid"
+        }`}
       >
-        {options.map((option) => (
-          <option key={option.value} value={option.value} className="bg-bg text-base font-normal text-text">
-            {option.label}
-          </option>
-        ))}
-      </select>
+        {chosen}
+        <ChevronDown size={14} aria-hidden className={`translate-y-[-1px] self-center transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <ul
+          ref={list}
+          id={`${id}-list`}
+          role="listbox"
+          tabIndex={-1}
+          aria-label={label}
+          aria-activedescendant={`${id}-${active}`}
+          onKeyDown={onListKey}
+          className={`sentence-menu absolute top-full z-40 mt-2 min-w-[14rem] rounded-2xl border border-border bg-bg p-1.5 text-base font-normal shadow-xl shadow-black/10 focus:outline-none dark:shadow-black/40 ${
+            alignRight ? "right-0" : "left-0"
+          }`}
+        >
+          <li role="presentation" className="px-3 pb-1 pt-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-text-secondary">
+            {label}
+          </li>
+          {options.map((option, i) => {
+            const selected = i === selectedIndex;
+            return (
+              <li
+                key={option.value}
+                id={`${id}-${i}`}
+                role="option"
+                aria-selected={selected}
+                onPointerEnter={() => setActive(i)}
+                onClick={() => pick(i)}
+                className={`flex cursor-pointer items-center justify-between gap-6 rounded-xl px-3 py-2 text-[15px] leading-tight transition-colors ${
+                  i === active ? "bg-accent/10" : ""
+                } ${selected ? "font-semibold text-accent" : "text-text"}`}
+              >
+                <span className="first-letter:uppercase">{option.label}</span>
+                {selected && <Check size={16} aria-hidden className="shrink-0" />}
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </span>
   );
 }

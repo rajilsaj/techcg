@@ -89,7 +89,7 @@ export const fr = {
   "filters.sentence.show": "Afficher les articles sur",
   "filters.sentence.published": "publiés",
   "filters.sentence.first": "d'abord.",
-  "filters.sentence.topicLabel": "Catégorie",
+  "filters.sentence.topicLabel": "Sujet",
   "filters.sentence.periodLabel": "Période",
   "filters.sentence.sortLabel": "Ordre",
   "filters.sentence.topic.all": "tous les sujets",

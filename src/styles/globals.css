@@ -183,6 +183,18 @@ textarea:focus {
   }
 }
 
+/* Homepage filter sentence: the choice menus open with a short drop. */
+.sentence-menu {
+  animation: sentence-menu-in 0.14s ease-out;
+  transform-origin: top left;
+}
+@keyframes sentence-menu-in {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sentence-menu { animation: none; }
+}
+
 /* Profiles.CG: the hovered profile's photo fades in. */
 .profile-photo {
   animation: profile-in 0.35s ease-out;

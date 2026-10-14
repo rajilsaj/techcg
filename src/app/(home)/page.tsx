@@ -65,6 +65,7 @@ export default async function Home({ searchParams }: PageProps) {
           <>
             <RegionSection
               id="news-congo"
+              marker="congo"
               eyebrow={t("home.local")}
               title={t("home.congo")}
               moreHref="/etiquette/congo"
@@ -75,6 +76,7 @@ export default async function Home({ searchParams }: PageProps) {
             />
             <RegionSection
               id="news-africa"
+              marker="afrique"
               eyebrow={t("home.continent")}
               title={t("home.africa")}
               moreHref="/etiquette/afrique"
@@ -83,8 +85,8 @@ export default async function Home({ searchParams }: PageProps) {
               firstRank={congo.length + 1}
               isLoggedIn={!!session}
             />
-            <div className="mt-8">
-              <SectionTitle id="news-world" eyebrow={t("home.everywhere")}>
+            <div className="mt-10">
+              <SectionTitle id="news-world" eyebrow={t("home.everywhere")} marker="monde">
                 {t("home.world")}
               </SectionTitle>
             </div>
