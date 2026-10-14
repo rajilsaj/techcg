@@ -6,6 +6,7 @@ Every change requested in a Claude Code session, newest first, with when it was 
 
 | Date & time (UTC-4) | Update | Pushed |
 | --- | --- | --- |
+| 2026-10-14 15:35 | Header: Admin, Mon espace, Mon profil and Déconnexion in a dropdown under the avatar; Publier always beside Connexion / the account menu; Sources moved out of the top menu (footer only); homepage sort pills icon-only with the label on hover; « En discussion » button renamed « Rejoindre les discussions » | Yes (392cf05) |
 | 2026-10-14 15:30 | Public **API v1** (stories, comments, votes, discussions, sources, profiles, topics, users, me) with personal **API keys** in Mon espace › API and documentation at **/api** (+ OpenAPI file); whole site readable offline as an app, desktop install button; mobile fixes (sign-in pages, docs) | Yes (fd3832f) |
 | 2026-10-14 14:20 | Security hotfix: the old API let anyone publish as user #1 and edit or trash any story without signing in; those write endpoints now answer 401 | Yes (c67fd38) |
 | 2026-10-14 13:55 | Homepage tabs above **Congo**: **Les plus populaires** (most consulted), **Les plus récents**, **Les plus discutés**, plus **En discussion** → new chat pages `/discussions` (conversations in progress, chat view per article, start on an article or a free topic) | Yes (265e183) |
