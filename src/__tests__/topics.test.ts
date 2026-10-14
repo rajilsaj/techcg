@@ -25,7 +25,7 @@ describe("detectTopics", () => {
 
   it("uses declared keywords and section subdomains", () => {
     expect(detectTopics({ title: "Une étude sur la concentration", url: "https://intelligence-artificielle.developpez.com/actu/1/x/" })).toEqual(["tech"]);
-    expect(detectTopics({ title: "Article", keywords: ["Événementiel"] })).toEqual(["evenements"]);
+    expect(detectTopics({ title: "Article à Dakar", keywords: ["Événementiel"] })).toEqual(["evenements", "afrique"]);
   });
 
   it("tells Congo, the rest of Africa and the world apart", () => {
@@ -103,5 +103,13 @@ describe("strict detection (general-news sources)", () => {
     expect(detectTopics({ title: "Gouvernance", excerpt: "Le directeur général a présenté le bilan. Les entrepreneurs et les PME ont salué la réforme." }, { strict: true })).toContain(
       "entrepreneurs"
     );
+  });
+});
+
+describe("events are Congo or Africa only", () => {
+  it("drops the event tag for events elsewhere", async () => {
+    const { detectTopics } = await import("@/lib/topics");
+    expect(detectTopics({ title: "CES 2027 : les nouveautés de Las Vegas", excerpt: "Les smartphones et la tech du salon." })).not.toContain("evenements");
+    expect(detectTopics({ title: "Le hackathon de Pointe-Noire ouvre ses inscriptions" })).toEqual(["evenements", "congo"]);
   });
 });

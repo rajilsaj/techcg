@@ -140,8 +140,10 @@ export function detectTopics(
   // "Concours", "congrès", "forum"… are events for this site only around tech, startups or entrepreneurs.
   const ecosystem = found.has("tech") || found.has("startups") || found.has("entrepreneurs");
   if (!found.has("evenements") && ecosystem && RULES.evenements.contextual?.test(normalized)) found.add("evenements");
-  const topics: AutoTagSlug[] = TOPICS.map((topic) => topic.slug).filter((slug) => found.has(slug));
   const region = detectRegion(text, parts.url);
+  // Événements: only events in Congo or elsewhere in Africa (a Las Vegas or Paris show is not one for this site).
+  if (!region) found.delete("evenements");
+  const topics: AutoTagSlug[] = TOPICS.map((topic) => topic.slug).filter((slug) => found.has(slug));
   return region ? [...topics, region] : topics;
 }
 

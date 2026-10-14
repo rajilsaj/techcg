@@ -264,7 +264,9 @@ async function importFrom(source: {
       { strict: source.strict }
     );
     // No meta topic found: use the source's own (e.g. a Google News search on "startups Congo").
-    if (source.topic && isTopic(source.topic) && !topics.some(isTopic)) topics.push(source.topic);
+    // Événements stays for Congo and Africa only, even as a fallback.
+    const african = topics.includes("congo") || topics.includes("afrique");
+    if (source.topic && isTopic(source.topic) && !topics.some(isTopic) && (source.topic !== "evenements" || african)) topics.push(source.topic);
 
     // Never date an article in the future; feeds sometimes do.
     const createdAt = article.publishedAt && article.publishedAt.getTime() <= now ? article.publishedAt : new Date(now);
