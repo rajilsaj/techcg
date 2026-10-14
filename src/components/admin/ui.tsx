@@ -124,13 +124,15 @@ const NOTICES: Record<string, string> = {
   "import-done": "Importation terminée : aucun nouvel article (voir le résultat ci-dessous).",
   "demo-removed": "Les articles de démonstration ont été supprimés.",
   "name-required": "Le nom est obligatoire.",
+  "profiles-imported": "Importation des profils terminée (détail ci-dessous).",
+  "profiles-none": "Aucun profil ajouté (détail ci-dessous).",
 };
 
 /** The one-time message passed as ?notice= after a form. */
 export function AdminNotice({ notice }: { notice?: string }) {
   const text = notice ? NOTICES[notice] : undefined;
   if (!text) return null;
-  const warning = ["no-selection", "slug-taken", "self-protect", "last-admin", "blob-missing", "invalid-url", "name-required", "import-done"].includes(notice!);
+  const warning = ["no-selection", "slug-taken", "self-protect", "last-admin", "blob-missing", "invalid-url", "name-required", "import-done", "profiles-none"].includes(notice!);
   return (
     <p
       role="status"

@@ -133,9 +133,11 @@ interface RequestOptions {
   /** Stop reading after this many bytes. */
   maxBytes?: number;
   acceptHeader?: string;
+  /** Some sites (LinkedIn) only show public previews to link-preview robots. */
+  userAgent?: string;
 }
 
-function request(url: URL, { accept = /html/i, maxBytes = MAX_HTML_BYTES, acceptHeader }: RequestOptions = {}): Promise<RawResponse> {
+function request(url: URL, { accept = /html/i, maxBytes = MAX_HTML_BYTES, acceptHeader, userAgent }: RequestOptions = {}): Promise<RawResponse> {
   // A literal IP in the URL never goes through DNS, so check it here.
   const host = url.hostname.replace(/^\[|\]$/g, "");
   if (net.isIP(host) && !isPublicIp(host)) {
@@ -151,7 +153,7 @@ function request(url: URL, { accept = /html/i, maxBytes = MAX_HTML_BYTES, accept
         lookup: safeLookup,
         timeout: TIMEOUT_MS,
         headers: {
-          "User-Agent": USER_AGENT,
+          "User-Agent": userAgent ?? USER_AGENT,
           Accept: acceptHeader ?? "text/html,application/xhtml+xml;q=0.9,*/*;q=0.5",
           "Accept-Encoding": "gzip, deflate, br",
           "Accept-Language": "fr,en;q=0.8",

@@ -21,23 +21,29 @@ export function ProfileList({ profiles, firstNumber = 1 }: { profiles: ProfileRo
   const [active, setActive] = useState(0);
   const [photoTop, setPhotoTop] = useState(0);
   const rows = useRef<(HTMLLIElement | null)[]>([]);
+  const box = useRef<HTMLDivElement>(null);
+  const photo = useRef<HTMLDivElement>(null);
 
+  // The photo follows the row but stays inside the list (a short list doesn't push it over the footer).
   const activate = (index: number) => {
     setActive(index);
     const row = rows.current[index];
-    if (row) setPhotoTop(row.offsetTop);
+    if (!row) return;
+    const room = (box.current?.offsetHeight ?? 0) - (photo.current?.offsetHeight ?? 0);
+    setPhotoTop(Math.max(0, Math.min(row.offsetTop - 8, room)));
   };
 
   const current = profiles[active];
 
   return (
-    <div className="relative">
+    <div ref={box} className="relative md:min-h-[19rem] lg:min-h-[22rem]">
       {/* Floating photo (wide screens) */}
       {current && (
         <div
+          ref={photo}
           aria-hidden
           className="pointer-events-none absolute left-[52%] z-10 hidden w-48 -translate-x-1/2 transition-[top] duration-300 ease-out md:block lg:w-56"
-          style={{ top: Math.max(0, photoTop - 8) }}
+          style={{ top: photoTop }}
         >
           <ProfilePhoto
             key={current.slug}
