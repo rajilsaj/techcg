@@ -42,7 +42,7 @@ export function ProfileList({ profiles, firstNumber = 1 }: { profiles: ProfileRo
         <div
           ref={photo}
           aria-hidden
-          className="pointer-events-none absolute left-[52%] z-10 hidden w-48 -translate-x-1/2 transition-[top] duration-300 ease-out md:block lg:w-56"
+          className="pointer-events-none absolute left-[55%] z-10 hidden w-48 -translate-x-1/2 transition-[top] duration-300 ease-out md:block lg:w-60 2xl:w-72"
           style={{ top: photoTop }}
         >
           <ProfilePhoto
@@ -70,7 +70,7 @@ export function ProfileList({ profiles, firstNumber = 1 }: { profiles: ProfileRo
                 href={`/profils/${profile.slug}`}
                 onMouseEnter={() => activate(i)}
                 onFocus={() => activate(i)}
-                className="group grid grid-cols-[auto_minmax(0,1fr)] items-center hover:no-underline gap-x-3 py-3 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:gap-x-5 sm:py-4"
+                className="group grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 py-3 hover:no-underline sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:gap-x-6 sm:py-4 lg:py-5"
               >
                 <span className="flex items-center gap-1.5 text-xs tabular-nums text-text-secondary">
                   <span aria-hidden>(</span>
@@ -88,7 +88,7 @@ export function ProfileList({ profiles, firstNumber = 1 }: { profiles: ProfileRo
                   />
                   <span className="min-w-0">
                     <span
-                      className={`block truncate text-2xl leading-tight tracking-tight transition-colors duration-200 sm:text-4xl ${
+                      className={`block truncate text-2xl leading-tight tracking-tight transition-colors duration-200 sm:text-4xl lg:text-5xl 2xl:text-6xl ${
                         on ? "text-text" : "text-text-secondary/60 group-hover:text-text"
                       }`}
                     >
@@ -102,7 +102,7 @@ export function ProfileList({ profiles, firstNumber = 1 }: { profiles: ProfileRo
 
                 <span className="hidden items-center gap-1.5 text-sm text-text-secondary sm:flex">
                   <span aria-hidden>(</span>
-                  <span className={`max-w-[16rem] truncate ${on ? "text-text underline underline-offset-4" : ""}`}>
+                  <span className={`max-w-[16rem] truncate lg:max-w-[24rem] lg:text-base ${on ? "text-text underline underline-offset-4" : ""}`}>
                     {[profile.role, profile.organization].filter(Boolean).join(" · ") || "Profil"}
                   </span>
                   <span aria-hidden>)</span>

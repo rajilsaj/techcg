@@ -3,7 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { initialOf, LETTERS, parseProfileFilters, profileInitials, profilesWhere } from "@/lib/profiles";
-import { Header } from "@/components/layout/Header";
+import { ProfilesBar } from "@/components/profiles/ProfilesBar";
 import { ProfileList } from "@/components/profiles/ProfileList";
 import { t } from "@/i18n";
 
@@ -39,23 +39,24 @@ export default async function ProfilesPage({ searchParams }: { searchParams: Pro
 
   return (
     <>
-      <Header />
-      <div className="mx-auto max-w-5xl px-4 pb-16 pt-10 sm:pt-16">
+      <ProfilesBar />
+      <div className="px-5 sm:px-8 lg:px-12 2xl:px-16 pb-16 pt-8 sm:pt-12">
         <header className="text-center">
           <p className="text-sm font-medium uppercase tracking-[0.2em] text-accent">{t("profiles.kicker")}</p>
-          <h1 className="mt-3 text-5xl font-medium leading-[0.95] tracking-tight text-text sm:text-7xl">
+          <h1 className="mt-3 text-5xl font-medium leading-[0.92] tracking-tight text-text sm:text-7xl lg:text-8xl 2xl:text-9xl">
             {t("profiles.title1")}
             <br />
             {t("profiles.title2")}
           </h1>
-          <p className="mx-auto mt-5 max-w-xl text-sm text-text-secondary sm:text-base">{t("profiles.subtitle")}</p>
+          <p className="mx-auto mt-6 max-w-2xl text-sm text-text-secondary sm:text-base lg:text-lg">{t("profiles.subtitle")}</p>
         </header>
 
+        <div className="mt-12 flex flex-col gap-4 pb-6 lg:flex-row lg:items-center lg:justify-between lg:gap-8">
         <form
           action="/profils"
           method="get"
           role="search"
-          className="mx-auto mt-10 flex max-w-xl items-center gap-1 rounded-full bg-bg-secondary p-1 pl-4 focus-within:ring-2 focus-within:ring-accent/40"
+          className="flex w-full items-center gap-1 rounded-full bg-bg-secondary p-1 pl-4 focus-within:ring-2 focus-within:ring-accent/40 lg:max-w-md xl:max-w-lg"
         >
           {letter && <input type="hidden" name="lettre" value={letter} />}
           <label className="min-w-0 flex-1">
@@ -75,7 +76,7 @@ export default async function ProfilesPage({ searchParams }: { searchParams: Pro
           </button>
         </form>
 
-        <nav aria-label={t("profiles.az")} className="scrollbar-none -mx-4 mt-6 flex gap-0.5 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:justify-center sm:px-0">
+        <nav aria-label={t("profiles.az")} className="scrollbar-none -mx-5 flex gap-0.5 overflow-x-auto px-5 sm:mx-0 sm:flex-wrap sm:px-0 lg:justify-end">
           <Link href={href(null)} aria-current={!letter ? "page" : undefined} className={letterClass(!letter, true)}>
             {t("profiles.all")}
           </Link>
@@ -92,7 +93,9 @@ export default async function ProfilesPage({ searchParams }: { searchParams: Pro
           )}
         </nav>
 
-        <div className="mt-10">
+        </div>
+
+        <div className="mt-2">
           {profiles.length > 0 ? (
             <ProfileList
               profiles={profiles.map((p) => ({ slug: p.slug, name: p.name, role: p.role, organization: p.organization, photo: p.photoUrl, initials: profileInitials(p.name) }))}
