@@ -182,7 +182,15 @@ export async function runImport(sourceId: number): Promise<ImportResult> {
 }
 
 
-async function importFrom(source: { id: number; name: string; url: string; maxItems: number; categoryId: number | null; topic: string | null }): Promise<ImportResult> {
+async function importFrom(source: {
+  id: number;
+  name: string;
+  url: string;
+  maxItems: number;
+  categoryId: number | null;
+  topic: string | null;
+  strict: boolean;
+}): Promise<ImportResult> {
   const limit = Math.min(Math.max(source.maxItems, 1), 100);
   const found = await findArticles(source.url, limit);
   if ("error" in found) return { ok: false, found: 0, created: 0, skipped: 0, message: `Échec : ${found.error}.` };
@@ -207,13 +215,32 @@ async function importFrom(source: { id: number; name: string; url: string; maxIt
     return { ok: true, mode: found.mode, found: articles.length, created: 0, skipped: articles.length, message: `${articles.length} article(s) trouvé(s) via ${MODE_LABEL[found.mode]}, aucun nouveau.` };
   }
 
+  // « Filtrer » (strict sources): articles whose title, summary and keywords show no
+  // startup, entrepreneur or tech angle are dropped before their page is even read.
+  const candidates = source.strict
+    ? withoutSiteWideKeywords(fresh).filter((a) => detectTopics({ title: a.title, excerpt: a.summary, keywords: a.keywords, url: a.url }).some(isTopic))
+    : fresh;
+  let offTopic = fresh.length - candidates.length;
+
   const authorId = await sourceAuthor(source);
   const now = Date.now();
   let created = 0;
   // Every new article page is analysed (feeds give little text and often small or no pictures).
-  const toCreate = withoutSiteWideKeywords(await analyzeAll(fresh));
+  const toCreate = withoutSiteWideKeywords(await analyzeAll(candidates));
 
   for (const article of toCreate) {
+    // Strict sources: the analysed page must confirm the topic (title, or two different terms), checked before translating.
+    if (
+      source.strict &&
+      !detectTopics(
+        { title: article.title, excerpt: `${article.summary ?? ""} . ${article.text ?? ""}`, keywords: article.keywords, url: article.url },
+        { strict: true }
+      ).some(isTopic)
+    ) {
+      offTopic++;
+      continue;
+    }
+
     const language = article.language ?? found.language ?? null;
     let excerpt = article.summary;
     let excerptLang: string | null = excerpt ? language : null;
@@ -227,12 +254,15 @@ async function importFrom(source: { id: number; name: string; url: string; maxIt
 
     const title = await frenchTitle(article.title, language);
     // Topics from the original wording too: keyword lists are often in the source language.
-    const topics = detectTopics({
-      title: `${title.title} . ${title.originalTitle ?? ""}`,
-      excerpt: `${excerpt ?? ""} . ${article.summary ?? ""} . ${article.text ?? ""}`,
-      keywords: article.keywords,
-      url: article.url,
-    });
+    const topics = detectTopics(
+      {
+        title: `${title.title} . ${title.originalTitle ?? ""}`,
+        excerpt: `${excerpt ?? ""} . ${article.summary ?? ""} . ${article.text ?? ""}`,
+        keywords: article.keywords,
+        url: article.url,
+      },
+      { strict: source.strict }
+    );
     // No meta topic found: use the source's own (e.g. a Google News search on "startups Congo").
     if (source.topic && isTopic(source.topic) && !topics.some(isTopic)) topics.push(source.topic);
 
@@ -269,12 +299,13 @@ async function importFrom(source: { id: number; name: string; url: string; maxIt
   }
 
   const skipped = articles.length - created;
+  const already = skipped - offTopic;
   return {
     ok: true,
     mode: found.mode,
     found: articles.length,
     created,
     skipped,
-    message: `${created} article(s) importé(s), ${skipped} déjà présent(s) — via ${MODE_LABEL[found.mode]}.`,
+    message: `${created} article(s) importé(s), ${already} déjà présent(s)${offTopic ? `, ${offTopic} hors sujet écarté(s)` : ""} — via ${MODE_LABEL[found.mode]}.`,
   };
 }

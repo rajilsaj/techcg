@@ -89,3 +89,19 @@ describe("events need a tech angle unless they are tech events", () => {
     expect(detectTopics({ title: "GITEX Africa ouvre ses portes à Marrakech" })).toContain("evenements");
   });
 });
+
+describe("strict detection (general-news sources)", () => {
+  it("needs the topic in the title, or two different topic terms", async () => {
+    const { detectTopics } = await import("@/lib/topics");
+    const politics = { title: "Les coupures d'électricité impactent Brazzaville", excerpt: "Regardez notre reportage en streaming sur notre chaîne." };
+    expect(detectTopics(politics)).toContain("tech");
+    expect(detectTopics(politics, { strict: true })).not.toContain("tech");
+    expect(detectTopics({ title: "La fintech Kelasi lance son application", excerpt: "Rien d'autre." }, { strict: true })).toContain("tech");
+    expect(
+      detectTopics({ title: "Brazzaville : une nouvelle offre pour les ménages", excerpt: "L'opérateur déploie la fibre optique et la 5G dans trois arrondissements." }, { strict: true })
+    ).toContain("tech");
+    expect(detectTopics({ title: "Gouvernance", excerpt: "Le directeur général a présenté le bilan. Les entrepreneurs et les PME ont salué la réforme." }, { strict: true })).toContain(
+      "entrepreneurs"
+    );
+  });
+});

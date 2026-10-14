@@ -139,6 +139,14 @@ export default async function ImportPage({ searchParams }: PageProps) {
                   <td className={tdClass}>
                     <span className="font-medium text-text">{s.name}</span>
                     {!s.enabled && <span className="ml-2 text-xs text-text-secondary">(désactivée)</span>}
+                    {s.strict && (
+                      <span
+                        className="ml-2 rounded-full bg-accent/10 px-2 py-0.5 text-[11px] font-medium text-accent"
+                        title="Seuls les articles sur les startups, l'entrepreneuriat ou la tech sont importés"
+                      >
+                        Filtré
+                      </span>
+                    )}
                     <div className="truncate text-xs text-text-secondary">
                       {isGoogleNewsSource(s.url) ? `Google News ${describeGoogleNews(s.url)}` : s.url}
                     </div>
@@ -155,6 +163,10 @@ export default async function ImportPage({ searchParams }: PageProps) {
                         <label className="flex items-center gap-2 text-sm text-text">
                           <input type="checkbox" name={`enabled-${s.id}`} defaultChecked={s.enabled} className="h-4 w-4 accent-[var(--accent)]" />
                           Active
+                        </label>
+                        <label className="flex items-center gap-2 text-sm text-text sm:col-span-2">
+                          <input type="checkbox" name={`strict-${s.id}`} defaultChecked={s.strict} className="h-4 w-4 accent-[var(--accent)]" />
+                          Filtrer : n&apos;importer que les articles sur les startups, l&apos;entrepreneuriat et la tech
                         </label>
                         <div className="flex items-center gap-3">
                           <SubmitButton formAction={updateSourceAction} name="editId" value={String(s.id)} className={buttonClass}>
@@ -228,6 +240,13 @@ export default async function ImportPage({ searchParams }: PageProps) {
                 {categorySelect("categoryId", null)}
               </div>
             </div>
+            <label className="flex items-start gap-2 text-sm text-text">
+              <input type="checkbox" name="strict" defaultChecked className="mt-0.5 h-4 w-4 accent-[var(--accent)]" />
+              <span>
+                Filtrer : n&apos;importer que les articles sur les startups, l&apos;entrepreneuriat et la tech
+                <span className="block text-xs text-text-secondary">À garder coché pour un site d&apos;actualité générale ; décochez pour un site 100 % tech.</span>
+              </span>
+            </label>
             <SubmitButton className={primaryButtonClass}>Ajouter la source</SubmitButton>
           </form>
         </Card>

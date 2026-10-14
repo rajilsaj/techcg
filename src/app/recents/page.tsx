@@ -1,4 +1,5 @@
 import { StoryListPage } from "@/components/list/StoryListPage";
+import { HOME_STORIES } from "@/lib/story-filters";
 import { t } from "@/i18n";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +13,7 @@ export default function NewestPage({ searchParams }: PageProps) {
     <StoryListPage
       title={t("section.newest")}
       pathname="/recents"
-      where={{ type: "story" }}
+      where={HOME_STORIES}
       order="newest"
       searchParams={searchParams}
     />

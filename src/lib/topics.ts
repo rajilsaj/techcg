@@ -91,8 +91,29 @@ export function detectRegion(text: string, url?: string | null): RegionSlug | nu
   return null;
 }
 
-/** Meta tags and region of a story, from its title, excerpt, declared keywords and URL. */
-export function detectTopics(parts: { title?: string | null; excerpt?: string | null; keywords?: string[] | null; url?: string | null }): AutoTagSlug[] {
+/** Number of different terms of `pattern` found in `text` ("startup", "levée de fonds"… count once each). */
+function distinctTerms(pattern: RegExp, text: string): number {
+  const terms = new Set<string>();
+  for (const m of text.matchAll(new RegExp(pattern.source, pattern.flags.includes("g") ? pattern.flags : `${pattern.flags}g`))) {
+    // The tech pattern starts with a "( |')" group: the term is then the second group.
+    const term = m[1] !== undefined && /^[ ']$/.test(m[1]) ? m[2] : m[1] ?? m[0];
+    terms.add((term ?? m[0]).trim());
+  }
+  return terms.size;
+}
+
+/**
+ * Meta tags and region of a story, from its title, excerpt, declared keywords and URL.
+ *
+ * `strict` (sources set to « Filtrer » in the admin: general-news sites): a topic
+ * counts only when its words are in the title, or when at least two different
+ * terms of it appear in the text, so one passing mention ("streaming", "numérique")
+ * doesn't make a politics story a tech one.
+ */
+export function detectTopics(
+  parts: { title?: string | null; excerpt?: string | null; keywords?: string[] | null; url?: string | null },
+  { strict = false }: { strict?: boolean } = {}
+): AutoTagSlug[] {
   const text = [parts.title, parts.excerpt, ...(parts.keywords ?? [])].filter(Boolean).join(" . ");
   // Section subdomains and paths ("intelligence-artificielle.developpez.com", "/startups/") count too.
   let urlText = "";
@@ -106,7 +127,15 @@ export function detectTopics(parts: { title?: string | null; excerpt?: string | 
   }
   const normalized = normalize(`${text} ${urlText}`);
 
-  const matches = (slug: TopicSlug) => RULES[slug].words.test(normalized) || (RULES[slug].exact?.test(text) ?? false);
+  const title = parts.title ?? "";
+  const titleNormalized = normalize(title);
+  const matches = (slug: TopicSlug) => {
+    const rule = RULES[slug];
+    const anywhere = rule.words.test(normalized) || (rule.exact?.test(text) ?? false);
+    if (!strict || !anywhere) return anywhere;
+    if (rule.words.test(titleNormalized) || rule.exact?.test(title)) return true;
+    return distinctTerms(rule.words, normalized) + (rule.exact ? distinctTerms(rule.exact, text) : 0) >= 2;
+  };
   const found = new Set(TOPICS.map((topic) => topic.slug).filter(matches));
   // "Concours", "congrès", "forum"… are events for this site only around tech, startups or entrepreneurs.
   const ecosystem = found.has("tech") || found.has("startups") || found.has("entrepreneurs");

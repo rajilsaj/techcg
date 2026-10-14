@@ -195,6 +195,8 @@ model ImportSource {
   categoryId Int?
   /// Meta topic (startups, entrepreneurs, tech, evenements) given to its articles when none is detected.
   topic      String?
+  /// « Filtrer »: keep only articles clearly about startups, entrepreneurs or tech (general-news sites).
+  strict     Boolean   @default(true)
   lastRunAt  DateTime?
   lastResult String? // human-readable summary of the last run
   createdAt  DateTime  @default(now())

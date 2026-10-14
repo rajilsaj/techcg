@@ -46,6 +46,7 @@ function sourceFields(formData: FormData, suffix = "") {
     maxItems,
     categoryId: Number.isInteger(categoryId) ? categoryId : null,
     enabled: formData.get(`enabled${suffix}`) === "on",
+    strict: formData.get(`strict${suffix}`) === "on",
   };
 }
 

@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { HOME_STORIES } from "@/lib/story-filters";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { listStories } from "@/lib/stories";
@@ -22,7 +23,8 @@ export default async function TagPage({ params, searchParams }: PageProps) {
   const session = await getSession();
   const page = pageNumber(query.page);
   const { stories, nextCursor } = await listStories({
-    where: { tags: { some: { tagId: tag.id } } },
+    // Only startup, entrepreneur, tech and event stories, like the homepage.
+    where: { AND: [HOME_STORIES, { tags: { some: { tagId: tag.id } } }] },
     order: "newest",
     cursor: query.cursor,
     viewerId: session?.userId,

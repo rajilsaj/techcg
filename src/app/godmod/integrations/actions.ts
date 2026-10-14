@@ -77,6 +77,8 @@ export async function saveSubjectsAction(formData: FormData) {
       maxItems,
       topic,
       enabled: true,
+      // The subjects are already tech searches: keep their results (the fallback meta applies).
+      strict: false,
     };
     const id = bySubject.get(subject.toLowerCase());
     if (id) {

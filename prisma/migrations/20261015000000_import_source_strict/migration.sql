@@ -1,0 +1,1 @@
+ALTER TABLE "ImportSource" ADD COLUMN "strict" BOOLEAN NOT NULL DEFAULT true;

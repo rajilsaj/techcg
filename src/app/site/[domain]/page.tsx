@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { HOME_STORIES } from "@/lib/story-filters";
 import { getSession } from "@/lib/auth";
 import { fromDomain, listStories } from "@/lib/stories";
 import { Header } from "@/components/layout/Header";
@@ -21,7 +22,7 @@ export default async function SitePage({ params, searchParams }: PageProps) {
   const page = pageNumber(query.page);
 
   const { stories, nextCursor } = await listStories({
-    where: fromDomain(domain),
+    where: { AND: [HOME_STORIES, fromDomain(domain)] },
     order: "newest",
     cursor: query.cursor,
     viewerId: session?.userId,

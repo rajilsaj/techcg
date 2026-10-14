@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { HOME_STORIES } from "@/lib/story-filters";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { listStories } from "@/lib/stories";
@@ -22,7 +23,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
   const session = await getSession();
   const page = pageNumber(query.page);
   const { stories, nextCursor } = await listStories({
-    where: { categoryId: category.id },
+    where: { AND: [HOME_STORIES, { categoryId: category.id }] },
     order: "newest",
     cursor: query.cursor,
     viewerId: session?.userId,
