@@ -175,10 +175,21 @@ export async function chooseCover(candidates: ImageCandidate[]): Promise<{ cover
   return { cover: null, coverCheck: "too_small" };
 }
 
+/** A page already rendered by the browser (« Navigateur » sources), instead of a plain download. */
+export type RenderPage = (url: string) => Promise<{ ok: true; url: URL; body: string } | { ok: false; error: string }>;
+
 /** Reads and analyses an article page. */
-export async function analyzeArticle(input: string): Promise<{ ok: true; article: ScrapedArticle } | { ok: false; reason: PreviewFailure }> {
-  const page = await fetchPublic(input, { maxBytes: HTML_BYTES });
-  if (!page.ok) return { ok: false, reason: page.reason };
+export async function analyzeArticle(input: string, render?: RenderPage): Promise<{ ok: true; article: ScrapedArticle } | { ok: false; reason: PreviewFailure }> {
+  let page: { url: URL; body: string; contentLanguage: string };
+  if (render) {
+    const rendered = await render(input);
+    if (!rendered.ok) return { ok: false, reason: "unreachable" };
+    page = { ...rendered, contentLanguage: "" };
+  } else {
+    const fetched = await fetchPublic(input, { maxBytes: HTML_BYTES });
+    if (!fetched.ok) return { ok: false, reason: fetched.reason };
+    page = fetched;
+  }
 
   const preview = parseMetadata(page.body, page.url, page.contentLanguage);
   const paragraphs = articleParagraphs(page.body);

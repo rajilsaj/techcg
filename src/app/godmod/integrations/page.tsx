@@ -9,7 +9,7 @@ import { TOPICS } from "@/lib/topic-list";
 import { SubmitButton } from "@/components/admin/FormControls";
 import { AdminHeader, AdminNotice, Card, buttonClass, inputClass, primaryButtonClass } from "@/components/admin/ui";
 import { checkSerpApiAction, removeSerpApiKeyAction, saveSerpApiKeyAction, saveSubjectsAction } from "./actions";
-import { MAX_SUBJECTS, NEWS_COUNTRIES, NEWS_LANGUAGES, subjectOf } from "./subjects";
+import { MAX_SUBJECTS, NEWS_COUNTRIES, NEWS_LANGUAGES, isSiteSearch, subjectOf } from "./subjects";
 
 export const dynamic = "force-dynamic";
 
@@ -25,13 +25,15 @@ export default async function IntegrationsPage({ searchParams }: { searchParams:
     serpApiOverview(),
     prisma.importSource.findMany({ orderBy: { createdAt: "asc" }, include: { _count: { select: { items: true } } } }),
   ]);
-  const news = sources.filter((s) => isGoogleNewsSource(s.url));
+  // Subjects only; site searches (« site:… », managed in Importation) still count towards the monthly searches.
+  const news = sources.filter((s) => isGoogleNewsSource(s.url) && !isSiteSearch(s.url));
+  const siteSearches = sources.filter((s) => isGoogleNewsSource(s.url) && isSiteSearch(s.url) && s.enabled).length;
   const first = news[0] ? new URL(news[0].url).searchParams : null;
   const rows = Array.from({ length: MAX_SUBJECTS }, (_, i) => news[i] ?? null);
 
   const connected = !!keyHint && !!status?.ok;
   const failed = !!keyHint && status && !status.ok;
-  const monthly = news.length * SEARCHES_PER_SUBJECT;
+  const monthly = (news.length + siteSearches) * SEARCHES_PER_SUBJECT;
 
   return (
     <>
@@ -206,7 +208,7 @@ export default async function IntegrationsPage({ searchParams }: { searchParams:
             </div>
             <p className={hint}>
               Consommation : {SEARCHES_PER_SUBJECT} recherches par mois et par sujet
-              {news.length > 0 && <> (soit environ {monthly} pour vos {news.length} sujet{news.length > 1 ? "s" : ""})</>}
+              {news.length + siteSearches > 0 && <> (soit environ {monthly} pour vos {news.length} sujet{news.length > 1 ? "s" : ""}{siteSearches > 0 && ` et ${siteSearches} site${siteSearches > 1 ? "s" : ""} suivi${siteSearches > 1 ? "s" : ""} via Google News`})</>}
               {status?.searchesPerMonth != null && monthly > status.searchesPerMonth && (
                 <span className="font-medium text-red-500"> : plus que les {status.searchesPerMonth} de votre offre</span>
               )}

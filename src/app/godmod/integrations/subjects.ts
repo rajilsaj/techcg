@@ -18,6 +18,14 @@ export const NEWS_LANGUAGES = [
   { code: "en", label: "Anglais" },
 ] as const;
 
+/**
+ * A Google News search limited to one site ("site:techpoint.africa"), added in Importation for a site
+ * that refuses robots. Those are sources of their own: the subjects form never touches them.
+ */
+export function isSiteSearch(sourceUrl: string): boolean {
+  return /^site:\S+/i.test(subjectOf(sourceUrl));
+}
+
 /** The subject typed by the admin, from a stored search ("startups Congo when:7d" → "startups Congo"). */
 export function subjectOf(sourceUrl: string): string {
   try {

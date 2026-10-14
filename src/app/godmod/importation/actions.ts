@@ -47,6 +47,7 @@ function sourceFields(formData: FormData, suffix = "") {
     categoryId: Number.isInteger(categoryId) ? categoryId : null,
     enabled: formData.get(`enabled${suffix}`) === "on",
     strict: formData.get(`strict${suffix}`) === "on",
+    render: formData.get(`render${suffix}`) === "on",
   };
 }
 
@@ -79,7 +80,11 @@ export async function updateSourceAction(formData: FormData) {
   const { url, ...fields } = sourceFields(formData, `-${id}`);
   if (!fields.name) redirect(withNotice(PAGE, "name-required"));
   if (!url) redirect(withNotice(PAGE, "invalid-url"));
-  await prisma.importSource.update({ where: { id }, data: { ...fields, ...cardFields(formData, `-${id}`), url } });
+  // A new address or mode starts afresh: no stored validators, no failure streak.
+  await prisma.importSource.update({
+    where: { id },
+    data: { ...fields, ...cardFields(formData, `-${id}`), url, etag: null, lastModified: null, failCount: 0, failingSince: null },
+  });
   revalidatePath("/sources");
   await logActivity(admin.userId, "import.source", `Source d'import « ${fields.name} » modifiée`, { type: "settings", id });
   redirect(withNotice(PAGE, "saved"));

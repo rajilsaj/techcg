@@ -35,27 +35,29 @@ model User {
 }
 
 model Item {
-  id    Int     @id @default(autoincrement())
-  type  String // 'story' | 'comment' | 'ask' | 'show' | 'job'
-  title String?
-  url   String?
-  text  String?
+  id     Int     @id @default(autoincrement())
+  type   String // 'story' | 'comment' | 'ask' | 'show' | 'job'
+  title  String?
+  url    String?
+  /// The address reduced to one key per article (see lib/duplicates.ts urlKey), for duplicate checks.
+  urlKey String?
+  text   String?
 
   // Link preview, filled in after submission (see src/lib/enrich-story.ts)
-  titleLang     String? // language `title` is in; "fr" once translated (see src/lib/enrich-story.ts)
-  originalTitle String? // the title before translation, kept for search
-  keywords      String[]  @default([]) // tags/keywords the article declares (feed categories, meta tags)
-  excerpt       String? // in French when translation succeeded
-  excerptLang   String? // language of `excerpt`, e.g. "fr", "en"
-  imageUrl      String?
-  previewAt     DateTime? // last preview attempt; null = never tried
+  titleLang      String? // language `title` is in; "fr" once translated (see src/lib/enrich-story.ts)
+  originalTitle  String? // the title before translation, kept for search
+  keywords       String[]  @default([]) // tags/keywords the article declares (feed categories, meta tags)
+  excerpt        String? // in French when translation succeeded
+  excerptLang    String? // language of `excerpt`, e.g. "fr", "en"
+  imageUrl       String?
+  previewAt      DateTime? // last preview attempt; null = never tried
   /// Estimated reading time of the linked article (advanced scraper), in minutes.
   readingMinutes Int?
   /// When the scraper last analysed the article page (text, cover size).
   analyzedAt     DateTime?
-  metaManual    Boolean   @default(false) // meta tags/region picked by an admin: not recomputed
-  authorId      Int
-  author        User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  metaManual     Boolean   @default(false) // meta tags/region picked by an admin: not recomputed
+  authorId       Int
+  author         User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
   parentId Int?
   parent   Item?  @relation("Comments", fields: [parentId], references: [id], onDelete: Cascade)
@@ -98,6 +100,7 @@ model Item {
   @@index([deleted])
   @@index([status])
   @@index([categoryId])
+  @@index([urlKey])
   @@index([importSourceId])
 }
 
@@ -192,26 +195,36 @@ model Media {
 
 /// Websites the admin imports articles from (see src/lib/importer).
 model ImportSource {
-  id         Int       @id @default(autoincrement())
-  name       String
-  url        String // homepage or RSS/Atom feed
-  enabled    Boolean   @default(true)
-  maxItems   Int       @default(20)
-  categoryId Int?
+  id             Int       @id @default(autoincrement())
+  name           String
+  url            String // homepage or RSS/Atom feed
+  enabled        Boolean   @default(true)
+  maxItems       Int       @default(20)
+  categoryId     Int?
   /// Meta topic (startups, entrepreneurs, tech, evenements) given to its articles when none is detected.
-  topic      String?
+  topic          String?
   /// « Filtrer »: keep only articles clearly about startups, entrepreneurs or tech (general-news sites).
-  strict     Boolean   @default(true)
+  strict         Boolean   @default(true)
   /// Public card on /sources (read from the site's homepage, editable in the admin).
-  siteName    String?
-  description String?
-  logoUrl     String?
-  country     String?
-  profiledAt  DateTime?
-  lastRunAt  DateTime?
-  lastResult String? // human-readable summary of the last run
-  createdAt  DateTime  @default(now())
-  items      Item[]
+  siteName       String?
+  description    String?
+  logoUrl        String?
+  country        String?
+  profiledAt     DateTime?
+  /// « Navigateur »: the listing and article pages are opened in a headless browser (sites built with JavaScript).
+  render         Boolean   @default(false)
+  /// Validators of the source address's last response, sent back so an unchanged feed isn't downloaded again.
+  etag           String?
+  lastModified   String?
+  /// Failed runs in a row (0 = last run worked) and when the current streak started.
+  failCount      Int       @default(0)
+  failingSince   DateTime?
+  /// Set while an import of this source runs, so two runs never import it at the same time.
+  importingSince DateTime?
+  lastRunAt      DateTime?
+  lastResult     String? // human-readable summary of the last run
+  createdAt      DateTime  @default(now())
+  items          Item[]
 }
 
 /// One page view, recorded by the tracker in the root layout (see src/lib/analytics).

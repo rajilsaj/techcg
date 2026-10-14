@@ -41,7 +41,11 @@ const TIMEOUT_MS = 6000;
 const MAX_REDIRECTS = 5;
 // Enough for <head> plus the start of the article, used when meta tags are missing.
 const MAX_HTML_BYTES = 512 * 1024;
-const USER_AGENT = "Mozilla/5.0 (compatible; TechCGBot/1.0; +link-preview)";
+/** Who we are, with a page explaining what the robot reads and how to opt out (robots.txt). */
+export const BOT_NAME = "TechCGBot";
+export const USER_AGENT = `Mozilla/5.0 (compatible; ${BOT_NAME}/1.0; +https://techcg.vercel.app/robot)`;
+/** At most one request starting every HOST_GAP_MS per site, so a batch of articles never floods it. */
+const HOST_GAP_MS = 500;
 
 /* ---------- Address checks ---------- */
 
@@ -104,6 +108,18 @@ const safeLookup: LookupFunction = (hostname, options, callback) => {
   });
 };
 
+/** True when every address `hostname` resolves to is public (for clients that do their own connecting, like the browser). */
+export async function resolvesToPublic(hostname: string): Promise<boolean> {
+  const host = hostname.replace(/^\[|\]$/g, "");
+  if (net.isIP(host)) return isPublicIp(host);
+  try {
+    const list = await dns.promises.lookup(host, { all: true });
+    return list.length > 0 && list.every((a) => isPublicIp(a.address));
+  } catch {
+    return false;
+  }
+}
+
 /* ---------- Fetching ---------- */
 
 export function normalizeUrl(input: string): URL | null {
@@ -122,6 +138,8 @@ export function normalizeUrl(input: string): URL | null {
 interface RawResponse {
   status: number;
   location?: string;
+  etag?: string;
+  lastModified?: string;
   contentType: string;
   contentLanguage: string;
   body: string;
@@ -139,14 +157,35 @@ export interface RequestOptions {
   userAgent?: string;
   /** Keep the body as bytes (`bytes`) instead of text, e.g. to read an image's size. */
   binary?: boolean;
+  /** Validators from an earlier response: an unchanged page answers 304 with no body. */
+  ifNoneMatch?: string | null;
+  ifModifiedSince?: string | null;
 }
 
-function request(url: URL, { accept = /html/i, maxBytes = MAX_HTML_BYTES, acceptHeader, userAgent, binary = false }: RequestOptions = {}): Promise<RawResponse> {
+/* ---------- Politeness: requests to one site are spaced out ---------- */
+
+const nextSlot = new Map<string, number>();
+
+/** Waits until this host's next free slot (HOST_GAP_MS after the previous request to it). */
+export async function hostTurn(host: string): Promise<void> {
+  const now = Date.now();
+  if (nextSlot.size > 500) for (const [h, at] of nextSlot) if (at < now) nextSlot.delete(h);
+  const key = host.replace(/^www\./, "").toLowerCase();
+  const at = Math.max(now, nextSlot.get(key) ?? 0);
+  nextSlot.set(key, at + HOST_GAP_MS);
+  if (at > now) await new Promise((r) => setTimeout(r, at - now));
+}
+
+async function request(
+  url: URL,
+  { accept = /html/i, maxBytes = MAX_HTML_BYTES, acceptHeader, userAgent, binary = false, ifNoneMatch, ifModifiedSince }: RequestOptions = {}
+): Promise<RawResponse> {
   // A literal IP in the URL never goes through DNS, so check it here.
   const host = url.hostname.replace(/^\[|\]$/g, "");
   if (net.isIP(host) && !isPublicIp(host)) {
-    return Promise.reject(new BlockedAddressError(`Blocked address ${host}`));
+    throw new BlockedAddressError(`Blocked address ${host}`);
   }
+  await hostTurn(host);
 
   const client = url.protocol === "https:" ? https : http;
   return new Promise((resolve, reject) => {
@@ -161,6 +200,8 @@ function request(url: URL, { accept = /html/i, maxBytes = MAX_HTML_BYTES, accept
           Accept: acceptHeader ?? "text/html,application/xhtml+xml;q=0.9,*/*;q=0.5",
           "Accept-Encoding": "gzip, deflate, br",
           "Accept-Language": "fr,en;q=0.8",
+          ...(ifNoneMatch ? { "If-None-Match": ifNoneMatch } : {}),
+          ...(ifModifiedSince ? { "If-Modified-Since": ifModifiedSince } : {}),
         },
       },
       (res) => {
@@ -168,11 +209,12 @@ function request(url: URL, { accept = /html/i, maxBytes = MAX_HTML_BYTES, accept
         const contentType = String(res.headers["content-type"] ?? "");
         const location = res.headers.location;
         const contentLanguage = String(res.headers["content-language"] ?? "");
+        const validators = { etag: res.headers.etag || undefined, lastModified: res.headers["last-modified"] || undefined };
 
         // Only HTML bodies of successful responses are worth reading.
         if (status >= 300 || !accept.test(contentType)) {
           res.resume();
-          return resolve({ status, location, contentType, contentLanguage, body: "" });
+          return resolve({ status, location, contentType, contentLanguage, body: "", ...validators });
         }
 
         const encoding = String(res.headers["content-encoding"] ?? "").toLowerCase();
@@ -190,7 +232,7 @@ function request(url: URL, { accept = /html/i, maxBytes = MAX_HTML_BYTES, accept
           done = true;
           req.destroy();
           const data = Buffer.concat(chunks);
-          resolve({ status, contentType, contentLanguage, body: binary ? "" : decodeBody(data, contentType), bytes: binary ? data : undefined });
+          resolve({ status, contentType, contentLanguage, body: binary ? "" : decodeBody(data, contentType), bytes: binary ? data : undefined, ...validators });
         };
         stream.on("data", (chunk: Buffer) => {
           chunks.push(chunk);
@@ -430,7 +472,7 @@ export function cleanKeywords(values: string[]): string[] {
 /* ---------- Generic safe fetch (also used by the importer) ---------- */
 
 export type FetchResult =
-  | { ok: true; url: URL; status: number; contentType: string; contentLanguage: string; body: string; bytes?: Buffer }
+  | { ok: true; url: URL; status: number; contentType: string; contentLanguage: string; body: string; bytes?: Buffer; etag?: string; lastModified?: string }
   | { ok: false; reason: PreviewFailure; status?: number };
 
 /**
@@ -458,7 +500,8 @@ export async function fetchPublic(input: string | URL, options: RequestOptions =
     if (res.status === 404 || res.status === 410) return { ok: false, reason: "not_found", status: res.status };
     if (res.status >= 500) return { ok: false, reason: "server_error", status: res.status };
     if (res.status >= 400) return { ok: false, reason: "restricted", status: res.status };
-    return { ok: true, url, status: res.status, contentType: res.contentType, contentLanguage: res.contentLanguage, body: res.body, bytes: res.bytes };
+    // 304 (with ifNoneMatch / ifModifiedSince): unchanged since last time, `status` says so and the body is empty.
+    return { ok: true, url, status: res.status, contentType: res.contentType, contentLanguage: res.contentLanguage, body: res.body, bytes: res.bytes, etag: res.etag, lastModified: res.lastModified };
   }
   return { ok: false, reason: "unreachable" };
 }

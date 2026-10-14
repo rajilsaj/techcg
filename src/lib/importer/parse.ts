@@ -139,6 +139,20 @@ export function discoverFeeds(html: string, pageUrl: URL): string[] {
 
 const SKIP_PATH = /\/(tag|tags|categorie|category|auteur|author|page|search|recherche|login|connexion|inscription|forum|forums|contact|about|a-propos|mentions|cgu|rss)(\/|$)/i;
 
+/** Link text that says "read more" instead of naming the article. */
+const READ_MORE = /^(lire( l['’]article| la suite| plus)?|en savoir plus|voir (l['’]article|plus)|read( more| the article| article)?|continue reading|leia mais|saiba mais|ler mais)\s*(»|›|→|\.\.\.|…)?$/i;
+
+/** Links to a whole section (« Voir toutes nos publications »), not an article. */
+const SEE_ALL = /^(voir|afficher|d[eé]couvrir|consulter|see|view|browse|ver)( (tout|toutes|tous|all|plus|more|todas|todos))\b/i;
+
+/** The text of the last <h1>–<h4> in the 3,000 characters before `index`. */
+function headingBefore(html: string, index: number): string | null {
+  const before = html.slice(Math.max(0, index - 3000), index);
+  const headings = [...before.matchAll(/<h[1-4]\b[^>]*>([\s\S]*?)<\/h[1-4]>/gi)];
+  const last = headings.at(-1);
+  return last ? plainText(last[1]) || null : null;
+}
+
 /**
  * Article links on a listing page when there's no feed: same-site links whose text
  * reads like a headline, preferring ones inside headings or <article> blocks.
@@ -155,8 +169,10 @@ export function scrapeArticleLinks(html: string, pageUrl: URL, limit: number): {
     if (url.hostname.replace(/^www\./, "") !== pageUrl.hostname.replace(/^www\./, "")) continue;
     if (url.pathname === "/" || url.pathname === pageUrl.pathname || SKIP_PATH.test(url.pathname)) continue;
 
-    const title = plainText(m[2]);
-    if (title.length < 25 || title.length > 300 || title.split(" ").length < 4) continue;
+    let title = plainText(m[2]);
+    // A « Lire l'article » button under its headline: the headline is the nearest heading above it.
+    if (READ_MORE.test(title)) title = headingBefore(body, m.index ?? 0) ?? title;
+    if (title.length < 25 || title.length > 300 || title.split(" ").length < 4 || SEE_ALL.test(title)) continue;
 
     // Links that sit in a heading score higher than plain links.
     const before = body.slice(Math.max(0, (m.index ?? 0) - 120), m.index ?? 0);

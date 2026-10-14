@@ -6,6 +6,7 @@ import { isPubliclyVisible, publiclyVisible } from "./content-status";
 import { getSettings } from "./settings";
 import { parseTagNames, setItemTags } from "./taxonomy";
 import { t } from "@/i18n";
+import { urlKey } from "@/lib/duplicates";
 
 /*
  * Publishing and commenting, shared by the website's forms and the public API,
@@ -73,10 +74,11 @@ export async function publishStory(
   const limit = await checkRateLimit(author.userId, "submit");
   if (!limit.allowed) return refuse("rate_limited", t("action.rateLimited", { seconds: limit.retryAfter ?? 0 }), limit.retryAfter);
 
-  // Same link in the last 14 days: upvote the existing story instead.
+  // Same link in the last 14 days (any variant of its address): upvote the existing story instead.
+  const key = urlKey(url);
   if (url) {
     const existing = await prisma.item.findFirst({
-      where: { type: "story", url, createdAt: { gte: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000) }, ...publiclyVisible() },
+      where: { type: "story", OR: [{ url }, ...(key ? [{ urlKey: key }] : [])], createdAt: { gte: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000) }, ...publiclyVisible() },
       select: { id: true },
     });
     if (existing) {
@@ -96,6 +98,7 @@ export async function publishStory(
       type,
       title,
       url: url || null,
+      urlKey: key,
       text: text || null,
       authorId: author.userId,
       path: "", // set to the padded id below

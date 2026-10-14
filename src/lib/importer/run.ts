@@ -1,6 +1,6 @@
 import { prisma } from "../db";
-import { decodeEntities, fetchPublic, type PreviewFailure } from "../link-preview";
-import { analyzeArticle } from "../scraper/article";
+import { decodeEntities, fetchPublic, type FetchResult, type PreviewFailure, type RequestOptions } from "../link-preview";
+import { analyzeArticle, type RenderPage } from "../scraper/article";
 import { worthKeeping } from "../scraper/image-size";
 import { stripLeadingTitle } from "../excerpt";
 import { calculateRankScore } from "../ranking";
@@ -10,6 +10,9 @@ import { detectTopics, setAutoTags } from "../topics";
 import { isTopic } from "../topic-list";
 import { isGoogleNewsSource, searchGoogleNews } from "./google-news";
 import { discoverFeeds, looksLikeFeed, parseFeed, scrapeArticleLinks, type FoundArticle } from "./parse";
+import { robotsAllowed } from "./robots";
+import { TITLE_WINDOW_DAYS, sameHeadline, urlKey } from "../duplicates";
+import { openRenderer, type Renderer } from "./browser";
 
 const FEED_BYTES = 3 * 1024 * 1024;
 const PAGE_ACCEPT = /(html|xml|rss|atom)/i;
@@ -25,14 +28,19 @@ export interface ImportResult {
   created: number;
   skipped: number;
   message: string;
+  /** Validators of the source address's response, kept for the next run (undefined: keep the stored ones). */
+  validators?: { etag: string | null; lastModified: string | null };
 }
+
+/** A source counts as failing (alert in the admin) after this many failed runs in a row. */
+export const FAILING_AFTER = 3;
 
 const FAILURES: Record<PreviewFailure, string> = {
   invalid: "adresse invalide",
   blocked: "adresse non publique",
   not_found: "site ou page introuvable",
   server_error: "le site renvoie une erreur",
-  restricted: "le site refuse l'accès aux robots",
+  restricted: "le site refuse l'accès aux robots — passez par Google News (voir le guide)",
   timeout: "le site ne répond pas (délai dépassé)",
   unreachable: "connexion impossible",
 };
@@ -81,22 +89,54 @@ export function withoutSiteWideKeywords(articles: FoundArticle[]): FoundArticle[
   return common.size === 0 ? articles : articles.map((a) => ({ ...a, keywords: a.keywords.filter((k) => !common.has(k.toLowerCase())) }));
 }
 
-/** Runs `fn` over `items`, 4 at a time, keeping the order. */
-async function inBatches<T, R>(items: T[], fn: (item: T) => Promise<R>): Promise<R[]> {
+/** Runs `fn` over `items`, `size` at a time, keeping the order. */
+async function inBatches<T, R>(items: T[], fn: (item: T) => Promise<R>, size = 4): Promise<R[]> {
   const out: R[] = [];
-  for (let i = 0; i < items.length; i += 4) out.push(...(await Promise.all(items.slice(i, i + 4).map(fn))));
+  for (let i = 0; i < items.length; i += size) out.push(...(await Promise.all(items.slice(i, i + size).map(fn))));
   return out;
 }
+
+/* ---------- Reliable, polite fetching ---------- */
+
+/** Waits before the 2nd and 3rd attempts when a site times out or errors. */
+const RETRY_DELAYS_MS = [2_000, 5_000];
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const retryable = (res: FetchResult) =>
+  !res.ok && (res.reason === "timeout" || res.reason === "unreachable" || res.reason === "server_error" || res.status === 429);
+
+/** fetchPublic, tried again twice (after 2 s, then 5 s) on a timeout, a lost connection, a 5xx or a 429. */
+export async function fetchWithRetry(url: string | URL, options: RequestOptions, delays = RETRY_DELAYS_MS): Promise<FetchResult> {
+  let res = await fetchPublic(url, options);
+  for (const delay of delays) {
+    if (!retryable(res)) break;
+    await sleep(delay);
+    res = await fetchPublic(url, options);
+  }
+  return res;
+}
+
+/** The browser's render, tried once more on a failure that may be passing (slow site). */
+function renderWithRetry(renderer: Renderer): RenderPage {
+  return async (url) => {
+    const first = await renderer.render(url);
+    if (first.ok || /refuse|introuvable|non publique/.test(first.error)) return first;
+    await sleep(RETRY_DELAYS_MS[0]);
+    return renderer.render(url);
+  };
+}
+
+const ROBOTS_REFUSED = "le site interdit l'accès à notre robot (robots.txt)";
 
 /**
  * Advanced scraper on each article page: title, summary, keywords, language,
  * reading time and a measured cover. A small or missing picture is dropped (the
  * site then shows the topic's cover); the source's own image is kept only if large.
  */
-export function analyzeAll(articles: FoundArticle[]): Promise<FoundArticle[]> {
+export function analyzeAll(articles: FoundArticle[], render?: RenderPage): Promise<FoundArticle[]> {
   return inBatches(articles, async (a) => {
     if (a.analyzed) return a;
-    const result = await analyzeArticle(a.url);
+    // Pages robots.txt keeps us out of: only what the feed said about them.
+    const result = (await robotsAllowed(a.url)) ? await analyzeArticle(a.url, render) : ({ ok: false } as const);
     if (!result.ok) return { ...a, image: (await worthKeeping(a.image)) ? a.image : null };
     const { preview, cover, summary } = result.article;
     const described = preview.description ? stripLeadingTitle(preview.description, a.title) : null;
@@ -112,40 +152,93 @@ export function analyzeAll(articles: FoundArticle[]): Promise<FoundArticle[]> {
       analyzed: true,
       text: result.article.text.slice(0, 600),
     };
-  });
+  }, render ? 1 : 4); // The browser opens one page at a time.
 }
 
+export interface FindOptions {
+  /** « Navigateur » sources: the listing and article pages are rendered by this browser. */
+  renderer?: Renderer;
+  /** Validators from the last run: an unchanged source answers 304 and nothing is downloaded. */
+  etag?: string | null;
+  lastModified?: string | null;
+}
+
+export type FindResult =
+  | { mode: ImportMode; language: string | null; articles: FoundArticle[]; validators?: ImportResult["validators"] }
+  | { notModified: true }
+  | { error: string };
+
 /** Finds articles on a source: its feed if it has one, else links scraped from the page. */
-export async function findArticles(sourceUrl: string, limit: number): Promise<{ mode: ImportMode; language: string | null; articles: FoundArticle[] } | { error: string }> {
+export async function findArticles(sourceUrl: string, limit: number, options: FindOptions = {}): Promise<FindResult> {
   if (isGoogleNewsSource(sourceUrl)) {
     const news = await searchGoogleNews(sourceUrl);
     return "error" in news ? news : { mode: "google_news", ...news };
   }
+  if (!(await robotsAllowed(sourceUrl))) return { error: ROBOTS_REFUSED };
 
-  const page = await fetchPublic(sourceUrl, {
-    accept: PAGE_ACCEPT,
-    maxBytes: FEED_BYTES,
-    acceptHeader: "application/rss+xml,application/atom+xml,application/xml;q=0.9,text/html;q=0.8,*/*;q=0.5",
-  });
-  if (!page.ok) return { error: FAILURES[page.reason] + (page.status ? ` (${page.status})` : "") };
+  const render = options.renderer ? renderWithRetry(options.renderer) : undefined;
+  let page: { url: URL; body: string };
+  let validators: ImportResult["validators"];
+  if (render) {
+    const rendered = await render(sourceUrl);
+    if (!rendered.ok) return { error: rendered.error };
+    page = rendered;
+  } else {
+    const fetched = await fetchWithRetry(sourceUrl, {
+      accept: PAGE_ACCEPT,
+      maxBytes: FEED_BYTES,
+      acceptHeader: "application/rss+xml,application/atom+xml,application/xml;q=0.9,text/html;q=0.8,*/*;q=0.5",
+      ifNoneMatch: options.etag,
+      ifModifiedSince: options.lastModified,
+    });
+    if (!fetched.ok) return { error: FAILURES[fetched.reason] + (fetched.status ? ` (${fetched.status})` : "") };
+    if (fetched.status === 304) return { notModified: true };
+    page = fetched;
+    validators = { etag: fetched.etag ?? null, lastModified: fetched.lastModified ?? null };
+  }
 
-  if (looksLikeFeed(page.body)) {
+  if (!render && looksLikeFeed(page.body)) {
     const feed = parseFeed(page.body, page.url);
-    return { mode: "flux", language: feed.language, articles: feed.articles };
+    return { mode: "flux", language: feed.language, articles: feed.articles, validators };
   }
 
   for (const feedUrl of discoverFeeds(page.body, page.url).slice(0, 3)) {
-    const feed = await fetchPublic(feedUrl, { accept: PAGE_ACCEPT, maxBytes: FEED_BYTES, acceptHeader: "application/rss+xml,application/atom+xml,application/xml" });
+    if (!(await robotsAllowed(feedUrl))) continue;
+    const feed = await fetchWithRetry(feedUrl, { accept: PAGE_ACCEPT, maxBytes: FEED_BYTES, acceptHeader: "application/rss+xml,application/atom+xml,application/xml" }, [2_000]);
     if (feed.ok && looksLikeFeed(feed.body)) {
       const parsed = parseFeed(feed.body, feed.url);
-      if (parsed.articles.length > 0) return { mode: "flux", language: parsed.language, articles: parsed.articles };
+      if (parsed.articles.length > 0) return { mode: "flux", language: parsed.language, articles: parsed.articles, validators };
     }
   }
 
   // No usable feed: read the listing page, then analyse each article page.
   const links = scrapeArticleLinks(page.body, page.url, limit);
-  const articles = await analyzeAll(links.map((link) => ({ title: link.title, url: link.url, publishedAt: null, summary: null, image: null, keywords: [] })));
-  return { mode: "page", language: null, articles };
+  const articles = await analyzeAll(links.map((link) => ({ title: link.title, url: link.url, publishedAt: null, summary: null, image: null, keywords: [] })), render);
+  return { mode: "page", language: null, articles, validators };
+}
+
+/**
+ * Articles of a batch already on the site: same address (at any time, trashed ones
+ * included, so a removed article never comes back) or, within TITLE_WINDOW_DAYS,
+ * the same headline (another source, or the site posting it twice).
+ */
+async function alreadyPublished(articles: FoundArticle[]): Promise<{ sameAddress: Set<string>; sameTitle: Set<string> }> {
+  const keys = articles.map((a) => urlKey(a.url)).filter((k): k is string => !!k);
+  const [byAddress, recent] = await Promise.all([
+    prisma.item.findMany({ where: { OR: [{ urlKey: { in: keys } }, { url: { in: articles.map((a) => a.url) } }] }, select: { url: true, urlKey: true } }),
+    prisma.item.findMany({
+      where: { type: { in: ["story", "show", "job", "ask"] }, createdAt: { gte: new Date(Date.now() - TITLE_WINDOW_DAYS * 24 * 60 * 60 * 1000) } },
+      select: { title: true, originalTitle: true },
+    }),
+  ]);
+  const knownKeys = new Set(byAddress.flatMap((i) => [i.urlKey, urlKey(i.url)]).filter(Boolean));
+  const sameAddress = new Set(articles.filter((a) => knownKeys.has(urlKey(a.url))).map((a) => a.url));
+  const sameTitle = new Set(
+    articles
+      .filter((a) => !sameAddress.has(a.url) && recent.some((r) => sameHeadline(r.originalTitle, a.title) || sameHeadline(r.title, a.title)))
+      .map((a) => a.url)
+  );
+  return { sameAddress, sameTitle };
 }
 
 /** The account imported stories are posted under, one per source (e.g. "developpez_com"). */
@@ -169,15 +262,38 @@ export async function runImport(sourceId: number): Promise<ImportResult> {
   const source = await prisma.importSource.findUnique({ where: { id: sourceId } });
   if (!source) return { ok: false, found: 0, created: 0, skipped: 0, message: "Source introuvable." };
 
+  // One run per source at a time (« Importer maintenant » during an automatic run, two server instances…).
+  // A claim older than 10 minutes is a run that crashed: it can be taken over.
+  const claimed = await prisma.importSource.updateMany({
+    where: { id: sourceId, OR: [{ importingSince: null }, { importingSince: { lt: new Date(Date.now() - 10 * 60_000) } }] },
+    data: { importingSince: new Date() },
+  });
+  if (claimed.count === 0) return { ok: true, found: 0, created: 0, skipped: 0, message: "Importation déjà en cours pour cette source." };
+
   let result: ImportResult;
+  let renderer: Renderer | undefined;
   try {
-    result = await importFrom(source);
+    if (source.render && !isGoogleNewsSource(source.url)) renderer = await openRenderer();
+    result = await importFrom(source, renderer);
   } catch (err) {
     console.error(`[import] source ${sourceId} failed:`, err);
-    result = { ok: false, found: 0, created: 0, skipped: 0, message: "Erreur inattendue pendant l'importation." };
+    const browser = source.render && !renderer;
+    result = { ok: false, found: 0, created: 0, skipped: 0, message: browser ? "Échec : le navigateur n'a pas pu démarrer." : "Erreur inattendue pendant l'importation." };
+  } finally {
+    await renderer?.close();
   }
 
-  await prisma.importSource.update({ where: { id: sourceId }, data: { lastRunAt: new Date(), lastResult: result.message } });
+  // Failed runs in a row: after FAILING_AFTER the admin shows an alert. A success resets the count.
+  await prisma.importSource.update({
+    where: { id: sourceId },
+    data: {
+      lastRunAt: new Date(),
+      lastResult: result.message,
+      importingSince: null,
+      ...(result.ok ? { failCount: 0, failingSince: null } : { failCount: { increment: 1 }, failingSince: source.failingSince ?? new Date() }),
+      ...(result.ok && result.validators ? result.validators : {}),
+    },
+  });
   return result;
 }
 
@@ -190,29 +306,38 @@ async function importFrom(source: {
   categoryId: number | null;
   topic: string | null;
   strict: boolean;
-}): Promise<ImportResult> {
+  etag: string | null;
+  lastModified: string | null;
+}, renderer?: Renderer): Promise<ImportResult> {
   const limit = Math.min(Math.max(source.maxItems, 1), 100);
-  const found = await findArticles(source.url, limit);
+  const found = await findArticles(source.url, limit, { renderer, etag: source.etag, lastModified: source.lastModified });
   if ("error" in found) return { ok: false, found: 0, created: 0, skipped: 0, message: `Échec : ${found.error}.` };
+  if ("notModified" in found) {
+    return { ok: true, found: 0, created: 0, skipped: 0, message: "Aucun changement depuis la dernière lecture (le site l'indique), rien à télécharger." };
+  }
+  const render = renderer ? renderWithRetry(renderer) : undefined;
+  const { validators } = found;
 
-  // Newest first, unique by canonical URL; no newsletters, podcasts or sponsored posts.
-  const seen = new Set<string>();
-  const articles = found.articles
+  // Newest first, one per article (same address or same headline); no newsletters, podcasts or sponsored posts.
+  const seenKeys = new Set<string>();
+  const unique: FoundArticle[] = [];
+  const listed = found.articles
     .map((a) => ({ ...a, url: canonicalUrl(a.url), title: cleanTitle(a.title) }))
     .filter((a) => a.title && !a.keywords.some((k) => NOT_NEWS.test(k.trim())))
-    .filter((a) => !seen.has(a.url) && seen.add(a.url))
-    .sort((a, b) => (b.publishedAt?.getTime() ?? 0) - (a.publishedAt?.getTime() ?? 0))
-    .slice(0, limit);
+    .sort((a, b) => (b.publishedAt?.getTime() ?? 0) - (a.publishedAt?.getTime() ?? 0));
+  for (const a of listed) {
+    const key = urlKey(a.url) ?? a.url;
+    if (seenKeys.has(key) || unique.some((u) => sameHeadline(u.title, a.title))) continue;
+    seenKeys.add(key);
+    unique.push(a);
+  }
+  const articles = unique.slice(0, limit);
 
-  const existing = await prisma.item.findMany({
-    where: { url: { in: articles.flatMap((a) => [a.url, a.url.replace(/\/$/, ""), `${a.url.replace(/\/$/, "")}/`]) } },
-    select: { url: true },
-  });
-  const known = new Set(existing.map((e) => e.url?.replace(/\/$/, "")));
-  const fresh = articles.filter((a) => !known.has(a.url.replace(/\/$/, "")));
+  const { sameAddress, sameTitle } = await alreadyPublished(articles);
+  const fresh = articles.filter((a) => !sameAddress.has(a.url) && !sameTitle.has(a.url));
 
   if (fresh.length === 0) {
-    return { ok: true, mode: found.mode, found: articles.length, created: 0, skipped: articles.length, message: `${articles.length} article(s) trouvé(s) via ${MODE_LABEL[found.mode]}, aucun nouveau.` };
+    return { ok: true, mode: found.mode, found: articles.length, created: 0, skipped: articles.length, validators, message: `${articles.length} article(s) trouvé(s) via ${MODE_LABEL[found.mode]}, aucun nouveau.` };
   }
 
   // « Filtrer » (strict sources): articles whose title, summary and keywords show no
@@ -223,12 +348,21 @@ async function importFrom(source: {
   let offTopic = fresh.length - candidates.length;
 
   const authorId = await sourceAuthor(source);
+  let lateDuplicates = 0;
   const now = Date.now();
   let created = 0;
   // Every new article page is analysed (feeds give little text and often small or no pictures).
-  const toCreate = withoutSiteWideKeywords(await analyzeAll(candidates));
+  const toCreate = withoutSiteWideKeywords(await analyzeAll(candidates, render));
 
   for (const article of toCreate) {
+    // Another import may have added it while this one was reading pages (the address may also have changed on redirect).
+    const key = urlKey(article.url);
+    const late = await prisma.item.findFirst({ where: { OR: [...(key ? [{ urlKey: key }] : []), { url: article.url }] }, select: { id: true } });
+    if (late) {
+      lateDuplicates++;
+      continue;
+    }
+
     // Strict sources: the analysed page must confirm the topic (title, or two different terms), checked before translating.
     if (
       source.strict &&
@@ -278,6 +412,7 @@ async function importFrom(source: {
         originalTitle: title.originalTitle,
         keywords: article.keywords,
         url: article.url,
+        urlKey: key,
         excerpt,
         excerptLang: excerpt ? excerptLang ?? "und" : null,
         imageUrl: article.image,
@@ -301,13 +436,15 @@ async function importFrom(source: {
   }
 
   const skipped = articles.length - created;
-  const already = skipped - offTopic;
+  const duplicates = sameTitle.size + lateDuplicates;
+  const already = skipped - offTopic - duplicates;
   return {
     ok: true,
     mode: found.mode,
     found: articles.length,
     created,
     skipped,
-    message: `${created} article(s) importé(s), ${already} déjà présent(s)${offTopic ? `, ${offTopic} hors sujet écarté(s)` : ""} — via ${MODE_LABEL[found.mode]}.`,
+    validators,
+    message: `${created} article(s) importé(s), ${already} déjà présent(s)${duplicates ? `, ${duplicates} doublon(s) écarté(s)` : ""}${offTopic ? `, ${offTopic} hors sujet écarté(s)` : ""} — via ${MODE_LABEL[found.mode]}.`,
   };
 }

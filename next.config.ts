@@ -22,8 +22,18 @@ const ENGLISH_PATHS: [string, string][] = [
   ["/godmod/settings", "/godmod/parametres"],
 ];
 
+/**
+ * Routes that run « Navigateur » imports need the headless browser's files. Not the
+ * homepage: its visit-triggered imports skip those sources, so it stays light.
+ */
+const BROWSER_FILES = ["./node_modules/@sparticuz/chromium/bin/**/*"];
+
 const config: NextConfig = {
   reactStrictMode: true,
+  outputFileTracingIncludes: {
+    "/api/cron/import": BROWSER_FILES,
+    "/godmod/importation": BROWSER_FILES,
+  },
   async headers() {
     // The service worker must never be served stale, or fixes to it would take days to reach phones.
     return [

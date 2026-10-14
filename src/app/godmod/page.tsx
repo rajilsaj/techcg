@@ -4,7 +4,8 @@ import { requireAdminPage } from "@/lib/admin";
 import { STATUS_LABELS, type ItemStatus } from "@/lib/content-status";
 import { AdminHeader, Card, StatusBadge } from "@/components/admin/ui";
 import { formatRelativeTime } from "@/i18n";
-import { Flag } from "lucide-react";
+import { Flag, TriangleAlert } from "lucide-react";
+import { FAILING_AFTER } from "@/lib/importer/run";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +14,7 @@ const POST_TYPES = ["story", "ask", "show", "job"];
 export default async function AdminDashboard() {
   await requireAdminPage("/godmod");
 
-  const [postCounts, commentCounts, members, banned, categories, flagged, recentPosts, recentComments, activity] =
+  const [postCounts, commentCounts, members, banned, categories, flagged, recentPosts, recentComments, activity, failingSources] =
     await Promise.all([
       prisma.item.groupBy({ by: ["status"], where: { type: { in: POST_TYPES } }, _count: { _all: true } }),
       prisma.item.groupBy({ by: ["status"], where: { type: "comment" }, _count: { _all: true } }),
@@ -50,6 +51,7 @@ export default async function AdminDashboard() {
         take: 6,
         select: { id: true, summary: true, createdAt: true, actor: { select: { username: true } } },
       }),
+      prisma.importSource.findMany({ where: { enabled: true, failCount: { gte: FAILING_AFTER } }, select: { name: true } }),
     ]);
 
   const count = (rows: { status: string; _count: { _all: number } }[], status: string) =>
@@ -68,6 +70,19 @@ export default async function AdminDashboard() {
   return (
     <>
       <AdminHeader title="Tableau de bord" description="Vue d'ensemble du site et de ce qui demande votre attention." />
+      {failingSources.length > 0 && (
+        <Link
+          href="/godmod/importation"
+          role="alert"
+          className="mb-4 flex items-start gap-2.5 rounded-xl border border-red-500/50 bg-red-500/10 p-4 text-sm text-text hover:border-red-500"
+        >
+          <TriangleAlert size={18} aria-hidden className="mt-0.5 shrink-0 text-red-500" />
+          <span>
+            <strong>Importation : {failingSources.length === 1 ? "1 source en panne" : `${failingSources.length} sources en panne`}</strong>{" "}
+            ({failingSources.map((s) => s.name).join(", ")}). Voir Importation.
+          </span>
+        </Link>
+      )}
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <div className="space-y-4 xl:col-span-2">

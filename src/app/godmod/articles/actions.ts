@@ -9,6 +9,7 @@ import { isItemStatus, STATUS_LABELS } from "@/lib/content-status";
 import { fromLocalInput } from "@/lib/local-time";
 import { calculateRankScore } from "@/lib/ranking";
 import { parseTagNames, setItemTags } from "@/lib/taxonomy";
+import { urlKey } from "@/lib/duplicates";
 
 const POST_TYPES = ["story", "ask", "show", "job"];
 
@@ -100,6 +101,7 @@ export async function updateArticleAction(formData: FormData) {
     data: {
       title: text("title", 500) ?? "Sans titre",
       url,
+      urlKey: urlKey(url),
       text: text("text", 20000),
       excerpt: text("excerpt", 1000),
       excerptLang: text("excerpt", 1000) ? "fr" : null,

@@ -6,6 +6,7 @@ import { listCategories } from "@/lib/taxonomy";
 import { IMPORT_INTERVAL_MINUTES } from "@/lib/importer/schedule";
 import { lastAutoImport } from "@/lib/cron-auth";
 import { describeGoogleNews, isGoogleNewsSource } from "@/lib/importer/google-news";
+import { FAILING_AFTER } from "@/lib/importer/run";
 import { PendingNotice, SubmitButton } from "@/components/admin/FormControls";
 import { AdminHeader, AdminNotice, Card, buttonClass, inputClass, primaryButtonClass, tdClass, thClass } from "@/components/admin/ui";
 import { createSourceAction, deleteSourceAction, reanalyzeAction, removeDemoAction, runImportAction, updateSourceAction } from "./actions";
@@ -40,6 +41,7 @@ export default async function ImportPage({ searchParams }: PageProps) {
   // Runs every 30 minutes: more than 2 hours without one means the schedule is not working.
   const autoHealthy = autoAge !== null && autoAge < 2 * 60 * 60 * 1000 && !auto?.error;
   const categoryName = new Map(categories.map((c) => [c.id, c.name]));
+  const failing = sources.filter((s) => s.enabled && s.failCount >= FAILING_AFTER);
 
   const categorySelect = (name: string, value: number | null) => (
     <select name={name} defaultValue={value ?? ""} className={inputClass} aria-label="Catégorie">
@@ -69,6 +71,29 @@ export default async function ImportPage({ searchParams }: PageProps) {
         }
       />
       <AdminNotice notice={notice} />
+
+      {failing.length > 0 && (
+        <section role="alert" className="mb-4 rounded-xl border border-red-500/50 bg-red-500/10 p-4 text-sm text-text">
+          <h2 className="font-semibold">
+            {failing.length === 1 ? "1 source ne fonctionne plus" : `${failing.length} sources ne fonctionnent plus`}
+          </h2>
+          <ul className="mt-1.5 space-y-0.5">
+            {failing.map((s) => (
+              <li key={s.id}>
+                <span className="font-medium">{s.name}</span> : {s.failCount} échecs de suite
+                {s.failingSince && ` depuis le ${formatLocalDateTime(s.failingSince)}`} — {s.lastResult?.replace(/^Échec : /, "")}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-text-secondary">
+            Que faire ? Consultez le{" "}
+            <Link href="/godmod/importation/guide#pannes" className="text-accent hover:underline">
+              guide de configuration
+            </Link>
+            .
+          </p>
+        </section>
+      )}
 
       <section className="mb-4 rounded-xl border border-border bg-bg p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -139,6 +164,16 @@ export default async function ImportPage({ searchParams }: PageProps) {
                   <td className={tdClass}>
                     <span className="font-medium text-text">{s.name}</span>
                     {!s.enabled && <span className="ml-2 text-xs text-text-secondary">(désactivée)</span>}
+                    {s.enabled && s.failCount >= FAILING_AFTER && (
+                      <span className="ml-2 rounded-full bg-red-500 px-2 py-0.5 text-[11px] font-semibold text-white" title={`${s.failCount} échecs de suite`}>
+                        En panne
+                      </span>
+                    )}
+                    {s.render && (
+                      <span className="ml-2 rounded-full bg-bg-secondary px-2 py-0.5 text-[11px] font-medium text-text-secondary" title="Pages ouvertes dans un navigateur">
+                        Navigateur
+                      </span>
+                    )}
                     {s.strict && (
                       <span
                         className="ml-2 rounded-full bg-accent/10 px-2 py-0.5 text-[11px] font-medium text-accent"
@@ -179,6 +214,12 @@ export default async function ImportPage({ searchParams }: PageProps) {
                           <input type="checkbox" name={`strict-${s.id}`} defaultChecked={s.strict} className="h-4 w-4 accent-[var(--accent)]" />
                           Filtrer : n&apos;importer que les articles sur les startups, l&apos;entrepreneuriat et la tech
                         </label>
+                        {!isGoogleNewsSource(s.url) && (
+                          <label className="flex items-center gap-2 text-sm text-text sm:col-span-2">
+                            <input type="checkbox" name={`render-${s.id}`} defaultChecked={s.render} className="h-4 w-4 accent-[var(--accent)]" />
+                            Navigateur : ouvrir les pages dans un navigateur (sites construits en JavaScript, plus lent)
+                          </label>
+                        )}
                         <div className="flex items-center gap-3">
                           <SubmitButton formAction={updateSourceAction} name="editId" value={String(s.id)} className={buttonClass}>
                             Enregistrer
@@ -258,6 +299,16 @@ export default async function ImportPage({ searchParams }: PageProps) {
                 <span className="block text-xs text-text-secondary">À garder coché pour un site d&apos;actualité générale ; décochez pour un site 100 % tech.</span>
               </span>
             </label>
+            <label className="flex items-start gap-2 text-sm text-text">
+              <input type="checkbox" name="render" className="mt-0.5 h-4 w-4 accent-[var(--accent)]" />
+              <span>
+                Navigateur : ouvrir les pages dans un navigateur
+                <span className="block text-xs text-text-secondary">
+                  Seulement si l&apos;import trouve 0 article alors que le site en affiche (site construit en JavaScript).{" "}
+                  <Link href="/godmod/importation/guide#navigateur" className="text-accent hover:underline">En savoir plus</Link>
+                </span>
+              </span>
+            </label>
             <SubmitButton className={primaryButtonClass}>Ajouter la source</SubmitButton>
           </form>
         </Card>
@@ -282,6 +333,13 @@ export default async function ImportPage({ searchParams }: PageProps) {
         </Card>
 
         <Card title="Comment ça marche">
+          <p className="mb-3 text-sm text-text">
+            Tout le détail (flux, filtres, navigateur, sites qui bloquent, pannes) est dans le{" "}
+            <Link href="/godmod/importation/guide" className="text-accent hover:underline">
+              guide de configuration
+            </Link>
+            .
+          </p>
           <p className="mb-3 text-sm text-text">
             Pour ajouter des articles Google News sur vos sujets, configurez SerpApi dans{" "}
             <Link href="/godmod/integrations" className="text-accent hover:underline">

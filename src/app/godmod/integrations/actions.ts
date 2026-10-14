@@ -7,7 +7,7 @@ import { prisma } from "@/lib/db";
 import { checkSerpApiKey, getSerpApiKey, looksLikeSerpApiKey, saveSerpApiKey, saveSerpApiStatus } from "@/lib/serpapi";
 import { googleNewsSourceUrl, isGoogleNewsSource } from "@/lib/importer/google-news";
 import { isTopic } from "@/lib/topic-list";
-import { NEWS_COUNTRIES, NEWS_LANGUAGES, MAX_SUBJECTS, subjectOf } from "./subjects";
+import { NEWS_COUNTRIES, NEWS_LANGUAGES, MAX_SUBJECTS, isSiteSearch, subjectOf } from "./subjects";
 
 const PAGE = "/godmod/integrations";
 
@@ -66,7 +66,8 @@ export async function saveSubjectsAction(formData: FormData) {
     }
   }
 
-  const existing = (await prisma.importSource.findMany({ select: { id: true, url: true } })).filter((s) => isGoogleNewsSource(s.url));
+  // Site searches ("site:techpoint.africa", set up in Importation) are not subjects: never updated or deleted here.
+  const existing = (await prisma.importSource.findMany({ select: { id: true, url: true } })).filter((s) => isGoogleNewsSource(s.url) && !isSiteSearch(s.url));
   const bySubject = new Map(existing.map((s) => [subjectOf(s.url).toLowerCase(), s.id]));
 
   for (const { subject, topic } of wanted) {

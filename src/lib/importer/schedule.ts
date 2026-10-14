@@ -19,11 +19,20 @@ export interface ImportTick {
  * until the time budget runs out. Each source is claimed atomically (lastRunAt
  * moved to now) so two runs at the same moment never import the same source twice.
  */
-export async function runDueImports({ budgetMs, maxSources = Infinity }: { budgetMs: number; maxSources?: number }): Promise<ImportTick> {
+export async function runDueImports({
+  budgetMs,
+  maxSources = Infinity,
+  browser = true,
+}: {
+  budgetMs: number;
+  maxSources?: number;
+  /** false: skip « Navigateur » sources (the homepage function doesn't ship the browser). */
+  browser?: boolean;
+}): Promise<ImportTick> {
   const started = Date.now();
   const cutoff = new Date(started - IMPORT_INTERVAL_MINUTES * 60_000);
   const candidates = await prisma.importSource.findMany({
-    where: { enabled: true, OR: [{ lastRunAt: null }, { lastRunAt: { lt: cutoff } }] },
+    where: { enabled: true, ...(browser ? {} : { render: false }), OR: [{ lastRunAt: null }, { lastRunAt: { lt: cutoff } }] },
     orderBy: [{ lastRunAt: { sort: "asc", nulls: "first" } }, { id: "asc" }],
     select: { id: true, name: true, url: true, lastRunAt: true },
   });
@@ -59,7 +68,8 @@ export async function importOnVisit(): Promise<void> {
   if (now - lastVisitCheck < VISIT_CHECK_MS) return;
   lastVisitCheck = now;
   try {
-    await runDueImports({ budgetMs: 45_000, maxSources: 1 });
+    // « Navigateur » sources are left to the scheduled job and « Importer maintenant », whose functions include the browser.
+    await runDueImports({ budgetMs: 45_000, maxSources: 1, browser: false });
   } catch (err) {
     console.error("[import] visit-triggered run failed:", err);
   }

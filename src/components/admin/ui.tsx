@@ -136,6 +136,8 @@ const NOTICES: Record<string, string> = {
   "subjects-saved": "Sujets Google News enregistrés. Ils seront importés au fil des visites, ou tout de suite depuis la page Importation.",
   analyzed: "Analyse terminée (détail ci-dessous).",
   "subjects-none": "Aucun sujet : les recherches Google News sont arrêtées.",
+  merged: "Doublons fusionnés : les copies sont dans la corbeille (restaurables depuis Articles).",
+  "merge-none": "Aucun doublon à fusionner.",
 };
 
 /** The one-time message passed as ?notice= after a form. */
@@ -143,7 +145,7 @@ export function AdminNotice({ notice }: { notice?: string }) {
   const text = notice ? NOTICES[notice] : undefined;
   if (!text) return null;
   const warning = ["no-selection", "slug-taken", "self-protect", "last-admin", "blob-missing", "invalid-url", "name-required", "import-done", "profiles-none",
-    "serpapi-empty", "serpapi-failed", "serpapi-refused", "serpapi-format", "serpapi-missing", "subjects-none"].includes(notice!);
+    "serpapi-empty", "serpapi-failed", "serpapi-refused", "serpapi-format", "serpapi-missing", "subjects-none", "merge-none"].includes(notice!);
   return (
     <p
       role="status"
