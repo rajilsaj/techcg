@@ -29,7 +29,7 @@ export default async function Home({ searchParams }: PageProps) {
   after(importOnVisit);
 
   // Unfiltered homepage: 5 latest Congo stories, then 5 from the rest of Africa,
-  // then everything else ("Dans le monde"), which leaves those 10 out on every page.
+  // then everything else ("D'ailleurs"), which leaves those 10 out on every page.
   const lead = async (region: string, exclude: number[]) =>
     hasFilters(filters)
       ? []
@@ -65,8 +65,6 @@ export default async function Home({ searchParams }: PageProps) {
           <>
             <RegionSection
               id="news-congo"
-              marker="congo"
-              eyebrow={t("home.local")}
               title={t("home.congo")}
               moreHref="/etiquette/congo"
               moreLabel={t("home.congoAll")}
@@ -76,8 +74,6 @@ export default async function Home({ searchParams }: PageProps) {
             />
             <RegionSection
               id="news-africa"
-              marker="afrique"
-              eyebrow={t("home.continent")}
               title={t("home.africa")}
               moreHref="/etiquette/afrique"
               moreLabel={t("home.africaAll")}
@@ -86,7 +82,7 @@ export default async function Home({ searchParams }: PageProps) {
               isLoggedIn={!!session}
             />
             <div className="mt-10">
-              <SectionTitle id="news-world" eyebrow={t("home.everywhere")} marker="monde">
+              <SectionTitle id="news-world">
                 {t("home.world")}
               </SectionTitle>
             </div>

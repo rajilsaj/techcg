@@ -195,7 +195,7 @@ export default async function EditArticlePage({ params, searchParams }: PageProp
                 manual: article.metaManual,
               }}
             />
-            <p className="mt-1 text-xs text-text-secondary">Enregistré à chaque clic. La région place l&apos;article dans « Au Congo », « En Afrique » ou « Dans le monde ».</p>
+            <p className="mt-1 text-xs text-text-secondary">Enregistré à chaque clic. La région place l&apos;article dans « Congo », « Afrique » ou « D&apos;ailleurs ».</p>
           </Card>
 
           <Card title="Étiquettes">
