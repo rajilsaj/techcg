@@ -6,6 +6,7 @@ Every change requested in a Claude Code session, newest first, with when it was 
 
 | Date & time (UTC-4) | Update | Pushed |
 | --- | --- | --- |
+| 2026-10-14 15:30 | Public **API v1** (stories, comments, votes, discussions, sources, profiles, topics, users, me) with personal **API keys** in Mon espace › API and documentation at **/api** (+ OpenAPI file); whole site readable offline as an app, desktop install button; mobile fixes (sign-in pages, docs) | Yes (fd3832f) |
 | 2026-10-14 14:20 | Security hotfix: the old API let anyone publish as user #1 and edit or trash any story without signing in; those write endpoints now answer 401 | Yes (c67fd38) |
 | 2026-10-14 13:55 | Homepage tabs above **Congo**: **Les plus populaires** (most consulted), **Les plus récents**, **Les plus discutés**, plus **En discussion** → new chat pages `/discussions` (conversations in progress, chat view per article, start on an article or a free topic) | Yes (265e183) |
 | 2026-10-15 03:05 | New **Mon espace** (`/mon-espace`) for every signed-in member, separate from the admin: hello header with avatar, « Mon profil public » and « Publier »; four counters that are also tabs — Mes publications (every status, score, comments), Commentaires reçus (others' comments on my publications, with author and link), Mes commentaires (with status and the publication), Votes reçus (anonymous ↑/↓ per publication). Link « Mon espace » in the header; on phones the tab bar's Profil tab becomes « Mon espace ». Signed-out visitors go to the login page and come back. | Yes (9986a28) |
