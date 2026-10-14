@@ -12,6 +12,11 @@ export interface FoundArticle {
   keywords: string[];
   /** Language of this article when known per article (page scraping). */
   language?: string | null;
+  /** Set when the article page was analysed (advanced scraper). */
+  readingMinutes?: number | null;
+  analyzed?: boolean;
+  /** Opening of the article's main text, for topic detection. */
+  text?: string;
 }
 
 export interface ParsedFeed {

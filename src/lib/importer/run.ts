@@ -1,5 +1,8 @@
 import { prisma } from "../db";
-import { decodeEntities, fetchPublic, getLinkPreview, type PreviewFailure } from "../link-preview";
+import { decodeEntities, fetchPublic, type PreviewFailure } from "../link-preview";
+import { analyzeArticle } from "../scraper/article";
+import { worthKeeping } from "../scraper/image-size";
+import { stripLeadingTitle } from "../excerpt";
 import { calculateRankScore } from "../ranking";
 import { slugify } from "../taxonomy";
 import { frenchTitle, translateToFrench } from "../translate";
@@ -61,6 +64,40 @@ export function canonicalUrl(raw: string): string {
   }
 }
 
+/** Runs `fn` over `items`, 4 at a time, keeping the order. */
+async function inBatches<T, R>(items: T[], fn: (item: T) => Promise<R>): Promise<R[]> {
+  const out: R[] = [];
+  for (let i = 0; i < items.length; i += 4) out.push(...(await Promise.all(items.slice(i, i + 4).map(fn))));
+  return out;
+}
+
+/**
+ * Advanced scraper on each article page: title, summary, keywords, language,
+ * reading time and a measured cover. A small or missing picture is dropped (the
+ * site then shows the topic's cover); the source's own image is kept only if large.
+ */
+export function analyzeAll(articles: FoundArticle[]): Promise<FoundArticle[]> {
+  return inBatches(articles, async (a) => {
+    if (a.analyzed) return a;
+    const result = await analyzeArticle(a.url);
+    if (!result.ok) return { ...a, image: (await worthKeeping(a.image)) ? a.image : null };
+    const { preview, cover, summary } = result.article;
+    const described = preview.description ? stripLeadingTitle(preview.description, a.title) : null;
+    return {
+      ...a,
+      title: a.title || preview.title || a.url,
+      url: result.article.url,
+      summary: a.summary && a.summary.length >= 100 ? a.summary : described && described.length >= 100 ? described : summary ?? described ?? a.summary,
+      image: cover?.url ?? ((await worthKeeping(a.image)) ? a.image : null),
+      keywords: [...new Set([...preview.keywords, ...a.keywords])],
+      language: preview.lang ?? a.language,
+      readingMinutes: result.article.readingMinutes,
+      analyzed: true,
+      text: result.article.text.slice(0, 600),
+    };
+  });
+}
+
 /** Finds articles on a source: its feed if it has one, else links scraped from the page. */
 export async function findArticles(sourceUrl: string, limit: number): Promise<{ mode: ImportMode; language: string | null; articles: FoundArticle[] } | { error: string }> {
   if (isGoogleNewsSource(sourceUrl)) {
@@ -88,21 +125,9 @@ export async function findArticles(sourceUrl: string, limit: number): Promise<{ 
     }
   }
 
-  // No usable feed: read the listing page, then each article page for its metadata.
+  // No usable feed: read the listing page, then analyse each article page.
   const links = scrapeArticleLinks(page.body, page.url, limit);
-  const articles: FoundArticle[] = [];
-  for (const link of links) {
-    const preview = await getLinkPreview(link.url);
-    articles.push({
-      title: preview.ok && preview.preview.title ? preview.preview.title : link.title,
-      url: preview.ok ? preview.preview.url : link.url,
-      publishedAt: null,
-      summary: preview.ok ? preview.preview.description : null,
-      image: preview.ok ? preview.preview.image : null,
-      keywords: preview.ok ? preview.preview.keywords : [],
-      language: preview.ok ? preview.preview.lang : null,
-    });
-  }
+  const articles = await analyzeAll(links.map((link) => ({ title: link.title, url: link.url, publishedAt: null, summary: null, image: null, keywords: [] })));
   return { mode: "page", language: null, articles };
 }
 
@@ -139,31 +164,6 @@ export async function runImport(sourceId: number): Promise<ImportResult> {
   return result;
 }
 
-/**
- * Google News gives only a title, link and thumbnail: read each article's own page
- * for its meta description, keywords, image and language (4 at a time).
- */
-async function withPageMetadata(articles: FoundArticle[]): Promise<FoundArticle[]> {
-  const out: FoundArticle[] = [];
-  for (let i = 0; i < articles.length; i += 4) {
-    const batch = await Promise.all(
-      articles.slice(i, i + 4).map(async (a) => {
-        const page = await getLinkPreview(a.url);
-        if (!page.ok) return a;
-        const p = page.preview;
-        return {
-          ...a,
-          summary: p.description ?? a.summary,
-          image: p.image ?? a.image,
-          keywords: [...new Set([...p.keywords, ...a.keywords])],
-          language: p.lang ?? a.language,
-        };
-      })
-    );
-    out.push(...batch);
-  }
-  return out;
-}
 
 async function importFrom(source: { id: number; name: string; url: string; maxItems: number; categoryId: number | null; topic: string | null }): Promise<ImportResult> {
   const limit = Math.min(Math.max(source.maxItems, 1), 100);
@@ -193,7 +193,8 @@ async function importFrom(source: { id: number; name: string; url: string; maxIt
   const authorId = await sourceAuthor(source);
   const now = Date.now();
   let created = 0;
-  const toCreate = found.mode === "google_news" ? await withPageMetadata(fresh) : fresh;
+  // Every new article page is analysed (feeds give little text and often small or no pictures).
+  const toCreate = await analyzeAll(fresh);
 
   for (const article of toCreate) {
     const language = article.language ?? found.language ?? null;
@@ -209,7 +210,12 @@ async function importFrom(source: { id: number; name: string; url: string; maxIt
 
     const title = await frenchTitle(article.title, language);
     // Topics from the original wording too: keyword lists are often in the source language.
-    const topics = detectTopics({ title: `${title.title} . ${title.originalTitle ?? ""}`, excerpt: `${excerpt ?? ""} . ${article.summary ?? ""}`, keywords: article.keywords, url: article.url });
+    const topics = detectTopics({
+      title: `${title.title} . ${title.originalTitle ?? ""}`,
+      excerpt: `${excerpt ?? ""} . ${article.summary ?? ""} . ${article.text ?? ""}`,
+      keywords: article.keywords,
+      url: article.url,
+    });
     // No meta topic found: use the source's own (e.g. a Google News search on "startups Congo").
     if (source.topic && isTopic(source.topic) && !topics.some(isTopic)) topics.push(source.topic);
 
@@ -226,8 +232,11 @@ async function importFrom(source: { id: number; name: string; url: string; maxIt
         excerpt,
         excerptLang: excerpt ? excerptLang ?? "und" : null,
         imageUrl: article.image,
+        readingMinutes: article.readingMinutes ?? null,
+        analyzedAt: article.analyzed ? new Date(now) : null,
         // Missing image or excerpt: the preview job fills them in later.
-        previewAt: excerpt && article.image ? new Date(now) : null,
+        // Analysed pages are done; otherwise the preview job tries again later.
+        previewAt: article.analyzed || (excerpt && article.image) ? new Date(now) : null,
         authorId,
         points: 1,
         rankScore: calculateRankScore(1, createdAt),

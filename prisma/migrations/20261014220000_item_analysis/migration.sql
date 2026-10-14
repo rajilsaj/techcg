@@ -1,0 +1,2 @@
+ALTER TABLE "Item" ADD COLUMN "readingMinutes" INTEGER;
+ALTER TABLE "Item" ADD COLUMN "analyzedAt" TIMESTAMP(3);

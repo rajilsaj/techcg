@@ -125,9 +125,11 @@ interface RawResponse {
   contentType: string;
   contentLanguage: string;
   body: string;
+  /** Raw bytes, only when `binary` was asked for (images). */
+  bytes?: Buffer;
 }
 
-interface RequestOptions {
+export interface RequestOptions {
   /** Content types whose body is worth reading (default: HTML). */
   accept?: RegExp;
   /** Stop reading after this many bytes. */
@@ -135,9 +137,11 @@ interface RequestOptions {
   acceptHeader?: string;
   /** Some sites (LinkedIn) only show public previews to link-preview robots. */
   userAgent?: string;
+  /** Keep the body as bytes (`bytes`) instead of text, e.g. to read an image's size. */
+  binary?: boolean;
 }
 
-function request(url: URL, { accept = /html/i, maxBytes = MAX_HTML_BYTES, acceptHeader, userAgent }: RequestOptions = {}): Promise<RawResponse> {
+function request(url: URL, { accept = /html/i, maxBytes = MAX_HTML_BYTES, acceptHeader, userAgent, binary = false }: RequestOptions = {}): Promise<RawResponse> {
   // A literal IP in the URL never goes through DNS, so check it here.
   const host = url.hostname.replace(/^\[|\]$/g, "");
   if (net.isIP(host) && !isPublicIp(host)) {
@@ -185,7 +189,8 @@ function request(url: URL, { accept = /html/i, maxBytes = MAX_HTML_BYTES, accept
           if (done) return;
           done = true;
           req.destroy();
-          resolve({ status, contentType, contentLanguage, body: Buffer.concat(chunks).toString("utf8") });
+          const data = Buffer.concat(chunks);
+          resolve({ status, contentType, contentLanguage, body: binary ? "" : data.toString("utf8"), bytes: binary ? data : undefined });
         };
         stream.on("data", (chunk: Buffer) => {
           chunks.push(chunk);
@@ -240,7 +245,7 @@ function clean(value: string | undefined, max: number): string | null {
   return text.length > max ? `${text.slice(0, max - 1).trimEnd()}…` : text;
 }
 
-function attributes(tag: string): Record<string, string> {
+export function attributes(tag: string): Record<string, string> {
   const attrs: Record<string, string> = {};
   for (const m of tag.matchAll(/([\w:-]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+))/g)) {
     attrs[m[1].toLowerCase()] = m[2] ?? m[3] ?? m[4] ?? "";
@@ -248,7 +253,7 @@ function attributes(tag: string): Record<string, string> {
   return attrs;
 }
 
-function absoluteHttpUrl(value: string | null | undefined, base: URL): string | null {
+export function absoluteHttpUrl(value: string | null | undefined, base: URL): string | null {
   if (!value) return null;
   try {
     const url = new URL(decodeEntities(value.trim()), base);
@@ -264,7 +269,7 @@ export function plainText(fragment: string): string {
 }
 
 /** The article body if the page marks one, else the whole document minus chrome. */
-function contentArea(html: string): string {
+export function contentArea(html: string): string {
   const withoutNoise = html.replace(
     /<(script|style|noscript|svg|template|nav|header|footer|aside|form)\b[\s\S]*?<\/\1>/gi,
     " "
@@ -286,7 +291,7 @@ export function firstParagraph(html: string): string | undefined {
   return undefined;
 }
 
-const NOT_CONTENT_IMAGE = /logo|icon|avatar|sprite|badge|pixel|tracking|spacer|blank|emoji|\.svg(\?|$)|^data:/i;
+export const NOT_CONTENT_IMAGE = /logo|icon|avatar|sprite|badge|pixel|tracking|spacer|blank|emoji|\.svg(\?|$)|^data:/i;
 
 /** First image in the article body that looks like content rather than chrome. */
 export function firstContentImage(html: string): string | undefined {
@@ -406,7 +411,7 @@ export function cleanKeywords(values: string[]): string[] {
 /* ---------- Generic safe fetch (also used by the importer) ---------- */
 
 export type FetchResult =
-  | { ok: true; url: URL; status: number; contentType: string; contentLanguage: string; body: string }
+  | { ok: true; url: URL; status: number; contentType: string; contentLanguage: string; body: string; bytes?: Buffer }
   | { ok: false; reason: PreviewFailure; status?: number };
 
 /**
@@ -434,7 +439,7 @@ export async function fetchPublic(input: string | URL, options: RequestOptions =
     if (res.status === 404 || res.status === 410) return { ok: false, reason: "not_found", status: res.status };
     if (res.status >= 500) return { ok: false, reason: "server_error", status: res.status };
     if (res.status >= 400) return { ok: false, reason: "restricted", status: res.status };
-    return { ok: true, url, status: res.status, contentType: res.contentType, contentLanguage: res.contentLanguage, body: res.body };
+    return { ok: true, url, status: res.status, contentType: res.contentType, contentLanguage: res.contentLanguage, body: res.body, bytes: res.bytes };
   }
   return { ok: false, reason: "unreachable" };
 }

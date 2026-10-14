@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 import { requireAdminAction, withNotice } from "@/lib/admin";
 import { logActivity } from "@/lib/activity";
 import { runImport } from "@/lib/importer/run";
+import { reanalyzeStories } from "@/lib/scraper/reanalyze";
 import { normalizeUrl } from "@/lib/link-preview";
 import { cleanGoogleNewsUrl, isGoogleNewsSource } from "@/lib/importer/google-news";
 
@@ -77,6 +78,16 @@ export async function deleteSourceAction(formData: FormData) {
   const source = await prisma.importSource.delete({ where: { id }, select: { name: true } });
   await logActivity(admin.userId, "import.source", `Source d'import « ${source.name} » supprimée`, { type: "settings", id });
   redirect(withNotice(PAGE, "deleted"));
+}
+
+/** "Analyser les articles": advanced scraper on stories not analysed yet (pictures, reading time). */
+export async function reanalyzeAction() {
+  const admin = await requireAdminAction();
+  const r = await reanalyzeStories(200_000);
+  const summary = `${r.analyzed} article(s) analysé(s) : ${r.improved} image(s) remplacée(s) par une plus grande, ${r.removed} trop petite(s) remplacée(s) par l'illustration du sujet. Reste ${r.remaining} à analyser.`;
+  await logActivity(admin.userId, "import.analyze", summary, { type: "item" });
+  revalidatePath("/", "layout");
+  redirect(`${PAGE}?${new URLSearchParams({ notice: "analyzed", rapport: summary })}`);
 }
 
 /** Removes the fake demo members (…@demo.invalid) and, by cascade, their articles. */

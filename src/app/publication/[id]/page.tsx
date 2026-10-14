@@ -15,6 +15,7 @@ import { avatarUrl } from "@/lib/gravatar";
 import { Avatar } from "@/components/user/Avatar";
 import { STATUS_LABELS, isItemStatus, isPubliclyVisible, publiclyVisible } from "@/lib/content-status";
 import { CoverImage } from "@/components/media/CoverImage";
+import { TopicCover, coverTopic } from "@/components/media/TopicCover";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -44,6 +45,8 @@ export default async function ItemPage({ params }: PageProps) {
       excerptLang: true,
       imageUrl: true,
       previewAt: true,
+      readingMinutes: true,
+      tags: { select: { tag: { select: { slug: true } } } },
       status: true,
       publishAt: true,
       author: {
@@ -65,6 +68,12 @@ export default async function ItemPage({ params }: PageProps) {
   }
 
   if (needsEnrichment(story)) after(() => enrichStory(story.id));
+
+  // No picture, or none worth a cover: the topic's illustration instead.
+  const coverClass = "h-40 w-full shrink-0 rounded sm:h-28 sm:w-48";
+  const topicCover = (
+    <TopicCover topic={coverTopic(story.tags.map((t) => t.tag.slug), `${story.title ?? ""} ${story.excerpt ?? ""}`)} size="lg" className={coverClass} />
+  );
 
   const vote = (await viewerVotes(session?.userId, [itemId])).get(itemId) ?? 0;
 
@@ -147,15 +156,17 @@ export default async function ItemPage({ params }: PageProps) {
             </p>
           )}
 
-          {story.url && (story.imageUrl || story.excerpt) && (
+          {story.url && (
             <a
               href={story.url}
               target="_blank"
               rel="noopener noreferrer"
               className="mb-4 flex flex-col gap-3 rounded-lg border border-border bg-bg-secondary p-3 transition-colors hover:border-text-secondary sm:flex-row"
             >
-              {story.imageUrl && (
-                <CoverImage src={story.imageUrl} eager className="h-40 w-full shrink-0 rounded sm:h-28 sm:w-48" />
+              {story.imageUrl ? (
+                <CoverImage src={story.imageUrl} eager className={coverClass} fallback={topicCover} />
+              ) : (
+                topicCover
               )}
               {story.excerpt && (
                 <div className="min-w-0">
@@ -181,6 +192,7 @@ export default async function ItemPage({ params }: PageProps) {
               {story.author.username}
             </a>
             <span>{formatRelativeTime(story.createdAt)}</span>
+            {story.readingMinutes && <span>{t("story.readingTime", { minutes: story.readingMinutes })}</span>}
             <span>{story.commentCount} {pluralize(story.commentCount, t("unit.comment"), t("unit.comments"))}</span>
           </div>
         </div>

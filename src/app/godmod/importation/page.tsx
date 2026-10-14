@@ -7,7 +7,7 @@ import { IMPORT_INTERVAL_MINUTES } from "@/lib/importer/schedule";
 import { describeGoogleNews, isGoogleNewsSource } from "@/lib/importer/google-news";
 import { PendingNotice, SubmitButton } from "@/components/admin/FormControls";
 import { AdminHeader, AdminNotice, Card, buttonClass, inputClass, primaryButtonClass, tdClass, thClass } from "@/components/admin/ui";
-import { createSourceAction, deleteSourceAction, removeDemoAction, runImportAction, updateSourceAction } from "./actions";
+import { createSourceAction, deleteSourceAction, reanalyzeAction, removeDemoAction, runImportAction, updateSourceAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 // An import fetches many pages; give the server action room to finish.
@@ -22,9 +22,9 @@ interface PageProps {
 
 export default async function ImportPage({ searchParams }: PageProps) {
   await requireAdminPage("/godmod/importation");
-  const { notice } = await searchParams;
+  const { notice, rapport } = await searchParams;
 
-  const [sources, categories, demoMembers, demoArticles] = await Promise.all([
+  const [sources, categories, demoMembers, demoArticles, toAnalyze] = await Promise.all([
     prisma.importSource.findMany({
       orderBy: { createdAt: "asc" },
       include: { _count: { select: { items: true } } },
@@ -32,6 +32,7 @@ export default async function ImportPage({ searchParams }: PageProps) {
     listCategories(),
     prisma.user.count({ where: { email: { endsWith: "@demo.invalid" } } }),
     prisma.item.count({ where: { author: { email: { endsWith: "@demo.invalid" } } } }),
+    prisma.item.count({ where: { type: "story", url: { not: null }, analyzedAt: null } }),
   ]);
   const categoryName = new Map(categories.map((c) => [c.id, c.name]));
 
@@ -195,6 +196,25 @@ export default async function ImportPage({ searchParams }: PageProps) {
             </div>
             <SubmitButton className={primaryButtonClass}>Ajouter la source</SubmitButton>
           </form>
+        </Card>
+
+        <Card title="Analyse des articles">
+          <p className="text-sm text-text-secondary">
+            Chaque nouvel article est lu en entier : résumé, temps de lecture, et image mesurée. Une image absente ou trop petite
+            (logo, icône) est remplacée par l&apos;illustration de son sujet (IA, Tech, Startups, Entrepreneurs, Événements).
+          </p>
+          <p className="mt-2 text-sm text-text">
+            <strong className="tabular-nums">{toAnalyze}</strong> article{toAnalyze > 1 ? "s" : ""} déjà publié{toAnalyze > 1 ? "s" : ""} pas encore analysé{toAnalyze > 1 ? "s" : ""}.
+          </p>
+          {rapport && notice === "analyzed" && <p className="mt-2 rounded-md bg-bg-secondary p-2 text-xs text-text">{rapport}</p>}
+          {toAnalyze > 0 && (
+            <form action={reanalyzeAction} className="mt-3">
+              <SubmitButton className={buttonClass} pendingLabel="Analyse en cours…">
+                Analyser les articles
+              </SubmitButton>
+              <PendingNotice>Analyse en cours… jusqu&apos;à 3 minutes, gardez cette page ouverte.</PendingNotice>
+            </form>
+          )}
         </Card>
 
         <Card title="Comment ça marche">

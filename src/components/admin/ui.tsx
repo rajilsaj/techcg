@@ -134,6 +134,7 @@ const NOTICES: Record<string, string> = {
   "serpapi-missing": "Aucune clé SerpApi n'est configurée.",
   "serpapi-removed": "Clé SerpApi supprimée.",
   "subjects-saved": "Sujets Google News enregistrés. Ils seront importés au fil des visites, ou tout de suite depuis la page Importation.",
+  analyzed: "Analyse terminée (détail ci-dessous).",
   "subjects-none": "Aucun sujet : les recherches Google News sont arrêtées.",
 };
 

@@ -48,6 +48,10 @@ model Item {
   excerptLang   String? // language of `excerpt`, e.g. "fr", "en"
   imageUrl      String?
   previewAt     DateTime? // last preview attempt; null = never tried
+  /// Estimated reading time of the linked article (advanced scraper), in minutes.
+  readingMinutes Int?
+  /// When the scraper last analysed the article page (text, cover size).
+  analyzedAt     DateTime?
   metaManual    Boolean   @default(false) // meta tags/region picked by an admin: not recomputed
   authorId      Int
   author        User      @relation(fields: [authorId], references: [id], onDelete: Cascade)

@@ -64,6 +64,7 @@ export const fr = {
   "story.undoHide": "Annuler",
   "story.history": "Historique",
   "story.discuss": "Discuter",
+  "story.readingTime": "{minutes} min de lecture",
   "story.excerptLabel": "Extrait de l'article",
   "story.empty": "Aucune publication pour le moment.",
   "story.tags": "Sujets",

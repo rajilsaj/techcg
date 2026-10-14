@@ -5,6 +5,7 @@ import type { ListedStory } from "@/lib/stories";
 import { formatRelativeTime, pluralize, t } from "@/i18n";
 import { HideableStory, HideButton, VoteButtons } from "./StoryActions";
 import { CoverImage } from "@/components/media/CoverImage";
+import { TopicCover, coverTopic } from "@/components/media/TopicCover";
 import { isTopic } from "@/lib/topic-list";
 import { Avatar } from "@/components/user/Avatar";
 
@@ -25,6 +26,11 @@ export function StoryItem({ rank, story, isLoggedIn }: StoryItemProps) {
   const excerpt = story.excerpt ?? (story.url ? null : story.text);
   // Only the meta tags (Startups, Entrepreneurs, Tech, Événements) are shown.
   const tags = story.tags.map((t) => t.tag).filter((tag) => isTopic(tag.slug));
+  // No picture, or none worth a cover: the topic's illustration instead.
+  const coverClass = "h-16 w-28 rounded border border-border sm:h-20 sm:w-36";
+  const topicCover = (
+    <TopicCover topic={coverTopic(story.tags.map((t) => t.tag.slug), `${story.title ?? ""} ${story.originalTitle ?? ""} ${excerpt ?? ""}`)} className={coverClass} />
+  );
 
   return (
     <HideableStory itemId={story.id}>
@@ -53,13 +59,11 @@ export function StoryItem({ rank, story, isLoggedIn }: StoryItemProps) {
             )}
           </h2>
 
-          {(story.imageUrl || excerpt) && (
+          {(story.url || excerpt) && (
             <div className="mt-2 flex gap-3">
-              {story.imageUrl && (
-                <a href={href} target="_blank" rel="noopener noreferrer" className="shrink-0" tabIndex={-1}>
-                  <CoverImage src={story.imageUrl} className="h-16 w-28 rounded border border-border sm:h-20 sm:w-36" />
-                </a>
-              )}
+              <a href={href} {...(story.url ? { target: "_blank", rel: "noopener noreferrer" } : {})} className="shrink-0" tabIndex={-1}>
+                {story.imageUrl ? <CoverImage src={story.imageUrl} className={coverClass} fallback={topicCover} /> : topicCover}
+              </a>
               {excerpt && (
                 <p className="line-clamp-3 text-sm leading-5 text-text-secondary">{excerpt}</p>
               )}

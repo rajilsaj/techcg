@@ -1,5 +1,6 @@
 import { prisma } from "./db";
-import { getLinkPreview } from "./link-preview";
+import { analyzeArticle } from "./scraper/article";
+import { worthKeeping } from "./scraper/image-size";
 import { frenchTitle, translateToFrench } from "./translate";
 import { detectTopics, setAutoTags } from "./topics";
 import { stripLeadingTitle } from "./excerpt";
@@ -32,9 +33,16 @@ export function needsEnrichment(item: PreviewState, now = Date.now()): boolean {
 
 const inFlight = new Set<number>();
 
+/** An existing image is kept unless it was measured as too small for a cover. */
+async function keepIfBig(url: string | null): Promise<string | null> {
+  return (await worthKeeping(url)) ? url : null;
+}
+
 /**
- * Fetches the story's page, keeps its image, excerpt and keywords, translates the
- * title and excerpt into French and adds the topic tags. Existing data is never wiped by a later failed attempt.
+ * Analyses the story's page (advanced scraper): keeps a measured, large cover
+ * (else none, and the site shows the topic's cover), the excerpt, keywords and
+ * reading time; translates the title and excerpt into French and adds the topic
+ * tags. Existing data is never wiped by a later failed attempt.
  */
 export async function enrichStory(itemId: number): Promise<void> {
   if (inFlight.has(itemId)) return;
@@ -51,19 +59,29 @@ export async function enrichStory(itemId: number): Promise<void> {
     let imageUrl = item.imageUrl;
     let keywords = item.keywords;
     let pageLang: string | null = null;
+    let readingMinutes: number | null | undefined;
+    let analyzedAt: Date | undefined;
+    let bodyText = "";
 
     // Already fetched once with some result: only a translation is pending, no need to fetch again.
     const translationOnly = item.previewAt && (item.excerpt || item.imageUrl);
 
     if (!translationOnly) {
-      const result = await getLinkPreview(item.url);
+      const result = await analyzeArticle(item.url);
       if (result.ok) {
-        imageUrl = result.preview.image ?? imageUrl;
-        pageLang = result.preview.lang;
-        if (result.preview.keywords.length > 0) keywords = result.preview.keywords;
-        if (result.preview.description) {
-          excerpt = stripLeadingTitle(result.preview.description, item.title);
-          excerptLang = result.preview.lang ?? null;
+        const { preview, cover, summary } = result.article;
+        imageUrl = cover?.url ?? (await keepIfBig(imageUrl));
+        pageLang = preview.lang;
+        readingMinutes = result.article.readingMinutes;
+        bodyText = result.article.text;
+        analyzedAt = new Date();
+        if (preview.keywords.length > 0) keywords = preview.keywords;
+        // The publisher's description, unless it is short or just repeats the title: then the article's opening.
+        const described = preview.description ? stripLeadingTitle(preview.description, item.title) : null;
+        const best = described && described.length >= 100 ? described : summary ?? described;
+        if (best) {
+          excerpt = best;
+          excerptLang = preview.lang ?? null;
         }
       }
     }
@@ -87,13 +105,13 @@ export async function enrichStory(itemId: number): Promise<void> {
 
     await prisma.item.update({
       where: { id: itemId },
-      data: { excerpt, excerptLang, imageUrl, keywords, ...title, previewAt: new Date() },
+      data: { excerpt, excerptLang, imageUrl, keywords, ...title, previewAt: new Date(), readingMinutes, analyzedAt },
     });
     // An admin's choice in the meta picker wins over detection.
     if (!item.metaManual) {
       await setAutoTags(
         itemId,
-        detectTopics({ title: `${title.title ?? ""} . ${title.originalTitle ?? ""}`, excerpt, keywords, url: item.url })
+        detectTopics({ title: `${title.title ?? ""} . ${title.originalTitle ?? ""}`, excerpt: `${excerpt ?? ""} . ${bodyText.slice(0, 600)}`, keywords, url: item.url })
       );
     }
   } catch (err) {
