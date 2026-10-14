@@ -42,6 +42,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    // Locked until the API's authenticated version: never write without a signed-in user.
+    return createErrorResponse(API_ERRORS.UNAUTHORIZED, 401, { message: "Authentication required" });
     // TODO: Add authentication and ownership check
     const { id: idStr } = await params;
     const id = parseInt(idStr);
@@ -87,6 +89,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    // Locked until the API's authenticated version: never write without a signed-in user.
+    return createErrorResponse(API_ERRORS.UNAUTHORIZED, 401, { message: "Authentication required" });
     // TODO: Add authentication and admin check
     const { id: idStr } = await params;
     const id = parseInt(idStr);

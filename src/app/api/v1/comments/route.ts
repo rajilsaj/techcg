@@ -54,6 +54,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Locked until the API's authenticated version: never write without a signed-in user.
+    return createErrorResponse(API_ERRORS.UNAUTHORIZED, 401, { message: "Authentication required" });
     // TODO: Add authentication
     const body = await request.json() as CreateCommentRequest;
 
