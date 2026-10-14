@@ -2,10 +2,10 @@ import Link from "next/link";
 import { getSettings } from "@/lib/settings";
 import { getSession } from "@/lib/auth";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
-import { LogoutButton } from "@/components/layout/LogoutButton";
+import { Plus } from "lucide-react";
+import { AccountMenu } from "@/components/layout/AccountMenu";
 import { NavLinks } from "@/components/layout/NavLinks";
 import { MobileTabBar } from "@/components/layout/MobileTabBar";
-import { Avatar } from "@/components/user/Avatar";
 import { t } from "@/i18n";
 
 export async function Header() {
@@ -29,32 +29,17 @@ export async function Header() {
             <NavLinks visible={visibleMenus} />
           </nav>
 
-          <div className="ml-auto flex items-center gap-4 text-sm md:ml-0">
+          <div className="ml-auto flex items-center gap-3 text-sm md:ml-0">
+            {/* Publier always sits beside the account control (Connexion, or the avatar menu with Déconnexion). */}
+            <Link
+              href="/publier"
+              className="hidden items-center gap-1.5 rounded-full border border-border px-4 py-1.5 font-medium text-text transition-colors hover:border-accent hover:text-accent md:inline-flex"
+            >
+              <Plus size={15} aria-hidden />
+              {t("nav.submit")}
+            </Link>
             {session ? (
-              <>
-                {session.isAdmin && (
-                  <Link href="/godmod" className="text-text hover:text-accent transition-colors">
-                    {t("nav.admin")}
-                  </Link>
-                )}
-                <Link href="/mon-espace" className="hidden text-text hover:text-accent transition-colors md:inline">
-                  {t("nav.mySpace")}
-                </Link>
-                <Link href="/publier" className="hidden text-text hover:text-accent transition-colors md:inline">
-                  {t("nav.submit")}
-                </Link>
-                <Link
-                  href={`/profil/${session.username}`}
-                  className="hidden items-center gap-2 font-medium text-text hover:text-accent transition-colors md:inline-flex"
-                >
-                  <Avatar src={session.avatarUrl} size={26} />
-                  {session.username}{" "}
-                  <span className="text-text-secondary" title={t("nav.karmaTitle")}>
-                    ({session.karma})
-                  </span>
-                </Link>
-                <LogoutButton />
-              </>
+              <AccountMenu username={session.username} avatarUrl={session.avatarUrl} karma={session.karma} isAdmin={session.isAdmin} />
             ) : (
               <Link
                 href="/connexion"

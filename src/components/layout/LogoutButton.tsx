@@ -5,7 +5,7 @@ import { logoutAction } from "@/app/api/actions/auth";
 import { t } from "@/i18n";
 import { clearOfflinePages } from "@/components/pwa/ServiceWorker";
 
-export function LogoutButton() {
+export function LogoutButton({ className = "text-text-secondary hover:text-accent transition-colors disabled:opacity-60", children }: { className?: string; children?: React.ReactNode }) {
   const [pending, startTransition] = useTransition();
 
   const logout = () =>
@@ -26,9 +26,9 @@ export function LogoutButton() {
       type="button"
       onClick={logout}
       disabled={pending}
-      className="text-text-secondary hover:text-accent transition-colors disabled:opacity-60"
+      className={className}
     >
-      {t("nav.logout")}
+      {children ?? t("nav.logout")}
     </button>
   );
 }

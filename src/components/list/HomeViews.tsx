@@ -12,13 +12,13 @@ const VIEWS: { sort: StoryOrder; icon: typeof Clock }[] = [
 
 /**
  * Above « Congo »: Les plus populaires (most consulted), Les plus récents,
- * Les plus discutés (most comments) as one segmented control, and
- * « En discussion » leading to the conversations.
+ * Les plus discutés (most comments) as icons with a hover label, and
+ * « Rejoindre les discussions » leading to the conversations.
  */
 export function HomeViews({ filters, liveCount }: { filters: StoryFilters; liveCount: number }) {
   return (
     <div className="mt-6 flex items-center justify-between gap-3">
-      <nav aria-label={t("home.views")} className="scrollbar-none -mx-4 flex min-w-0 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+      <nav aria-label={t("home.views")} className="flex min-w-0">
         <ul className="flex shrink-0 items-center gap-1 rounded-full bg-bg-secondary p-1">
           {VIEWS.map(({ sort, icon: Icon }) => {
             const on = filters.sort === sort;
@@ -29,14 +29,19 @@ export function HomeViews({ filters, liveCount }: { filters: StoryFilters; liveC
                   href={query ? `/?${query}` : "/"}
                   scroll={false}
                   aria-current={on ? "page" : undefined}
-                  title={t(`home.view.${sort}Hint` as Key)}
-                  className={`inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-sm sm:px-3.5 font-semibold transition-colors hover:no-underline ${
+                  aria-label={t(`home.view.${sort}` as Key)}
+                  className={`group relative inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:no-underline ${
                     on ? "bg-text text-bg shadow-sm" : "text-text-secondary hover:bg-bg hover:text-text"
                   }`}
                 >
-                  <Icon size={15} aria-hidden className="hidden sm:block" />
-                  <span className="hidden sm:inline">{t(`home.view.${sort}` as Key)}</span>
-                  <span className="sm:hidden">{t(`home.view.${sort}Short` as Key)}</span>
+                  <Icon size={17} aria-hidden />
+                  {/* Icon only; the label shows on hover or keyboard focus. */}
+                  <span
+                    role="tooltip"
+                    className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-text px-2.5 py-1 text-xs font-semibold text-bg opacity-0 shadow-md transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+                  >
+                    {t(`home.view.${sort}` as Key)}
+                  </span>
                 </Link>
               </li>
             );
@@ -53,7 +58,7 @@ export function HomeViews({ filters, liveCount }: { filters: StoryFilters; liveC
           <span className={`relative inline-flex h-2.5 w-2.5 rounded-full ${liveCount > 0 ? "bg-emerald-500" : "bg-text-secondary/40"}`} />
         </span>
         <MessageSquareText size={16} aria-hidden className="sm:hidden" />
-        <span className="sr-only sm:not-sr-only">{t("home.inDiscussion")}</span>
+        <span className="sr-only sm:not-sr-only">{t("home.joinDiscussions")}</span>
         {liveCount > 0 && <span className="rounded-full bg-bg-secondary px-1.5 text-xs tabular-nums text-text-secondary group-hover:text-accent">{liveCount}</span>}
       </Link>
     </div>
