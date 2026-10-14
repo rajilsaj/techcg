@@ -100,17 +100,13 @@ export function VoteButtons({
     });
   };
 
-  // Two separate buttons: light green to upvote, red to downvote; solid once chosen.
+  // Two separate buttons, grey at rest, solid black (white in dark mode) once chosen.
   const button =
-    "grid h-8 w-9 place-items-center rounded-full transition-colors disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-offset-bg";
-  const up =
-    state.vote === 1
-      ? "bg-green-500 text-white shadow-sm shadow-green-500/30 focus-visible:ring-green-500"
-      : "bg-green-100 text-green-700 hover:bg-green-200 focus-visible:ring-green-500 dark:bg-green-500/15 dark:text-green-400 dark:hover:bg-green-500/25";
-  const down =
-    state.vote === -1
-      ? "bg-red-500 text-white shadow-sm shadow-red-500/30 focus-visible:ring-red-500"
-      : "bg-red-100 text-red-600 hover:bg-red-200 focus-visible:ring-red-500 dark:bg-red-500/15 dark:text-red-400 dark:hover:bg-red-500/25";
+    "grid h-8 w-9 place-items-center rounded-full transition-colors disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/40 focus-visible:ring-offset-1 focus-visible:ring-offset-bg";
+  const look = (on: boolean) =>
+    on ? "bg-text text-bg shadow-sm" : "bg-bg-secondary text-text-secondary hover:bg-border hover:text-text";
+  const up = look(state.vote === 1);
+  const down = look(state.vote === -1);
 
   return (
     <>
@@ -127,9 +123,7 @@ export function VoteButtons({
           <ArrowBigUp size={18} fill={state.vote === 1 ? "currentColor" : "none"} aria-hidden />
         </button>
         <span
-          className={`min-w-[2ch] text-center text-sm font-bold tabular-nums ${
-            state.vote === 1 ? "text-green-600 dark:text-green-400" : state.vote === -1 ? "text-red-500" : "text-text"
-          }`}
+          className="min-w-[2ch] text-center text-sm font-bold tabular-nums text-text"
           aria-live="polite"
           title={`${state.points} ${pluralize(state.points, t("unit.point"), t("unit.points"))}`}
         >
