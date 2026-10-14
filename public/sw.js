@@ -3,7 +3,7 @@
 // - Build assets (/_next/static) and fonts: cache first (their URLs change with each deploy).
 // - Images: shown from cache, refreshed in the background.
 // - Never cached: the API, the admin, sign-in, form posts.
-const VERSION = "v2";
+const VERSION = "v3";
 const PAGES = `pages-${VERSION}`;
 const ASSETS = `assets-${VERSION}`;
 const IMAGES = `images-${VERSION}`;
@@ -36,9 +36,10 @@ async function trim(cacheName, max) {
   for (const key of keys.slice(0, Math.max(0, keys.length - max))) await cache.delete(key);
 }
 
-/** Pages worth keeping for offline reading: the homepage and articles. */
+/** Pages worth keeping for offline reading: the homepage, articles, Profiles.CG and Sources. */
 function keepsOffline(url) {
-  return url.pathname === "/" || url.pathname.startsWith("/publication/");
+  const p = url.pathname;
+  return p === "/" || p.startsWith("/publication/") || p === "/profils" || p.startsWith("/profils/") || p === "/sources";
 }
 
 async function networkFirstPage(request) {

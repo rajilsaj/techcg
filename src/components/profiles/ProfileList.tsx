@@ -89,7 +89,8 @@ export function ProfileList({ profiles, firstNumber = 1 }: { profiles: ProfileRo
                   <span className="min-w-0">
                     <span
                       className={`block truncate text-2xl leading-tight tracking-tight transition-colors duration-200 sm:text-4xl lg:text-5xl 2xl:text-6xl ${
-                        on ? "text-text" : "text-text-secondary/60 group-hover:text-text"
+                        // Phones have no hover: names stay fully readable there.
+                        on ? "text-text" : "text-text md:text-text-secondary/60 md:group-hover:text-text"
                       }`}
                     >
                       {profile.name}

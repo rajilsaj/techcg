@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { History, MessageSquare } from "lucide-react";
+import { History, MessageCircle } from "lucide-react";
 import { getDomain } from "@/lib/utils";
 import type { ListedStory } from "@/lib/stories";
 import { formatRelativeTime, pluralize, t } from "@/i18n";
@@ -8,6 +8,8 @@ import { CoverImage } from "@/components/media/CoverImage";
 import { TopicCover, coverTopic } from "@/components/media/TopicCover";
 import { isTopic } from "@/lib/topic-list";
 import { Avatar } from "@/components/user/Avatar";
+import { ShareButton } from "@/components/ui/ShareButton";
+import { pillClass } from "./pill";
 
 export interface StoryItemProps {
   rank: number;
@@ -85,8 +87,21 @@ export function StoryItem({ rank, story, isLoggedIn }: StoryItemProps) {
             </ul>
           )}
 
-          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
+          {/* Action pills: ↑ score ↓ · comments · share */}
+          <div className="mt-3 flex flex-wrap items-center gap-2">
             <VoteButtons itemId={story.id} vote={story.vote} points={story.points} isLoggedIn={isLoggedIn} />
+            <Link
+              href={`/publication/${story.id}#commentaires`}
+              className={pillClass}
+              aria-label={`${story.commentCount} ${pluralize(story.commentCount, t("unit.comment"), t("unit.comments"))}`}
+            >
+              <MessageCircle size={16} aria-hidden />
+              <span className="tabular-nums">{story.commentCount}</span>
+            </Link>
+            <ShareButton path={`/publication/${story.id}`} title={title} className={pillClass} />
+          </div>
+
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
             <span className="text-xs text-text-secondary">
               {t("story.by")}{" "}
               <Link
@@ -114,12 +129,6 @@ export function StoryItem({ rank, story, isLoggedIn }: StoryItemProps) {
                 {t("story.history")}
               </Link>
             )}
-            <Link href={`/publication/${story.id}`} className={actionClass}>
-              <MessageSquare size={14} aria-hidden />
-              {story.commentCount > 0
-                ? `${story.commentCount} ${pluralize(story.commentCount, t("unit.comment"), t("unit.comments"))}`
-                : t("story.discuss")}
-            </Link>
           </div>
         </article>
       </li>

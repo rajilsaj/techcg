@@ -100,30 +100,32 @@ export function VoteButtons({
     });
   };
 
-  // Two separate buttons, grey at rest, solid black (white in dark mode) once chosen.
-  const button =
-    "grid h-8 w-9 place-items-center rounded-full transition-colors disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/40 focus-visible:ring-offset-1 focus-visible:ring-offset-bg";
-  const look = (on: boolean) =>
-    on ? "bg-text text-bg shadow-sm" : "bg-bg-secondary text-text-secondary hover:bg-border hover:text-text";
-  const up = look(state.vote === 1);
-  const down = look(state.vote === -1);
+  // One pill: ↑ score ↓. Grey at rest; solid black (white in dark mode) once the reader has voted.
+  const voted = state.vote !== 0;
+  const button = `grid h-9 w-9 place-items-center rounded-full transition-colors disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-text/40 ${
+    voted ? "hover:bg-bg/15" : "text-text-secondary hover:bg-border hover:text-text"
+  }`;
 
   return (
     <>
-      <div role="group" aria-label={t("vote.label")} className="inline-flex items-center gap-1.5">
+      <div
+        role="group"
+        aria-label={t("vote.label")}
+        className={`inline-flex h-9 items-center rounded-full transition-colors ${voted ? "bg-text text-bg" : "bg-bg-secondary text-text"}`}
+      >
         <button
           type="button"
           disabled={pending}
           aria-pressed={state.vote === 1}
           aria-label={t("vote.up")}
           title={t("vote.up")}
-          className={`${button} ${up}`}
+          className={button}
           onClick={() => cast(1)}
         >
           <ArrowBigUp size={18} fill={state.vote === 1 ? "currentColor" : "none"} aria-hidden />
         </button>
         <span
-          className="min-w-[2ch] text-center text-sm font-bold tabular-nums text-text"
+          className="min-w-[2ch] text-center text-sm font-semibold tabular-nums"
           aria-live="polite"
           title={`${state.points} ${pluralize(state.points, t("unit.point"), t("unit.points"))}`}
         >
@@ -135,7 +137,7 @@ export function VoteButtons({
           aria-pressed={state.vote === -1}
           aria-label={t("vote.down")}
           title={t("vote.down")}
-          className={`${button} ${down}`}
+          className={button}
           onClick={() => cast(-1)}
         >
           <ArrowBigDown size={18} fill={state.vote === -1 ? "currentColor" : "none"} aria-hidden />

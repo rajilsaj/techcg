@@ -7,6 +7,7 @@ import { getSession } from "@/lib/auth";
 import { PROFILE_COUNTRIES, isProfileCountry, profileInitials } from "@/lib/profiles";
 import { ProfilePhoto } from "@/components/profiles/ProfilePhoto";
 import { ProfilesBar } from "@/components/profiles/ProfilesBar";
+import { ShareButton } from "@/components/ui/ShareButton";
 import { t } from "@/i18n";
 
 export const dynamic = "force-dynamic";
@@ -47,7 +48,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ slug: 
             initials={profileInitials(profile.name)}
             alt={profile.name}
             textClass="text-7xl"
-            className="aspect-[4/5] w-full max-w-sm rounded-sm shadow-xl md:max-w-none"
+            className="mx-auto aspect-[4/5] w-full max-w-[16rem] rounded-sm shadow-xl sm:max-w-sm md:mx-0 md:max-w-none"
           />
           <div className="min-w-0">
             <p className="flex items-center gap-1.5 text-sm text-text-secondary">
@@ -58,8 +59,14 @@ export default async function ProfilePage({ params }: { params: Promise<{ slug: 
             <h1 className="mt-2 break-words text-5xl font-medium leading-none tracking-tight text-text sm:text-6xl lg:text-8xl">{profile.name}</h1>
             {place && <p className="mt-3 text-text-secondary">{place}</p>}
             {profile.bio && <p className="mt-6 max-w-3xl whitespace-pre-line text-base leading-relaxed text-text lg:text-lg">{profile.bio}</p>}
-            {links.length > 0 && (
-              <ul className="mt-6 flex flex-wrap gap-2">
+            <ul className="mt-6 flex flex-wrap gap-2">
+              <li>
+                <ShareButton
+                  path={`/profils/${profile.slug}`}
+                  title={`${profile.name} · Profiles.CG`}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-text px-4 py-1.5 text-sm font-medium text-bg transition-opacity hover:opacity-90"
+                />
+              </li>
                 {links.map((l) => (
                   <li key={l.label}>
                     <a
@@ -72,8 +79,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ slug: 
                     </a>
                   </li>
                 ))}
-              </ul>
-            )}
+            </ul>
             {session?.isAdmin && (
               <Link href={`/godmod/profils/${profile.id}`} className="mt-8 inline-block text-sm text-accent hover:underline">
                 {t("profiles.edit")}

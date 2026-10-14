@@ -10,6 +10,9 @@ import { CommentForm } from "@/components/item/CommentForm";
 import { buildCommentTree, CommentData } from "@/lib/thread";
 import { enrichStory, needsEnrichment } from "@/lib/enrich-story";
 import { VoteButtons } from "@/components/list/StoryActions";
+import { pillClass } from "@/components/list/pill";
+import { ShareButton } from "@/components/ui/ShareButton";
+import { MessageCircle } from "lucide-react";
 import { viewerVotes } from "@/lib/votes";
 import { avatarUrl } from "@/lib/gravatar";
 import { Avatar } from "@/components/user/Avatar";
@@ -185,19 +188,32 @@ export default async function ItemPage({ params }: PageProps) {
             </div>
           )}
 
-          <div className="flex flex-wrap items-center gap-4 text-xs text-text-secondary">
-            <VoteButtons itemId={story.id} vote={vote} points={story.points} isLoggedIn={!!session} />
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-text-secondary">
             <a href={`/profil/${story.author.username}`} className="inline-flex items-center gap-1.5 text-accent hover:underline">
               <Avatar src={avatarUrl(story.author.email, story.author.username)} size={20} />
               {story.author.username}
             </a>
             <span>{formatRelativeTime(story.createdAt)}</span>
             {story.readingMinutes && <span>{t("story.readingTime", { minutes: story.readingMinutes })}</span>}
-            <span>{story.commentCount} {pluralize(story.commentCount, t("unit.comment"), t("unit.comments"))}</span>
+          </div>
+
+          {/* Action pills: ↑ score ↓ · comments · share */}
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <VoteButtons itemId={story.id} vote={vote} points={story.points} isLoggedIn={!!session} />
+            <a
+              href="#commentaires"
+              className={pillClass}
+              aria-label={`${story.commentCount} ${pluralize(story.commentCount, t("unit.comment"), t("unit.comments"))}`}
+            >
+              <MessageCircle size={16} aria-hidden />
+              <span className="tabular-nums">{story.commentCount}</span>
+            </a>
+            <ShareButton path={`/publication/${story.id}`} title={story.title ?? "Tech.cg"} className={pillClass} />
           </div>
         </div>
 
         {/* Comment form */}
+        <div id="commentaires" className="scroll-mt-20" />
         <CommentForm itemId={itemId} isLoggedIn={!!session} />
 
         {/* Comments */}
