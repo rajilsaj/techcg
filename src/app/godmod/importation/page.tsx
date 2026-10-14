@@ -4,6 +4,7 @@ import { requireAdminPage } from "@/lib/admin";
 import { formatLocalDateTime } from "@/lib/local-time";
 import { listCategories } from "@/lib/taxonomy";
 import { IMPORT_INTERVAL_MINUTES } from "@/lib/importer/schedule";
+import { lastAutoImport } from "@/lib/cron-auth";
 import { describeGoogleNews, isGoogleNewsSource } from "@/lib/importer/google-news";
 import { PendingNotice, SubmitButton } from "@/components/admin/FormControls";
 import { AdminHeader, AdminNotice, Card, buttonClass, inputClass, primaryButtonClass, tdClass, thClass } from "@/components/admin/ui";
@@ -24,7 +25,7 @@ export default async function ImportPage({ searchParams }: PageProps) {
   await requireAdminPage("/godmod/importation");
   const { notice, rapport } = await searchParams;
 
-  const [sources, categories, demoMembers, demoArticles, toAnalyze] = await Promise.all([
+  const [sources, categories, demoMembers, demoArticles, toAnalyze, auto] = await Promise.all([
     prisma.importSource.findMany({
       orderBy: { createdAt: "asc" },
       include: { _count: { select: { items: true } } },
@@ -33,7 +34,11 @@ export default async function ImportPage({ searchParams }: PageProps) {
     prisma.user.count({ where: { email: { endsWith: "@demo.invalid" } } }),
     prisma.item.count({ where: { author: { email: { endsWith: "@demo.invalid" } } } }),
     prisma.item.count({ where: { type: "story", url: { not: null }, analyzedAt: null } }),
+    lastAutoImport(),
   ]);
+  const autoAge = auto ? Date.now() - new Date(auto.at).getTime() : null;
+  // Runs every 30 minutes: more than 2 hours without one means the schedule is not working.
+  const autoHealthy = autoAge !== null && autoAge < 2 * 60 * 60 * 1000 && !auto?.error;
   const categoryName = new Map(categories.map((c) => [c.id, c.name]));
 
   const categorySelect = (name: string, value: number | null) => (
@@ -51,7 +56,7 @@ export default async function ImportPage({ searchParams }: PageProps) {
     <>
       <AdminHeader
         title="Importation"
-        description={`Récupère les derniers articles de sites d'actualité : titre, image, court extrait et lien vers l'article d'origine. Automatique : chaque source active est relue toutes les ${IMPORT_INTERVAL_MINUTES} minutes au fil des visites, et au moins une fois par jour (6 h, heure de Kinshasa).`}
+        description={`Récupère les derniers articles de sites d'actualité : titre, image, court extrait et lien vers l'article d'origine. Automatique : chaque source active est relue toutes les ${IMPORT_INTERVAL_MINUTES} minutes (Google News : toutes les 6 heures), sans appuyer sur « Importer ».`}
         actions={
           sources.some((s) => s.enabled) && (
             <form action={runImportAction}>
@@ -64,6 +69,35 @@ export default async function ImportPage({ searchParams }: PageProps) {
         }
       />
       <AdminNotice notice={notice} />
+
+      <section className="mb-4 rounded-xl border border-border bg-bg p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-text">
+            <span aria-hidden className={`inline-block h-2.5 w-2.5 rounded-full ${autoHealthy ? "bg-green-600" : auto ? "bg-amber-500" : "bg-border"}`} />
+            Importation automatique {autoHealthy ? "active" : auto ? "en retard" : "en attente du premier passage"}
+          </h2>
+          <p className="text-xs text-text-secondary">Toutes les 30 minutes, sans action de votre part</p>
+        </div>
+        {auto ? (
+          <div className="mt-2 text-sm text-text-secondary">
+            <p>
+              Dernier passage : <span className="text-text">{formatLocalDateTime(new Date(auto.at))}</span> ({auto.trigger})
+              {auto.error ? <span className="text-red-500"> · {auto.error}</span> : auto.ran.length === 0 ? " · aucune source à relire" : ` · ${auto.ran.length} source(s) relue(s)`}
+            </p>
+            {auto.ran.length > 0 && (
+              <ul className="mt-1 space-y-0.5 text-xs">
+                {auto.ran.map((r, i) => (
+                  <li key={i}>
+                    <span className="text-text">{r.name}</span> : {r.message}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ) : (
+          <p className="mt-2 text-sm text-text-secondary">Le premier passage automatique apparaîtra ici.</p>
+        )}
+      </section>
 
       {demoMembers > 0 && (
         <div className="mb-4 rounded-xl border border-amber-500/50 bg-amber-500/10 p-4 text-sm text-text">
