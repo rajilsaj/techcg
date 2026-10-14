@@ -2,12 +2,12 @@
 
 import { getSession } from "@/lib/auth";
 import { listStories, type ListedStory } from "@/lib/stories";
-import { filtersWhere, parseStoryFilters } from "@/lib/story-filters";
+import { filtersWhere, HOME_STORIES, parseStoryFilters } from "@/lib/story-filters";
 
 /** Feeds the client may page through. Keys map to fixed queries. */
 const FEEDS = {
-  top: { where: { type: "story" } },
-} as const;
+  top: { where: HOME_STORIES },
+};
 
 export type Feed = keyof typeof FEEDS;
 

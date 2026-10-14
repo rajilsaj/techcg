@@ -10,6 +10,12 @@ describe("cleanTitle", () => {
     expect(cleanTitle("👨🏿‍🚀TechCabal Daily – A not-so-Flash deal")).toBe("TechCabal Daily – A not-so-Flash deal");
     expect(cleanTitle("🚀 Lancement")).toBe("Lancement");
   });
+  it("drops a trailing ' | site name'", () => {
+    expect(cleanTitle("Éducation : plus de CEPE à partir de cette année | adiac-congo.com : toute l'actualité du Bassin du Congo")).toBe(
+      "Éducation : plus de CEPE à partir de cette année"
+    );
+    expect(cleanTitle("Short | Site")).toBe("Short | Site");
+  });
   it("keeps normal titles", () => {
     expect(cleanTitle("  RDC : la 5G en préparation  ")).toBe("RDC : la 5G en préparation");
   });

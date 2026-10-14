@@ -1,4 +1,5 @@
 import { prisma } from "./db";
+import { AUTO_TAG_SLUGS, isAutoTag } from "./topics";
 
 export const MAX_TAGS_PER_ITEM = 5;
 
@@ -29,15 +30,20 @@ export function parseTagNames(input: string | null | undefined): string[] {
 }
 
 /** Replaces an item's tags with `names`, creating tags that don't exist yet. */
+/**
+ * Sets a story's free tags. Meta tags and region (Startups, Tech, Congo…) are
+ * managed separately (detection or the admin meta picker) and left untouched.
+ */
 export async function setItemTags(itemId: number, names: string[]): Promise<void> {
+  const free = names.filter((name) => !isAutoTag(slugify(name)));
   const tags = await Promise.all(
-    names.map((name) => {
+    free.map((name) => {
       const slug = slugify(name);
       return prisma.tag.upsert({ where: { slug }, create: { name, slug }, update: {}, select: { id: true } });
     })
   );
   await prisma.$transaction([
-    prisma.itemTag.deleteMany({ where: { itemId } }),
+    prisma.itemTag.deleteMany({ where: { itemId, tag: { slug: { notIn: AUTO_TAG_SLUGS } } } }),
     prisma.itemTag.createMany({ data: tags.map((tag) => ({ itemId, tagId: tag.id })), skipDuplicates: true }),
   ]);
 }

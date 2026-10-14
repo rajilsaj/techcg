@@ -183,26 +183,6 @@ textarea:focus {
   }
 }
 
-/* Congo block on the homepage: flag colours (green, yellow, red) as frame and halo. */
-.local-frame {
-  background: linear-gradient(120deg, #009543 0%, #009543 30%, #fbde4a 45%, #fbde4a 55%, #dc241f 70%, #dc241f 100%);
-}
-.local-flag {
-  background: linear-gradient(135deg, #009543 0 40%, #fbde4a 40% 60%, #dc241f 60% 100%);
-}
-.local-halo {
-  background: linear-gradient(120deg, #009543, #fbde4a, #dc241f);
-  opacity: 0.28;
-  animation: local-halo 6s ease-in-out infinite;
-}
-@keyframes local-halo {
-  0%, 100% { opacity: 0.22; transform: scale(0.995); }
-  50% { opacity: 0.4; transform: scale(1.005); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .local-halo { animation: none; }
-}
-
 /* Profiles.CG: the hovered profile's photo fades in. */
 .profile-photo {
   animation: profile-in 0.35s ease-out;

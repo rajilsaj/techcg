@@ -5,6 +5,9 @@ import { requireAdminPage } from "@/lib/admin";
 import { STATUS_LABELS, ITEM_STATUSES } from "@/lib/content-status";
 import { formatLocalDateTime, toLocalInput } from "@/lib/local-time";
 import { listCategories } from "@/lib/taxonomy";
+import { isAutoTag } from "@/lib/topics";
+import { isRegion, isTopic } from "@/lib/topic-list";
+import { MetaPicker } from "@/components/admin/MetaPicker";
 import { SubmitButton } from "@/components/admin/FormControls";
 import { ImagePicker } from "@/components/admin/ImagePicker";
 import { AdminHeader, AdminNotice, Card, StatusBadge, buttonClass, inputClass, primaryButtonClass } from "@/components/admin/ui";
@@ -47,7 +50,8 @@ export default async function EditArticlePage({ params, searchParams }: PageProp
             createdAt: true,
             updatedAt: true,
             author: { select: { username: true } },
-            tags: { select: { tag: { select: { name: true } } } },
+            metaManual: true,
+            tags: { select: { tag: { select: { name: true, slug: true } } } },
           },
         })
       : null,
@@ -182,10 +186,26 @@ export default async function EditArticlePage({ params, searchParams }: PageProp
             </Link>
           </Card>
 
+          <Card title="Méta">
+            <MetaPicker
+              itemId={article.id}
+              initial={{
+                topics: article.tags.map((t) => t.tag.slug).filter(isTopic),
+                region: article.tags.map((t) => t.tag.slug).find(isRegion) ?? null,
+                manual: article.metaManual,
+              }}
+            />
+            <p className="mt-1 text-xs text-text-secondary">Enregistré à chaque clic. La région place l&apos;article dans « Au Congo », « En Afrique » ou « Dans le monde ».</p>
+          </Card>
+
           <Card title="Étiquettes">
             <input
               name="tags"
-              defaultValue={article.tags.map((t) => t.tag.name).join(", ")}
+              defaultValue={article.tags
+                .map((t) => t.tag)
+                .filter((tag) => !isAutoTag(tag.slug))
+                .map((tag) => tag.name)
+                .join(", ")}
               placeholder="ia, cloud, startups"
               className={inputClass}
               aria-label="Étiquettes"

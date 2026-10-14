@@ -1,7 +1,7 @@
 import { prisma } from "./db";
 import { getLinkPreview } from "./link-preview";
 import { frenchTitle, translateToFrench } from "./translate";
-import { addTopicTags, detectTopics } from "./topics";
+import { detectTopics, setAutoTags } from "./topics";
 import { stripLeadingTitle } from "./excerpt";
 
 /** How long to wait before retrying a story whose excerpt couldn't be translated. */
@@ -42,7 +42,7 @@ export async function enrichStory(itemId: number): Promise<void> {
   try {
     const item = await prisma.item.findUnique({
       where: { id: itemId },
-      select: { url: true, title: true, titleLang: true, originalTitle: true, keywords: true, excerpt: true, excerptLang: true, imageUrl: true, previewAt: true },
+      select: { url: true, title: true, titleLang: true, originalTitle: true, keywords: true, excerpt: true, excerptLang: true, imageUrl: true, previewAt: true, metaManual: true },
     });
     if (!item?.url) return;
 
@@ -89,10 +89,13 @@ export async function enrichStory(itemId: number): Promise<void> {
       where: { id: itemId },
       data: { excerpt, excerptLang, imageUrl, keywords, ...title, previewAt: new Date() },
     });
-    await addTopicTags(
-      itemId,
-      detectTopics({ title: `${title.title ?? ""} . ${title.originalTitle ?? ""}`, excerpt, keywords, url: item.url })
-    );
+    // An admin's choice in the meta picker wins over detection.
+    if (!item.metaManual) {
+      await setAutoTags(
+        itemId,
+        detectTopics({ title: `${title.title ?? ""} . ${title.originalTitle ?? ""}`, excerpt, keywords, url: item.url })
+      );
+    }
   } catch (err) {
     console.error(`[enrich] story ${itemId} failed:`, err);
   } finally {

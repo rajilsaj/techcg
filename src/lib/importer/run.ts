@@ -3,7 +3,7 @@ import { decodeEntities, fetchPublic, getLinkPreview, type PreviewFailure } from
 import { calculateRankScore } from "../ranking";
 import { slugify } from "../taxonomy";
 import { frenchTitle, translateToFrench } from "../translate";
-import { addTopicTags, detectTopics } from "../topics";
+import { detectTopics, setAutoTags } from "../topics";
 import { discoverFeeds, looksLikeFeed, parseFeed, scrapeArticleLinks, type FoundArticle } from "./parse";
 
 const FEED_BYTES = 3 * 1024 * 1024;
@@ -36,7 +36,9 @@ export function cleanTitle(raw: string): string {
   return decodeEntities(decodeEntities(raw))
     .replace(/^[\p{Extended_Pictographic}\p{Emoji_Modifier}\u200d\ufe0f\s]+/u, "")
     .replace(/\s+/g, " ")
-    .trim();
+    .trim()
+    // "Title | Site name : tagline" → "Title" (when what's left is still a real title).
+    .replace(/^(.{15,}?)\s+\|\s+[^|]*$/, "$1");
 }
 
 /** Drops tracking parameters and fragments so the same article isn't imported twice. */
@@ -197,7 +199,7 @@ async function importFrom(source: { id: number; name: string; url: string; maxIt
       select: { id: true },
     });
     await prisma.item.update({ where: { id: story.id }, data: { path: String(story.id).padStart(6, "0") } });
-    await addTopicTags(story.id, topics);
+    await setAutoTags(story.id, topics);
     created++;
   }
 

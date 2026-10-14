@@ -1,6 +1,15 @@
 import type { Prisma } from "@prisma/client";
 import { fromDomain, type StoryOrder } from "./stories";
-import { isTopic, type TopicSlug } from "./topics";
+import { isTopic, TOPICS, type TopicSlug } from "./topic-list";
+
+/**
+ * The homepage only shows stories with at least one meta tag (Startups,
+ * Entrepreneurs, Tech, Événements): general news from wide sources stays out.
+ */
+export const HOME_STORIES: Prisma.ItemWhereInput = {
+  type: "story",
+  tags: { some: { tag: { slug: { in: TOPICS.map((t) => t.slug) } } } },
+};
 
 /** Homepage filters, read from the URL (French parameter names). */
 export interface StoryFilters {

@@ -5,7 +5,7 @@ import type { ListedStory } from "@/lib/stories";
 import { formatRelativeTime, pluralize, t } from "@/i18n";
 import { HideableStory, HideButton, VoteButtons } from "./StoryActions";
 import { CoverImage } from "@/components/media/CoverImage";
-import { isTopic, LOCAL_TAG } from "@/lib/topics";
+import { isTopic } from "@/lib/topic-list";
 import { Avatar } from "@/components/user/Avatar";
 
 export interface StoryItemProps {
@@ -23,8 +23,8 @@ export function StoryItem({ rank, story, isLoggedIn }: StoryItemProps) {
   const href = story.url || `/publication/${story.id}`;
   // Link posts show the article's excerpt; text posts show the start of their text.
   const excerpt = story.excerpt ?? (story.url ? null : story.text);
-  // Headline topics (IA, Startups…) first, then the other tags.
-  const tags = story.tags.map((t) => t.tag).sort((a, b) => Number(isTopic(b.slug)) - Number(isTopic(a.slug)));
+  // Only the meta tags (Startups, Entrepreneurs, Tech, Événements) are shown.
+  const tags = story.tags.map((t) => t.tag).filter((tag) => isTopic(tag.slug));
 
   return (
     <HideableStory itemId={story.id}>
@@ -71,14 +71,8 @@ export function StoryItem({ rank, story, isLoggedIn }: StoryItemProps) {
               {tags.map((tag) => (
                 <li key={tag.slug}>
                   <Link
-                    href={isTopic(tag.slug) ? `/?sujet=${tag.slug}` : `/etiquette/${tag.slug}`}
-                    className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium leading-4 transition-colors ${
-                      tag.slug === LOCAL_TAG.slug
-                        ? "border-green-600/30 bg-green-500/10 text-green-700 hover:bg-green-500/20 dark:text-green-400"
-                        : isTopic(tag.slug)
-                          ? "border-accent/30 bg-accent/10 text-accent hover:bg-accent/20"
-                          : "border-border text-text-secondary hover:border-accent hover:text-accent"
-                    }`}
+                    href={`/?sujet=${tag.slug}`}
+                    className="inline-flex items-center rounded-full border border-accent/30 bg-accent/10 px-2 py-0.5 text-[11px] font-medium leading-4 text-accent transition-colors hover:bg-accent/20"
                   >
                     #{tag.name}
                   </Link>
