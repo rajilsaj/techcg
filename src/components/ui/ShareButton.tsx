@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Share2 } from "lucide-react";
+import { Check, Forward } from "lucide-react";
 
 /**
  * Share: the phone's native share sheet (installed app or mobile browser), else
@@ -31,7 +31,7 @@ export function ShareButton({ path, title, className = "", label = "Partager" }:
 
   return (
     <button type="button" onClick={share} className={className} aria-live="polite">
-      {copied ? <Check size={16} aria-hidden /> : <Share2 size={16} aria-hidden />}
+      {copied ? <Check size={16} aria-hidden /> : <Forward size={17} aria-hidden />}
       <span>{copied ? "Lien copié" : label}</span>
     </button>
   );
