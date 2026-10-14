@@ -4,6 +4,7 @@ import { requireAdminPage } from "@/lib/admin";
 import { formatLocalDateTime } from "@/lib/local-time";
 import { listCategories } from "@/lib/taxonomy";
 import { IMPORT_INTERVAL_MINUTES } from "@/lib/importer/schedule";
+import { describeGoogleNews, isGoogleNewsSource } from "@/lib/importer/google-news";
 import { PendingNotice, SubmitButton } from "@/components/admin/FormControls";
 import { AdminHeader, AdminNotice, Card, buttonClass, inputClass, primaryButtonClass, tdClass, thClass } from "@/components/admin/ui";
 import { createSourceAction, deleteSourceAction, removeDemoAction, runImportAction, updateSourceAction } from "./actions";
@@ -103,7 +104,9 @@ export default async function ImportPage({ searchParams }: PageProps) {
                   <td className={tdClass}>
                     <span className="font-medium text-text">{s.name}</span>
                     {!s.enabled && <span className="ml-2 text-xs text-text-secondary">(désactivée)</span>}
-                    <div className="truncate text-xs text-text-secondary">{s.url}</div>
+                    <div className="truncate text-xs text-text-secondary">
+                      {isGoogleNewsSource(s.url) ? `Google News ${describeGoogleNews(s.url)}` : s.url}
+                    </div>
                     <div className="text-xs text-text-secondary">
                       {s.maxItems} articles max par import{s.categoryId && ` · ${categoryName.get(s.categoryId) ?? ""}`}
                     </div>
@@ -141,9 +144,13 @@ export default async function ImportPage({ searchParams }: PageProps) {
                     )}
                   </td>
                   <td className={`${tdClass} text-right tabular-nums`}>
-                    <Link href={`/godmod/articles?q=${encodeURIComponent(new URL(s.url).hostname.replace(/^www\./, ""))}`} className="text-accent hover:underline">
-                      {s._count.items}
-                    </Link>
+                    {isGoogleNewsSource(s.url) ? (
+                      s._count.items
+                    ) : (
+                      <Link href={`/godmod/articles?q=${encodeURIComponent(new URL(s.url).hostname.replace(/^www\./, ""))}`} className="text-accent hover:underline">
+                        {s._count.items}
+                      </Link>
+                    )}
                   </td>
                   <td className={`${tdClass} text-right`}>
                     <SubmitButton formAction={runImportAction} name="run" value={String(s.id)} className={buttonClass} pendingLabel="Importation…">
@@ -191,6 +198,13 @@ export default async function ImportPage({ searchParams }: PageProps) {
         </Card>
 
         <Card title="Comment ça marche">
+          <p className="mb-3 text-sm text-text">
+            Pour ajouter des articles Google News sur vos sujets, configurez SerpApi dans{" "}
+            <Link href="/godmod/integrations" className="text-accent hover:underline">
+              Intégrations
+            </Link>
+            .
+          </p>
           <ul className="list-disc space-y-1.5 pl-5 text-sm text-text-secondary">
             <li>L&apos;outil cherche d&apos;abord le flux RSS/Atom du site (annoncé dans sa page ou donné directement).</li>
             <li>Sans flux, il lit la page d&apos;accueil, repère les liens d&apos;articles et lit chaque article (titre, image, extrait).</li>

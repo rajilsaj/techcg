@@ -4,14 +4,20 @@ import { calculateRankScore } from "../ranking";
 import { slugify } from "../taxonomy";
 import { frenchTitle, translateToFrench } from "../translate";
 import { detectTopics, setAutoTags } from "../topics";
+import { isTopic } from "../topic-list";
+import { isGoogleNewsSource, searchGoogleNews } from "./google-news";
 import { discoverFeeds, looksLikeFeed, parseFeed, scrapeArticleLinks, type FoundArticle } from "./parse";
 
 const FEED_BYTES = 3 * 1024 * 1024;
 const PAGE_ACCEPT = /(html|xml|rss|atom)/i;
 
+export type ImportMode = "flux" | "page" | "google_news";
+
+const MODE_LABEL: Record<ImportMode, string> = { flux: "le flux RSS/Atom", page: "la page d'accueil", google_news: "Google News" };
+
 export interface ImportResult {
   ok: boolean;
-  mode?: "flux" | "page";
+  mode?: ImportMode;
   found: number;
   created: number;
   skipped: number;
@@ -56,7 +62,12 @@ export function canonicalUrl(raw: string): string {
 }
 
 /** Finds articles on a source: its feed if it has one, else links scraped from the page. */
-export async function findArticles(sourceUrl: string, limit: number): Promise<{ mode: "flux" | "page"; language: string | null; articles: FoundArticle[] } | { error: string }> {
+export async function findArticles(sourceUrl: string, limit: number): Promise<{ mode: ImportMode; language: string | null; articles: FoundArticle[] } | { error: string }> {
+  if (isGoogleNewsSource(sourceUrl)) {
+    const news = await searchGoogleNews(sourceUrl);
+    return "error" in news ? news : { mode: "google_news", ...news };
+  }
+
   const page = await fetchPublic(sourceUrl, {
     accept: PAGE_ACCEPT,
     maxBytes: FEED_BYTES,
@@ -128,7 +139,33 @@ export async function runImport(sourceId: number): Promise<ImportResult> {
   return result;
 }
 
-async function importFrom(source: { id: number; name: string; url: string; maxItems: number; categoryId: number | null }): Promise<ImportResult> {
+/**
+ * Google News gives only a title, link and thumbnail: read each article's own page
+ * for its meta description, keywords, image and language (4 at a time).
+ */
+async function withPageMetadata(articles: FoundArticle[]): Promise<FoundArticle[]> {
+  const out: FoundArticle[] = [];
+  for (let i = 0; i < articles.length; i += 4) {
+    const batch = await Promise.all(
+      articles.slice(i, i + 4).map(async (a) => {
+        const page = await getLinkPreview(a.url);
+        if (!page.ok) return a;
+        const p = page.preview;
+        return {
+          ...a,
+          summary: p.description ?? a.summary,
+          image: p.image ?? a.image,
+          keywords: [...new Set([...p.keywords, ...a.keywords])],
+          language: p.lang ?? a.language,
+        };
+      })
+    );
+    out.push(...batch);
+  }
+  return out;
+}
+
+async function importFrom(source: { id: number; name: string; url: string; maxItems: number; categoryId: number | null; topic: string | null }): Promise<ImportResult> {
   const limit = Math.min(Math.max(source.maxItems, 1), 100);
   const found = await findArticles(source.url, limit);
   if ("error" in found) return { ok: false, found: 0, created: 0, skipped: 0, message: `Échec : ${found.error}.` };
@@ -150,15 +187,15 @@ async function importFrom(source: { id: number; name: string; url: string; maxIt
   const fresh = articles.filter((a) => !known.has(a.url.replace(/\/$/, "")));
 
   if (fresh.length === 0) {
-    const mode = found.mode === "flux" ? "flux" : "page";
-    return { ok: true, mode: found.mode, found: articles.length, created: 0, skipped: articles.length, message: `${articles.length} article(s) trouvé(s) (${mode}), aucun nouveau.` };
+    return { ok: true, mode: found.mode, found: articles.length, created: 0, skipped: articles.length, message: `${articles.length} article(s) trouvé(s) via ${MODE_LABEL[found.mode]}, aucun nouveau.` };
   }
 
   const authorId = await sourceAuthor(source);
   const now = Date.now();
   let created = 0;
+  const toCreate = found.mode === "google_news" ? await withPageMetadata(fresh) : fresh;
 
-  for (const article of fresh) {
+  for (const article of toCreate) {
     const language = article.language ?? found.language ?? null;
     let excerpt = article.summary;
     let excerptLang: string | null = excerpt ? language : null;
@@ -173,6 +210,8 @@ async function importFrom(source: { id: number; name: string; url: string; maxIt
     const title = await frenchTitle(article.title, language);
     // Topics from the original wording too: keyword lists are often in the source language.
     const topics = detectTopics({ title: `${title.title} . ${title.originalTitle ?? ""}`, excerpt: `${excerpt ?? ""} . ${article.summary ?? ""}`, keywords: article.keywords, url: article.url });
+    // No meta topic found: use the source's own (e.g. a Google News search on "startups Congo").
+    if (source.topic && isTopic(source.topic) && !topics.some(isTopic)) topics.push(source.topic);
 
     // Never date an article in the future; feeds sometimes do.
     const createdAt = article.publishedAt && article.publishedAt.getTime() <= now ? article.publishedAt : new Date(now);
@@ -210,6 +249,6 @@ async function importFrom(source: { id: number; name: string; url: string; maxIt
     found: articles.length,
     created,
     skipped,
-    message: `${created} article(s) importé(s), ${skipped} déjà présent(s) — via ${found.mode === "flux" ? "le flux RSS/Atom" : "la page d'accueil"}.`,
+    message: `${created} article(s) importé(s), ${skipped} déjà présent(s) — via ${MODE_LABEL[found.mode]}.`,
   };
 }

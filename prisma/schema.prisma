@@ -189,6 +189,8 @@ model ImportSource {
   enabled    Boolean   @default(true)
   maxItems   Int       @default(20)
   categoryId Int?
+  /// Meta topic (startups, entrepreneurs, tech, evenements) given to its articles when none is detected.
+  topic      String?
   lastRunAt  DateTime?
   lastResult String? // human-readable summary of the last run
   createdAt  DateTime  @default(now())

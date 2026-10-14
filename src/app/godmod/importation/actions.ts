@@ -7,6 +7,7 @@ import { requireAdminAction, withNotice } from "@/lib/admin";
 import { logActivity } from "@/lib/activity";
 import { runImport } from "@/lib/importer/run";
 import { normalizeUrl } from "@/lib/link-preview";
+import { cleanGoogleNewsUrl, isGoogleNewsSource } from "@/lib/importer/google-news";
 
 const PAGE = "/godmod/importation";
 
@@ -33,7 +34,9 @@ export async function runImportAction(formData: FormData) {
 
 function sourceFields(formData: FormData, suffix = "") {
   const name = String(formData.get(`name${suffix}`) ?? "").trim().slice(0, 80);
-  const url = normalizeUrl(String(formData.get(`url${suffix}`) ?? ""))?.toString() ?? null;
+  const typed = normalizeUrl(String(formData.get(`url${suffix}`) ?? ""))?.toString() ?? null;
+  // A Google News search pasted with its api_key: keep the search, never the key.
+  const url = typed && isGoogleNewsSource(typed) ? cleanGoogleNewsUrl(typed) : typed;
   const maxItems = Math.min(Math.max(parseInt(String(formData.get(`maxItems${suffix}`) ?? "20"), 10) || 20, 1), 100);
   const categoryId = parseInt(String(formData.get(`categoryId${suffix}`) ?? ""), 10);
   return {

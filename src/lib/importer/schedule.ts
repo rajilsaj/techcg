@@ -1,6 +1,7 @@
 import { prisma } from "../db";
 import { refreshRankScores } from "../ranking-job";
 import { runImport } from "./run";
+import { GOOGLE_NEWS_INTERVAL_MINUTES, isGoogleNewsSource } from "./google-news";
 
 /** A source is re-read at most this often. */
 export const IMPORT_INTERVAL_MINUTES = 30;
@@ -13,18 +14,22 @@ export interface ImportTick {
 }
 
 /**
- * Imports every enabled source not read in the last 30 minutes, stalest first,
+ * Imports every enabled source not read in the last 30 minutes (6 hours for
+ * Google News searches), stalest first,
  * until the time budget runs out. Each source is claimed atomically (lastRunAt
  * moved to now) so two runs at the same moment never import the same source twice.
  */
 export async function runDueImports({ budgetMs, maxSources = Infinity }: { budgetMs: number; maxSources?: number }): Promise<ImportTick> {
   const started = Date.now();
   const cutoff = new Date(started - IMPORT_INTERVAL_MINUTES * 60_000);
-  const due = await prisma.importSource.findMany({
+  const candidates = await prisma.importSource.findMany({
     where: { enabled: true, OR: [{ lastRunAt: null }, { lastRunAt: { lt: cutoff } }] },
     orderBy: [{ lastRunAt: { sort: "asc", nulls: "first" } }, { id: "asc" }],
-    select: { id: true, name: true, lastRunAt: true },
+    select: { id: true, name: true, url: true, lastRunAt: true },
   });
+  // Google News searches cost SerpApi credits: those sources wait longer between runs.
+  const newsCutoff = started - GOOGLE_NEWS_INTERVAL_MINUTES * 60_000;
+  const due = candidates.filter((s) => !isGoogleNewsSource(s.url) || !s.lastRunAt || s.lastRunAt.getTime() < newsCutoff);
 
   const ran: ImportTick["ran"] = [];
   for (const source of due) {

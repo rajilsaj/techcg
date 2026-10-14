@@ -126,13 +126,23 @@ const NOTICES: Record<string, string> = {
   "name-required": "Le nom est obligatoire.",
   "profiles-imported": "Importation des profils terminée (détail ci-dessous).",
   "profiles-none": "Aucun profil ajouté (détail ci-dessous).",
+  "serpapi-ok": "Clé SerpApi vérifiée : la connexion à Google News fonctionne.",
+  "serpapi-empty": "Clé SerpApi enregistrée, mais votre compte n'a plus de recherches disponibles ce mois-ci.",
+  "serpapi-failed": "La vérification de la clé SerpApi a échoué (détail ci-dessous).",
+  "serpapi-refused": "Clé refusée par SerpApi : elle n'a pas été enregistrée. Vérifiez-la sur serpapi.com/manage-api-key.",
+  "serpapi-format": "Une clé SerpApi compte 64 caractères (chiffres et lettres a à f). Vérifiez le copier-coller.",
+  "serpapi-missing": "Aucune clé SerpApi n'est configurée.",
+  "serpapi-removed": "Clé SerpApi supprimée.",
+  "subjects-saved": "Sujets Google News enregistrés. Ils seront importés au fil des visites, ou tout de suite depuis la page Importation.",
+  "subjects-none": "Aucun sujet : les recherches Google News sont arrêtées.",
 };
 
 /** The one-time message passed as ?notice= after a form. */
 export function AdminNotice({ notice }: { notice?: string }) {
   const text = notice ? NOTICES[notice] : undefined;
   if (!text) return null;
-  const warning = ["no-selection", "slug-taken", "self-protect", "last-admin", "blob-missing", "invalid-url", "name-required", "import-done", "profiles-none"].includes(notice!);
+  const warning = ["no-selection", "slug-taken", "self-protect", "last-admin", "blob-missing", "invalid-url", "name-required", "import-done", "profiles-none",
+    "serpapi-empty", "serpapi-failed", "serpapi-refused", "serpapi-format", "serpapi-missing", "subjects-none"].includes(notice!);
   return (
     <p
       role="status"
