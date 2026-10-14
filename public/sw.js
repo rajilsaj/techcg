@@ -1,14 +1,14 @@
 // Tech.cg service worker: makes the site installable and usable on a weak connection.
-// - Pages: network first; the homepage and articles you've opened are kept for offline reading.
+// - Pages: network first; every public page you've opened is kept for offline reading.
 // - Build assets (/_next/static) and fonts: cache first (their URLs change with each deploy).
 // - Images: shown from cache, refreshed in the background.
-// - Never cached: the API, the admin, sign-in, form posts.
-const VERSION = "v3";
+// - Never cached: the API, the admin, sign-in, personal pages (Mon espace, Publier), form posts.
+const VERSION = "v4";
 const PAGES = `pages-${VERSION}`;
 const ASSETS = `assets-${VERSION}`;
 const IMAGES = `images-${VERSION}`;
 const OFFLINE_URL = "/offline.html";
-const MAX_PAGES = 40;
+const MAX_PAGES = 80;
 const MAX_IMAGES = 80;
 
 self.addEventListener("install", (event) => {
@@ -36,10 +36,12 @@ async function trim(cacheName, max) {
   for (const key of keys.slice(0, Math.max(0, keys.length - max))) await cache.delete(key);
 }
 
-/** Pages worth keeping for offline reading: the homepage, articles, Profiles.CG and Sources. */
+/** Private or form pages: never kept (they show one member's data, or need the network anyway). */
+const PRIVATE = /^\/(api|godmod|connexion|inscription|mon-espace|publier|discussions\/nouvelle)(\/|$)/;
+
+/** Every public page is worth keeping for offline reading (only the plain address, without filters). */
 function keepsOffline(url) {
-  const p = url.pathname;
-  return p === "/" || p.startsWith("/publication/") || p === "/profils" || p.startsWith("/profils/") || p === "/sources";
+  return !PRIVATE.test(url.pathname) && !url.search;
 }
 
 async function networkFirstPage(request) {

@@ -94,7 +94,7 @@ export function AuthStage({
   const soft = "border border-border bg-bg-secondary text-accent";
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center bg-bg px-4 py-16 text-text">
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-x-clip bg-bg px-4 py-16 text-text">
       {/* No site header here: just a way home and the theme button */}
       <div className="absolute inset-x-0 top-0 flex items-center justify-between px-4 py-3 sm:px-6">
         <Link href="/" className="text-sm text-text-secondary transition-colors hover:text-accent">

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowBigDown, ArrowBigUp, FileText, MessageCircle, MessagesSquare, ThumbsUp } from "lucide-react";
+import { ArrowBigDown, ArrowBigUp, FileText, KeyRound, MessageCircle, MessagesSquare, ThumbsUp } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { STATUS_LABELS, isItemStatus } from "@/lib/content-status";
@@ -9,6 +9,8 @@ import { avatarUrl } from "@/lib/gravatar";
 import { Header } from "@/components/layout/Header";
 import { Avatar } from "@/components/user/Avatar";
 import { formatRelativeTime } from "@/i18n";
+import { ApiKeys } from "@/components/account/ApiKeys";
+import { MAX_KEYS_PER_MEMBER } from "@/lib/api/keys";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Mon espace", robots: { index: false } };
@@ -23,6 +25,7 @@ const TABS = [
   { key: "recus", label: "Commentaires reçus", icon: MessagesSquare },
   { key: "commentaires", label: "Mes commentaires", icon: MessageCircle },
   { key: "votes", label: "Votes reçus", icon: ThumbsUp },
+  { key: "api", label: "Clés API", icon: KeyRound },
 ] as const;
 type Tab = (typeof TABS)[number]["key"];
 
@@ -57,10 +60,11 @@ export default async function MySpacePage({ searchParams }: { searchParams: Prom
   const titles = new Map(stories.map((s) => [s.id, s.title ?? "Sans titre"]));
   const onMine = stories.length ? { OR: stories.map((s) => ({ path: { startsWith: `${s.path}.` } })) } : { id: -1 };
 
-  const [receivedCount, myCommentCount, votes] = await Promise.all([
+  const [receivedCount, myCommentCount, votes, apiKeys] = await Promise.all([
     prisma.item.count({ where: { type: "comment", status: "published", authorId: { not: me }, ...onMine } }),
     prisma.item.count({ where: { type: "comment", authorId: me } }),
     prisma.vote.groupBy({ by: ["itemId", "value"], where: { itemId: { in: storyIds.length ? storyIds : [-1] }, userId: { not: me } }, _count: { _all: true } }),
+    prisma.apiKey.findMany({ where: { userId: me }, orderBy: { createdAt: "desc" }, select: { id: true, name: true, prefix: true, createdAt: true, lastUsedAt: true } }),
   ]);
   const ups = new Map<number, number>();
   const downs = new Map<number, number>();
@@ -100,6 +104,7 @@ export default async function MySpacePage({ searchParams }: { searchParams: Prom
     { key: "recus", label: "Commentaires reçus", value: String(receivedCount) },
     { key: "commentaires", label: "Mes commentaires", value: String(myCommentCount) },
     { key: "votes", label: "Votes reçus", value: `+${totalUp} / −${totalDown}` },
+    { key: "api", label: "Clés API", value: String(apiKeys.length) },
   ];
 
   const row = "border-b border-border py-4";
@@ -138,7 +143,7 @@ export default async function MySpacePage({ searchParams }: { searchParams: Prom
         </div>
 
         {/* Numbers, which are also the tabs */}
-        <nav aria-label="Mon espace" className="mt-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <nav aria-label="Mon espace" className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {stats.map((s) => {
             const Icon = TABS.find((t) => t.key === s.key)!.icon;
             const on = tab === s.key;
@@ -251,6 +256,13 @@ export default async function MySpacePage({ searchParams }: { searchParams: Prom
                 </ul>
               </>
             ))}
+
+          {tab === "api" && (
+            <ApiKeys
+              max={MAX_KEYS_PER_MEMBER}
+              keys={apiKeys.map((k) => ({ ...k, createdAt: k.createdAt.toISOString(), lastUsedAt: k.lastUsedAt?.toISOString() ?? null }))}
+            />
+          )}
         </section>
       </div>
     </>

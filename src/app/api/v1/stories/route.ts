@@ -1,102 +1,31 @@
-import { prisma } from "@/lib/db";
-import { createSuccessResponse, createErrorResponse, createPaginatedResponse, validatePagination, handleApiError } from "@/lib/api-utils";
-import { API_ERRORS, CreateStoryRequest, StoryResponse } from "@/types/api";
-import { NextRequest } from "next/server";
-import { publiclyVisible } from "@/lib/content-status";
+import { endpoint, fromRefusal, json, preflight, readBody, siteOrigin, stringField } from "@/lib/api/http";
+import { apiCaller, requireCaller } from "@/lib/api/keys";
+import { storiesFromQuery, storyById } from "@/lib/api/stories";
+import { publishStory } from "@/lib/publish";
 
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const perPage = parseInt(searchParams.get("perPage") || "30");
-    const { page: p, perPage: pp } = validatePagination(page, perPage);
+/** GET /api/v1/stories: the site's lists (sort, topic, region, search…), cursor-paginated. */
+export const GET = endpoint(async (request) => {
+  const caller = await apiCaller(request);
+  const { data, meta } = await storiesFromQuery(new URL(request.url).searchParams, caller, siteOrigin(request));
+  return json({ data, meta });
+});
 
-    const skip = (p - 1) * pp;
+/** POST /api/v1/stories: publish a link or a text (signed-in member or API key). */
+export const POST = endpoint(async (request) => {
+  const caller = await requireCaller(request);
+  const body = await readBody(request);
+  const categoryId = body.categoryId;
+  const result = await publishStory(caller, {
+    type: stringField(body, "type", { max: 10 }) ?? "story",
+    title: stringField(body, "title", { required: true, max: 500 })!,
+    url: stringField(body, "url", { max: 2000 }),
+    text: stringField(body, "text", { max: 20000 }),
+    categoryId: typeof categoryId === "number" ? categoryId : null,
+    tags: Array.isArray(body.tags) ? body.tags.filter((t): t is string => typeof t === "string").join(",") : stringField(body, "tags", { max: 300 }),
+  });
+  if (!result.ok) throw fromRefusal(result);
+  const story = await storyById(result.itemId, caller, siteOrigin(request));
+  return json({ data: story, meta: { duplicate: result.duplicate } }, result.duplicate ? 200 : 201);
+});
 
-    const [items, total] = await Promise.all([
-      prisma.item.findMany({
-        where: { type: "story", ...publiclyVisible(), author: { shadowBanned: false } },
-        orderBy: { rankScore: "desc" },
-        skip,
-        take: pp,
-        select: {
-          id: true,
-          title: true,
-          url: true,
-          author: { select: { id: true, username: true, karma: true } },
-          points: true,
-          commentCount: true,
-          flagCount: true,
-          createdAt: true,
-          updatedAt: true,
-        },
-      }),
-      prisma.item.count({
-        where: { type: "story", ...publiclyVisible(), author: { shadowBanned: false } },
-      }),
-    ]);
-
-    const stories: StoryResponse[] = items.map((item) => ({
-      ...item,
-      createdAt: item.createdAt.toISOString(),
-      updatedAt: item.updatedAt.toISOString(),
-    }));
-
-    return createPaginatedResponse(stories, total, p, pp);
-  } catch (error) {
-    return handleApiError(error);
-  }
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    // Locked until the API's authenticated version: never write without a signed-in user.
-    return createErrorResponse(API_ERRORS.UNAUTHORIZED, 401, { message: "Authentication required" });
-    // TODO: Add authentication
-    const body = await request.json() as CreateStoryRequest;
-
-    if (!body.title || (!body.url && !body.text)) {
-      return createErrorResponse(
-        API_ERRORS.VALIDATION_ERROR,
-        400,
-        { message: "Title and either URL or text content required" }
-      );
-    }
-
-    // TODO: Get userId from auth
-    const userId = 1; // Placeholder
-
-    const story = await prisma.item.create({
-      data: {
-        type: "story",
-        title: body.title,
-        url: body.url,
-        text: body.text,
-        authorId: userId,
-        points: 1,
-        rankScore: 0,
-      },
-      select: {
-        id: true,
-        title: true,
-        url: true,
-        author: { select: { id: true, username: true, karma: true } },
-        points: true,
-        commentCount: true,
-        flagCount: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
-
-    const response: StoryResponse = {
-      ...story,
-      createdAt: story.createdAt.toISOString(),
-      updatedAt: story.updatedAt.toISOString(),
-    };
-
-    return createSuccessResponse(response, 201);
-  } catch (error) {
-    return handleApiError(error);
-  }
-}
+export const OPTIONS = preflight;

@@ -13,6 +13,8 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: "/",
     scope: "/",
     display: "standalone",
+    display_override: ["standalone", "minimal-ui"],
+    orientation: "any",
     background_color: "#ffffff",
     theme_color: "#0066ff",
     categories: ["news", "technology"],
@@ -23,6 +25,8 @@ export default function manifest(): MetadataRoute.Manifest {
     ],
     shortcuts: [
       { name: "Publier", url: "/publier", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
+      { name: "En discussion", url: "/discussions", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
+      { name: "Mon espace", url: "/mon-espace", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
       { name: "Profiles.CG", url: "/profils", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
     ],
   };

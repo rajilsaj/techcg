@@ -1,112 +1,40 @@
 import { prisma } from "@/lib/db";
-import { createSuccessResponse, createErrorResponse, handleApiError } from "@/lib/api-utils";
-import { API_ERRORS, StoryResponse, UpdateStoryRequest } from "@/types/api";
-import { NextRequest } from "next/server";
+import { ApiError, endpoint, idParam, ok, preflight, readBody, siteOrigin, stringField } from "@/lib/api/http";
+import { apiCaller, requireCaller } from "@/lib/api/keys";
+import { ownStory, storyById } from "@/lib/api/stories";
+import { logActivity } from "@/lib/activity";
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  try {
-    const { id: idStr } = await params;
-    const id = parseInt(idStr);
+/** GET /api/v1/stories/{id} */
+export const GET = endpoint<{ id: string }>(async (request, { params }) => {
+  const id = idParam((await params).id);
+  return ok(await storyById(id, await apiCaller(request), siteOrigin(request)));
+});
 
-    const story = await prisma.item.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        title: true,
-        url: true,
-        text: true,
-        author: { select: { id: true, username: true, karma: true } },
-        points: true,
-        commentCount: true,
-        flagCount: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+/** PATCH /api/v1/stories/{id}  { title?, text? }: the author or an admin. */
+export const PATCH = endpoint<{ id: string }>(async (request, { params }) => {
+  const id = idParam((await params).id);
+  const caller = await requireCaller(request);
+  const story = await ownStory(id, caller);
+  const body = await readBody(request);
 
-    if (!story) {
-      return createErrorResponse(API_ERRORS.NOT_FOUND, 404);
-    }
+  const title = stringField(body, "title", { max: 500 })?.trim();
+  const text = stringField(body, "text", { max: 20000 })?.trim();
+  if (body.title !== undefined && !title) throw new ApiError("validation", "Le titre ne peut pas être vide.", { field: "title" });
+  if (title === undefined && text === undefined) throw new ApiError("validation", "Rien à modifier : envoyez title et/ou text.");
+  if (text && story.url && story.type === "story") throw new ApiError("validation", "Un lien ne peut pas avoir de texte.", { field: "text" });
 
-    const response: StoryResponse = {
-      ...story,
-      createdAt: story.createdAt.toISOString(),
-      updatedAt: story.updatedAt.toISOString(),
-    };
+  await prisma.item.update({ where: { id }, data: { ...(title !== undefined ? { title } : {}), ...(text !== undefined ? { text: text || null } : {}) } });
+  return ok(await storyById(id, caller, siteOrigin(request)));
+});
 
-    return createSuccessResponse(response);
-  } catch (error) {
-    return handleApiError(error);
-  }
-}
+/** DELETE /api/v1/stories/{id}: moves it to the trash (the author or an admin). */
+export const DELETE = endpoint<{ id: string }>(async (request, { params }) => {
+  const id = idParam((await params).id);
+  const caller = await requireCaller(request);
+  await ownStory(id, caller);
+  await prisma.item.update({ where: { id }, data: { status: "trash" } });
+  if (caller.isAdmin) await logActivity(caller.userId, "item.trash", `Publication #${id} mise à la corbeille (API)`, { type: "item", id });
+  return ok({ id, deleted: true });
+});
 
-export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  try {
-    // Locked until the API's authenticated version: never write without a signed-in user.
-    return createErrorResponse(API_ERRORS.UNAUTHORIZED, 401, { message: "Authentication required" });
-    // TODO: Add authentication and ownership check
-    const { id: idStr } = await params;
-    const id = parseInt(idStr);
-    const body = await request.json() as UpdateStoryRequest;
-
-    const story = await prisma.item.findUnique({ where: { id } });
-    if (!story) {
-      return createErrorResponse(API_ERRORS.NOT_FOUND, 404);
-    }
-
-    const updated = await prisma.item.update({
-      where: { id },
-      data: {
-        ...(body.title && { title: body.title }),
-        ...(body.url && { url: body.url }),
-        ...(body.text && { text: body.text }),
-      },
-      select: {
-        id: true,
-        title: true,
-        url: true,
-        text: true,
-        author: { select: { id: true, username: true, karma: true } },
-        points: true,
-        commentCount: true,
-        flagCount: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
-
-    const response: StoryResponse = {
-      ...updated,
-      createdAt: updated.createdAt.toISOString(),
-      updatedAt: updated.updatedAt.toISOString(),
-    };
-
-    return createSuccessResponse(response);
-  } catch (error) {
-    return handleApiError(error);
-  }
-}
-
-export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  try {
-    // Locked until the API's authenticated version: never write without a signed-in user.
-    return createErrorResponse(API_ERRORS.UNAUTHORIZED, 401, { message: "Authentication required" });
-    // TODO: Add authentication and admin check
-    const { id: idStr } = await params;
-    const id = parseInt(idStr);
-
-    const story = await prisma.item.findUnique({ where: { id } });
-    if (!story) {
-      return createErrorResponse(API_ERRORS.NOT_FOUND, 404);
-    }
-
-    await prisma.item.update({
-      where: { id },
-      data: { status: "trash" },
-    });
-
-    return createSuccessResponse({ deleted: true });
-  } catch (error) {
-    return handleApiError(error);
-  }
-}
+export const OPTIONS = preflight;

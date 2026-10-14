@@ -1,100 +1,30 @@
-import { prisma } from "@/lib/db";
-import { createSuccessResponse, createErrorResponse, createPaginatedResponse, validatePagination, handleApiError } from "@/lib/api-utils";
-import { API_ERRORS, CreateCommentRequest, CommentResponse } from "@/types/api";
-import { NextRequest } from "next/server";
-import { publiclyVisible } from "@/lib/content-status";
+import { revalidatePath } from "next/cache";
+import { ApiError, endpoint, fromRefusal, json, preflight, readBody, stringField } from "@/lib/api/http";
+import { requireCaller } from "@/lib/api/keys";
+import { commentsPage } from "@/lib/api/stories";
+import { postComment } from "@/lib/publish";
 
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const itemId = searchParams.get("itemId");
-    const page = parseInt(searchParams.get("page") || "1");
-    const perPage = parseInt(searchParams.get("perPage") || "30");
+/** GET /api/v1/comments: the latest comments on the whole site (`?storyId=` for one publication). */
+export const GET = endpoint(async (request) => {
+  const params = new URL(request.url).searchParams;
+  const raw = params.get("storyId") ?? params.get("itemId");
+  const storyId = raw === null ? undefined : Number(raw);
+  if (storyId !== undefined && (!Number.isInteger(storyId) || storyId <= 0)) throw new ApiError("validation", "storyId doit être un identifiant.");
+  return json(await commentsPage(params, storyId));
+});
 
-    if (!itemId) {
-      return createErrorResponse(API_ERRORS.BAD_REQUEST, 400, { message: "itemId required" });
-    }
+/** POST /api/v1/comments  { storyId, text } (same as POST /stories/{id}/comments). */
+export const POST = endpoint(async (request) => {
+  const caller = await requireCaller(request);
+  const body = await readBody(request);
+  const storyId = body.storyId ?? body.parentId;
+  if (typeof storyId !== "number" || !Number.isInteger(storyId)) throw new ApiError("validation", "storyId (entier) requis.", { field: "storyId" });
+  const text = stringField(body, "text", { required: true, max: 10000 })!;
+  const result = await postComment(caller, storyId, text);
+  if (!result.ok) throw fromRefusal(result);
+  revalidatePath(`/publication/${storyId}`);
+  revalidatePath(`/discussions/${storyId}`);
+  return json({ data: { id: result.commentId, storyId, status: result.pending ? "pending" : "published" } }, 201);
+});
 
-    const { page: p, perPage: pp } = validatePagination(page, perPage);
-    const skip = (p - 1) * pp;
-
-    const [comments, total] = await Promise.all([
-      prisma.item.findMany({
-        where: { type: "comment", parentId: parseInt(itemId), ...publiclyVisible() },
-        orderBy: { points: "desc" },
-        skip,
-        take: pp,
-        select: {
-          id: true,
-          text: true,
-          author: { select: { id: true, username: true, karma: true } },
-          parentId: true,
-          points: true,
-          createdAt: true,
-          updatedAt: true,
-        },
-      }),
-      prisma.item.count({
-        where: { type: "comment", parentId: parseInt(itemId), ...publiclyVisible() },
-      }),
-    ]);
-
-    const result: CommentResponse[] = comments.map((comment) => ({
-      ...comment,
-      text: comment.text || "",
-      createdAt: comment.createdAt.toISOString(),
-      updatedAt: comment.updatedAt.toISOString(),
-    }));
-
-    return createPaginatedResponse(result, total, p, pp);
-  } catch (error) {
-    return handleApiError(error);
-  }
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    // Locked until the API's authenticated version: never write without a signed-in user.
-    return createErrorResponse(API_ERRORS.UNAUTHORIZED, 401, { message: "Authentication required" });
-    // TODO: Add authentication
-    const body = await request.json() as CreateCommentRequest;
-
-    if (!body.text || !body.parentId) {
-      return createErrorResponse(API_ERRORS.VALIDATION_ERROR, 400, { message: "text and parentId required" });
-    }
-
-    // TODO: Get userId from auth
-    const userId = 1; // Placeholder
-
-    const comment = await prisma.item.create({
-      data: {
-        type: "comment",
-        text: body.text,
-        parentId: body.parentId,
-        authorId: userId,
-        points: 1,
-        rankScore: 0,
-      },
-      select: {
-        id: true,
-        text: true,
-        author: { select: { id: true, username: true, karma: true } },
-        parentId: true,
-        points: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
-
-    const response: CommentResponse = {
-      ...comment,
-      text: comment.text || "",
-      createdAt: comment.createdAt.toISOString(),
-      updatedAt: comment.updatedAt.toISOString(),
-    };
-
-    return createSuccessResponse(response, 201);
-  } catch (error) {
-    return handleApiError(error);
-  }
-}
+export const OPTIONS = preflight;

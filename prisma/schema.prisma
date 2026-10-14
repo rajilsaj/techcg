@@ -28,6 +28,7 @@ model User {
   hidden   HiddenItem[]
   media    Media[]
   activity ActivityLog[]
+  apiKeys  ApiKey[]
 
   @@index([karma])
   @@index([createdAt])
@@ -271,4 +272,19 @@ model Profile {
   updatedAt    DateTime @updatedAt
 
   @@index([published, name])
+}
+
+/// A member's personal key for the public API (Authorization: Bearer tcg_…). Only its SHA-256 is stored.
+model ApiKey {
+  id         Int       @id @default(autoincrement())
+  userId     Int
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String
+  /// First characters of the key, shown so the member can tell keys apart.
+  prefix     String
+  hash       String    @unique
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([userId])
 }

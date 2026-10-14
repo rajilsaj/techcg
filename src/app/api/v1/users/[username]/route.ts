@@ -1,39 +1,32 @@
 import { prisma } from "@/lib/db";
-import { createSuccessResponse, createErrorResponse, handleApiError } from "@/lib/api-utils";
-import { API_ERRORS, UserDetailResponse } from "@/types/api";
-import { NextRequest } from "next/server";
+import { avatarUrl } from "@/lib/gravatar";
+import { publiclyVisible } from "@/lib/content-status";
+import { ApiError, endpoint, ok, preflight, siteOrigin } from "@/lib/api/http";
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ username: string }> }) {
-  try {
-    const { username } = await params;
-    const user = await prisma.user.findUnique({
-      where: { username },
-      select: {
-        id: true,
-        username: true,
-        about: true,
-        karma: true,
-        createdAt: true,
-        _count: { select: { items: true } },
-      },
-    });
+/** GET /api/v1/users/{username}: a member's public profile (their stories: /stories?author=…). */
+export const GET = endpoint<{ username: string }>(async (request, { params }) => {
+  const { username } = await params;
+  if (!/^[\w.-]{1,40}$/.test(username)) throw new ApiError("not_found", "Membre introuvable.");
+  const user = await prisma.user.findFirst({
+    where: { username: { equals: username, mode: "insensitive" }, banned: false, shadowBanned: false },
+    select: { id: true, username: true, email: true, about: true, karma: true, createdAt: true },
+  });
+  if (!user) throw new ApiError("not_found", "Membre introuvable.");
+  const [stories, comments] = await Promise.all([
+    prisma.item.count({ where: { authorId: user.id, type: { not: "comment" }, ...publiclyVisible() } }),
+    prisma.item.count({ where: { authorId: user.id, type: "comment", ...publiclyVisible() } }),
+  ]);
+  const origin = siteOrigin(request);
+  return ok({
+    username: user.username,
+    avatarUrl: avatarUrl(user.email, user.username),
+    about: user.about,
+    karma: user.karma,
+    stories,
+    comments,
+    createdAt: user.createdAt.toISOString(),
+    links: { web: `${origin}/profil/${user.username}`, stories: `${origin}/api/v1/stories?author=${encodeURIComponent(user.username)}&scope=all` },
+  });
+});
 
-    if (!user) {
-      return createErrorResponse(API_ERRORS.NOT_FOUND, 404);
-    }
-
-    const response: UserDetailResponse = {
-      id: user.id,
-      username: user.username,
-      about: user.about || undefined,
-      karma: user.karma,
-      createdAt: user.createdAt.toISOString(),
-      itemCount: user._count.items,
-      commentCount: 0, // TODO: Count comments
-    };
-
-    return createSuccessResponse(response);
-  } catch (error) {
-    return handleApiError(error);
-  }
-}
+export const OPTIONS = preflight;
