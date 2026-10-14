@@ -6,6 +6,7 @@ Every change requested in a Claude Code session, newest first, with when it was 
 
 | Date & time (UTC-4) | Update | Pushed |
 | --- | --- | --- |
+| 2026-10-14 18:50 | Article page, signed-out visitors: a locked comment box (faded preview + lock) says « Connectez-vous pour commenter » with a « Se connecter » button beside it and « Créer un compte »; both bring the reader back to the article's comments. | Yes (8052ec3) |
 | 2026-10-14 18:30 | Loading bar: the line under the header turns into a green-yellow-red bar sliding back and forth while a page loads (link click, filter change) or while more stories load on scroll; a soft pulse instead for reduced-motion users. Also fixed the Google News subject name display in the admin. | Yes (29e949f) |
 | 2026-10-14 18:05 | Fix Google News import error « `q` and `so` parameters can't be used together »: searches no longer send the sort parameter (they stay recent with when:7d and are sorted on import); already saved subjects are fixed automatically. | Yes (382d03d) |
 | 2026-10-14 17:50 | Article summaries showed codes like `d&#39;` instead of apostrophes (source sites encode text twice). Decoder now handles double encoding and French accented entities (`&eacute;`, `&rsquo;`…); the 11 affected articles were repaired in the database. | Yes (2648967) |
