@@ -72,8 +72,8 @@ export async function saveSubjectsAction(formData: FormData) {
   for (const { subject, topic } of wanted) {
     const data = {
       name: `Google News : ${subject}`.slice(0, 80),
-      // when:7d keeps results to the last week; so=1 sorts them newest first.
-      url: googleNewsSourceUrl({ q: `${subject} when:7d`, gl: country, hl: language, so: "1" }),
+      // when:7d keeps results to the last week (the import sorts them newest first).
+      url: googleNewsSourceUrl({ q: `${subject} when:7d`, gl: country, hl: language }),
       maxItems,
       topic,
       enabled: true,

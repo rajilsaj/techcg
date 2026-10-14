@@ -5,7 +5,7 @@ import { getSerpApiKey } from "../serpapi";
  * Google News through SerpApi (https://serpapi.com/google-news-api).
  *
  * A source is stored as a SerpApi address without the key, e.g.
- * https://serpapi.com/search?engine=google_news&q=startup+Congo&gl=cg&hl=fr&so=1
+ * https://serpapi.com/search?engine=google_news&q=startup+Congo+when:7d&gl=cg&hl=fr
  * The key (Admin › Intégrations, else SERPAPI_API_KEY) is added only at request time.
  */
 
@@ -34,6 +34,8 @@ export function googleNewsSourceUrl(params: Partial<Record<(typeof ALLOWED_PARAM
     const value = params[key]?.trim();
     if (value) url.searchParams.set(key, value.slice(0, 300));
   }
+  // SerpApi refuses `so` (sort) together with `q`; searches stay fresh with "when:7d" and are sorted on import.
+  if (url.searchParams.has("q")) url.searchParams.delete("so");
   return url.toString();
 }
 
@@ -45,8 +47,8 @@ export function cleanGoogleNewsUrl(raw: string): string {
 
 /** "Congo startup · cg · fr" for the admin list. */
 export function describeGoogleNews(raw: string): string {
-  const u = new URL(raw);
-  const what = u.searchParams.get("q") ?? (u.searchParams.get("topic_token") ? "rubrique Google News" : "à la une");
+  const u = new URL(cleanGoogleNewsUrl(raw));
+  const what = u.searchParams.get("q")?.replace(/\s*when:\S+/gi, "").trim() || (u.searchParams.get("topic_token") ? "rubrique Google News" : "à la une");
   return [`« ${what} »`, u.searchParams.get("gl")?.toUpperCase(), u.searchParams.get("hl"), u.searchParams.get("so") === "1" ? "par date" : null]
     .filter(Boolean)
     .join(" · ");

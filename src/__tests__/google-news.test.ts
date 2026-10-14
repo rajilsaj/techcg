@@ -74,3 +74,10 @@ describe("SerpApi key storage", () => {
     expect(decryptSecret("garbage", key)).toBeNull();
   });
 });
+
+describe("Google News search parameters", () => {
+  it("drops `so` when there is a query (SerpApi refuses both together)", () => {
+    expect(new URL(cleanGoogleNewsUrl("https://serpapi.com/search?engine=google_news&q=startups&so=1")).searchParams.has("so")).toBe(false);
+    expect(new URL(googleNewsSourceUrl({ topic_token: "abc", so: "1" })).searchParams.get("so")).toBe("1");
+  });
+});
