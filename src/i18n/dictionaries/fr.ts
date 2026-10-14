@@ -170,6 +170,10 @@ export const fr = {
   "feed.end": "Vous avez tout vu !",
 
   "comment.add": "Ajouter un commentaire",
+  "comment.inviteTitle": "Connectez-vous pour commenter",
+  "comment.inviteText": "Un compte gratuit suffit pour réagir, voter et publier.",
+  "comment.inviteLogin": "Se connecter",
+  "comment.inviteRegister": "Créer un compte",
   "comment.pendingModeration": "Merci ! Votre commentaire sera visible après validation par un modérateur.",
   "comment.placeholder": "Partagez votre avis…",
   "comment.post": "Publier le commentaire",
