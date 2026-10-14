@@ -40,7 +40,7 @@ const RULES: Record<TopicSlug, { exact?: RegExp; words: RegExp; contextual?: Reg
   },
   entrepreneurs: {
     words:
-      / (entrepreneurs?|entrepreneuses?|entrepreneuriat|entrepreneurial(e|es|s)?|entrepreneurship|auto entrepreneurs?|fondateurs?|fondatrices?|cofondateurs?|co fondateurs?|cofondatrices?|co founders?|cofounders?|founders?|chefs? d'entreprises?|creation d'entreprises?|creer (son|sa|une) entreprise|pme|tpe|sme|smes|small business(es)?|self made|patronat|ceo|pdg|directeur general|directrice generale) /,
+      / (entrepreneurs?|entrepreneuses?|entrepreneuriat|entrepreneurial(e|es|s)?|entrepreneurship|auto entrepreneurs?|fondateurs?|fondatrices?|cofondateurs?|co fondateurs?|cofondatrices?|co founders?|cofounders?|founders?|chefs? d'entreprises?|creation d'entreprises?|creer (son|sa|une) entreprise|pme|tpe|sme|smes|small business(es)?|self made|patronat|ceo|pdg (de|du|des|d.)|directeur general|directrice generale) /,
   },
   tech: {
     exact: /(?<![\p{L}\p{N}'’.-])(AI|GenAI|LLMs?|AGI|IA)(?![\p{L}\p{N}'’-])/u,

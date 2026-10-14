@@ -81,7 +81,7 @@ export const fr = {
   "filters.apply": "Appliquer les filtres",
   "filters.reset": "Tout effacer",
   "home.congo": "Congo",
-  "home.congoAll": "Toute l'actualité du Congo",
+  "home.congoAll": "Toute l'actualité tech & startups du Congo",
   "home.africa": "Afrique",
   "home.africaAll": "Toute l'actualité africaine",
   "home.world": "D'ailleurs",

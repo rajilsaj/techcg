@@ -49,7 +49,8 @@ const MAX_PROBES = 4;
 export function articleParagraphs(html: string): string[] {
   const fromArticle = proseIn(contentArea(html));
   // Some sites wrap only a teaser in <article>: then read the whole page (minus menus and footer).
-  if (words(fromArticle) >= 150) return fromArticle;
+  // A page whose article holds no prose at all (a video post) is left empty: its sidebars would only add noise.
+  if (words(fromArticle) >= 150 || fromArticle.length === 0) return fromArticle;
   const fromPage = proseIn(html.replace(/<(script|style|noscript|svg|template|nav|header|footer|aside|form)\b[\s\S]*?<\/\1>/gi, " "));
   return words(fromPage) > words(fromArticle) ? fromPage : fromArticle;
 }

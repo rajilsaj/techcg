@@ -45,3 +45,18 @@ describe("withoutSiteWideKeywords", () => {
     expect(withoutSiteWideKeywords([article(["Tech"]), article(["Tech"])])[0].keywords).toEqual(["Tech"]);
   });
 });
+
+describe("feed boilerplate and titles", () => {
+  it("removes WordPress footers and click-here lines from summaries", async () => {
+    const { stripFeedBoilerplate } = await import("@/lib/excerpt");
+    expect(stripFeedBoilerplate("Cliquez ici pour voir toutes nos vidéos The post Bon début de saison first appeared on Vox Congo .")).toBe("");
+    expect(stripFeedBoilerplate("La fibre arrive à Pointe-Noire. The post La fibre arrive appeared first on Exemple.")).toBe("La fibre arrive à Pointe-Noire.");
+    expect(stripFeedBoilerplate("Le texte de l'article. L'article Titre est apparu en premier sur Site.")).toBe("Le texte de l'article.");
+    expect(stripFeedBoilerplate("Un résumé normal sans rien à retirer.")).toBe("Un résumé normal sans rien à retirer.");
+  });
+
+  it("capitalises a title that starts in lowercase", () => {
+    expect(cleanTitle("validation sous peu des protocoles")).toBe("Validation sous peu des protocoles");
+    expect(cleanTitle("iPhone 18 : les nouveautés")).toBe("iPhone 18 : les nouveautés");
+  });
+});

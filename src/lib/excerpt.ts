@@ -45,3 +45,16 @@ export function stripLeadingTitle(summary: string, title: string | null | undefi
   if (rest.length < 30) return summary;
   return rest.charAt(0).toUpperCase() + rest.slice(1);
 }
+
+/**
+ * Removes feed boilerplate from a summary: WordPress's "The post … appeared first
+ * on Site." / "… first appeared on Site." footer and "click here / read more" lines.
+ */
+export function stripFeedBoilerplate(summary: string): string {
+  return summary
+    .replace(/\s*The post\s.*?\s(?:first appeared|appeared first) on\s.*$/is, "")
+    .replace(/\s*(?:L'article|Cet article)\s.*?\s(?:est apparu en premier sur|a été publié en premier sur)\s.*$/is, "")
+    .replace(/^\s*(?:Cliquez ici pour (?:voir|lire)[^.!]*?(?:vidéos?|articles?|suite)\.?|Click here to (?:watch|read)[^.!]*?\.?)\s*/i, "")
+    .replace(/\s*(?:Lire la suite|Read more|Continue reading)\s*(?:…|\.\.\.|»|→)?\s*$/i, "")
+    .trim();
+}

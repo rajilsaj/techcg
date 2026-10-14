@@ -47,7 +47,10 @@ export function cleanTitle(raw: string): string {
     .replace(/\s+/g, " ")
     .trim()
     // "Title | Site name : tagline" → "Title" (when what's left is still a real title).
-    .replace(/^(.{15,}?)\s+\|\s+[^|]*$/, "$1");
+    .replace(/^(.{15,}?)\s+\|\s+[^|]*$/, "$1")
+    // "validation sous peu…" → "Validation sous peu…"
+    // (only when the whole first word is lowercase: "iPhone", "eBay" stay as they are).
+    .replace(/^\p{Ll}(?=[\p{Ll}'’-]*(\s|$))/u, (c) => c.toUpperCase());
 }
 
 /** Drops tracking parameters and fragments so the same article isn't imported twice. */
