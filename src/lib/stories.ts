@@ -25,6 +25,7 @@ const storySelect = {
   points: true,
   rankScore: true,
   commentCount: true,
+  viewCount: true,
   createdAt: true,
   author: { select: { username: true, email: true } },
   category: { select: { name: true, slug: true } },
@@ -36,7 +37,7 @@ type StoryRow = Prisma.ItemGetPayload<{ select: typeof storySelect }>;
 export type StoryRecord = Omit<StoryRow, "author"> & { author: { username: string; avatarUrl: string } };
 export type ListedStory = StoryRecord & { vote: VoteValue };
 
-export type StoryOrder = "rank" | "newest" | "points";
+export type StoryOrder = "rank" | "newest" | "points" | "views" | "comments";
 
 interface Cursor {
   key: number;
@@ -57,10 +58,12 @@ function decodeCursor(value: string | undefined): Cursor | null {
   }
 }
 
-const ORDER: Record<StoryOrder, { field: "rankScore" | "id" | "points"; orderBy: Prisma.ItemOrderByWithRelationInput[] }> = {
+const ORDER: Record<StoryOrder, { field: "rankScore" | "id" | "points" | "viewCount" | "commentCount"; orderBy: Prisma.ItemOrderByWithRelationInput[] }> = {
   rank: { field: "rankScore", orderBy: [{ rankScore: "desc" }, { id: "desc" }] },
   newest: { field: "id", orderBy: [{ id: "desc" }] },
   points: { field: "points", orderBy: [{ points: "desc" }, { id: "desc" }] },
+  views: { field: "viewCount", orderBy: [{ viewCount: "desc" }, { id: "desc" }] },
+  comments: { field: "commentCount", orderBy: [{ commentCount: "desc" }, { id: "desc" }] },
 };
 
 function afterCursor(order: StoryOrder, cursor: Cursor | null): Prisma.ItemWhereInput {

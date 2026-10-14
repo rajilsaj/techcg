@@ -45,7 +45,7 @@ export function StoryItem({ rank, story, isLoggedIn }: StoryItemProps) {
           <h2 className="text-base font-semibold leading-6 text-text">
             <a
               href={href}
-              {...(story.url ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+              {...(story.url ? { target: "_blank", rel: "noopener noreferrer", "data-open": story.id } : {})}
               className="text-text hover:underline"
               title={story.originalTitle ? t("story.originalTitle", { title: story.originalTitle }) : undefined}
             >
@@ -63,7 +63,7 @@ export function StoryItem({ rank, story, isLoggedIn }: StoryItemProps) {
 
           {(story.url || excerpt) && (
             <div className="mt-2 flex gap-3">
-              <a href={href} {...(story.url ? { target: "_blank", rel: "noopener noreferrer" } : {})} className="shrink-0" tabIndex={-1}>
+              <a href={href} {...(story.url ? { target: "_blank", rel: "noopener noreferrer", "data-open": story.id } : {})} className="shrink-0" tabIndex={-1}>
                 {story.imageUrl ? <CoverImage src={story.imageUrl} className={coverClass} fallback={topicCover} /> : topicCover}
               </a>
               {excerpt && (

@@ -27,8 +27,9 @@ export type Period = keyof typeof PERIODS;
 
 /** Latest news first by default. */
 export const DEFAULT_SORT: StoryOrder = "newest";
-const SORTS: Record<string, StoryOrder> = { recents: "newest", pertinence: "rank", points: "points" };
-export const SORT_PARAM: Record<StoryOrder, string> = { newest: "recents", rank: "pertinence", points: "points" };
+const SORTS: Record<string, StoryOrder> = { recents: "newest", populaires: "views", discutes: "comments", pertinence: "rank", points: "points" };
+/** In the order the sort choices are offered. */
+export const SORT_PARAM: Record<StoryOrder, string> = { newest: "recents", views: "populaires", comments: "discutes", rank: "pertinence", points: "points" };
 
 const MAX_QUERY = 100;
 const MAX_WORDS = 8;

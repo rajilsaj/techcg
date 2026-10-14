@@ -40,11 +40,32 @@ export function VisitTracker() {
     const onHide = () => {
       if (document.visibilityState === "hidden") leave();
     };
+    // An article opened from a list (links marked data-open="<id>"): once per tab.
+    const onOpen = (event: MouseEvent) => {
+      const link = (event.target as Element | null)?.closest?.("a[data-open]");
+      const id = Number(link?.getAttribute("data-open"));
+      if (!Number.isInteger(id) || id <= 0) return;
+      try {
+        const opened = new Set((sessionStorage.getItem("opened") ?? "").split(",").filter(Boolean));
+        if (opened.has(String(id))) return;
+        opened.add(String(id));
+        sessionStorage.setItem("opened", [...opened].slice(-200).join(","));
+      } catch {}
+      const body = JSON.stringify({ type: "open", id });
+      if (!navigator.sendBeacon?.("/api/track", new Blob([body], { type: "application/json" }))) {
+        fetch("/api/track", { method: "POST", body, keepalive: true, headers: { "Content-Type": "application/json" } }).catch(() => {});
+      }
+    };
     window.addEventListener("pagehide", leave);
     document.addEventListener("visibilitychange", onHide);
+    // Capture phase, before navigation; auxclick covers the middle button (new tab).
+    document.addEventListener("click", onOpen, true);
+    document.addEventListener("auxclick", onOpen, true);
     return () => {
       window.removeEventListener("pagehide", leave);
       document.removeEventListener("visibilitychange", onHide);
+      document.removeEventListener("click", onOpen, true);
+      document.removeEventListener("auxclick", onOpen, true);
     };
   }, []);
 

@@ -5,6 +5,7 @@ import { getSession } from "@/lib/auth";
 import { getSettings } from "@/lib/settings";
 import { cleanReferrer, requestInfo } from "@/lib/analytics/request-info";
 import { parseUserAgent } from "@/lib/analytics/user-agent";
+import { countConsultation, publicationId } from "@/lib/view-count";
 
 const VISITOR_COOKIE = "vid";
 const VISITOR_MAX_AGE = 365 * 24 * 60 * 60;
@@ -38,6 +39,7 @@ function trackablePath(value: unknown): string | null {
  * POST /api/track
  *   { type: "view", path, referrer, screen, language, tz, sessionId } → { id }
  *   { type: "leave", id, durationMs } (sent with sendBeacon when the page is left)
+ *   { type: "open", id } (an article opened from a list, for « Les plus populaires »)
  */
 export async function POST(request: NextRequest) {
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
@@ -60,6 +62,15 @@ export async function POST(request: NextRequest) {
     return new NextResponse(null, { status: 204 });
   }
 
+  if (body.type === "open") {
+    const id = Number(body.id);
+    const ua = request.headers.get("user-agent") ?? "";
+    if (visitorId && Number.isInteger(id) && id > 0 && !parseUserAgent(ua).isBot) {
+      await countConsultation(id, visitorId);
+    }
+    return new NextResponse(null, { status: 204 });
+  }
+
   const path = trackablePath(body.path);
   if (body.type !== "view" || !path) return new NextResponse(null, { status: 400 });
 
@@ -67,13 +78,14 @@ export async function POST(request: NextRequest) {
   const vid = visitorId && /^[\w-]{10,64}$/.test(visitorId) ? visitorId : randomUUID();
   const session = await getSession();
 
+  const agent = parseUserAgent(userAgent);
   const view = await prisma.pageView.create({
     data: {
       path,
       referrer: cleanReferrer(body.referrer, request.headers.get("host")),
       ...info,
       userAgent,
-      ...parseUserAgent(userAgent),
+      ...agent,
       screen: text(body.screen, 20)?.match(/^\d{2,5}x\d{2,5}$/)?.[0] ?? null,
       language: text(body.language, 20),
       clientTz: text(body.tz, 60),
@@ -83,6 +95,9 @@ export async function POST(request: NextRequest) {
     },
     select: { id: true },
   });
+
+  const viewed = publicationId(path);
+  if (viewed && !agent.isBot) after(() => countConsultation(viewed, vid));
 
   // Now and then, delete visits older than the retention period.
   if (Math.random() < 0.02) {

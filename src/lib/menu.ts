@@ -5,6 +5,7 @@ export const MENU_ITEMS = [
   { id: "indicateurs", href: "/indicateurs", label: "nav.indicators", short: "nav.indicators" },
   { id: "profils", href: "/profils", label: "nav.profiles", short: "nav.profilesShort" },
   { id: "sources", href: "/sources", label: "nav.sources", short: "nav.sources" },
+  { id: "discussions", href: "/discussions", label: "home.inDiscussion", short: "discussions.brand" },
   { id: "recents", href: "/recents", label: "section.newest", short: "section.newest" },
   { id: "questions", href: "/questions", label: "section.ask", short: "section.ask" },
   { id: "vitrine", href: "/vitrine", label: "section.show", short: "section.show" },

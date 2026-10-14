@@ -7,6 +7,8 @@ import { Header } from "@/components/layout/Header";
 import { InfiniteStoryList } from "@/components/list/InfiniteStoryList";
 import { StoryFilterBar } from "@/components/list/StoryFilterBar";
 import { RegionSection, SectionTitle } from "@/components/list/RegionSection";
+import { HomeViews } from "@/components/list/HomeViews";
+import { liveDiscussionCount } from "@/lib/discussions";
 import { nextPageHref, pageNumber } from "@/components/list/StoryList";
 import { t } from "@/i18n";
 
@@ -28,7 +30,7 @@ export default async function Home({ searchParams }: PageProps) {
   // Fetch new articles from due sources once the page has been sent (at most one source per visit).
   after(importOnVisit);
 
-  // Unfiltered homepage: 5 latest Congo stories, then 5 from the rest of Africa,
+  // Unfiltered homepage: 5 Congo stories, then 5 from the rest of Africa (in the chosen order),
   // then everything else ("D'ailleurs"), which leaves those 10 out on every page.
   const lead = async (region: string, exclude: number[]) =>
     hasFilters(filters)
@@ -36,13 +38,14 @@ export default async function Home({ searchParams }: PageProps) {
       : (
           await listStories({
             where: { AND: [HOME_STORIES, { id: { notIn: exclude } }, { tags: { some: { tag: { slug: region } } } }] },
-            order: "newest",
+            // Les plus populaires / récents / discutés (the tabs above « Congo »).
+            order: filters.sort,
             take: SECTION_COUNT,
             viewerId: session?.userId,
           })
         ).stories;
   // A story has one region tag, so the two sections can be fetched together.
-  const [congo, africa] = await Promise.all([lead("congo", []), lead("afrique", [])]);
+  const [congo, africa, live] = await Promise.all([lead("congo", []), lead("afrique", []), liveDiscussionCount()]);
   const leadIds = [...congo, ...africa].map((story) => story.id);
   const leading = leadIds.length > 0 && !params.cursor;
 
@@ -61,6 +64,7 @@ export default async function Home({ searchParams }: PageProps) {
       <Header />
       <div className="mx-auto max-w-5xl px-4 pt-4">
         <StoryFilterBar filters={filters} />
+        <HomeViews filters={filters} liveCount={live} />
         {leading && (
           <>
             <RegionSection

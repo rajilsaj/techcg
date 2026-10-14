@@ -5,6 +5,7 @@ import { getSession } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { isPubliclyVisible } from "@/lib/content-status";
 import { getSettings } from "@/lib/settings";
+import { checkRateLimit } from "@/lib/ratelimit";
 import { t } from "@/i18n";
 
 export async function submitCommentAction(
@@ -23,6 +24,11 @@ export async function submitCommentAction(
 
   if (text.length > 10000) {
     return { error: t("action.commentTooLong") };
+  }
+
+  const limit = await checkRateLimit(session.userId, "comment");
+  if (!limit.allowed) {
+    return { error: t("action.commentRateLimited", { seconds: limit.retryAfter ?? 0 }) };
   }
 
   // Check if parent item exists
@@ -72,5 +78,6 @@ export async function submitCommentAction(
   }
 
   revalidatePath(`/publication/${itemId}`);
+  revalidatePath(`/discussions/${itemId}`);
   return { success: true, pending: held };
 }
