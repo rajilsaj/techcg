@@ -54,7 +54,7 @@ export function SectionTitle({
   return (
     <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2 pb-1">
       <div>
-        <h2 id={id} className="flex items-baseline gap-2 text-2xl font-bold tracking-tight text-text sm:text-3xl">
+        <h2 id={id} className="flex items-baseline gap-2 text-4xl font-extrabold leading-none tracking-tight text-text-secondary/35 sm:text-5xl">
           {children}
           {count !== undefined && (
             <span className="text-sm font-normal tabular-nums text-text-secondary">
