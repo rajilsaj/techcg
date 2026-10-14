@@ -6,6 +6,7 @@ Every change requested in a Claude Code session, newest first, with when it was 
 
 | Date & time (UTC-4) | Update | Pushed |
 | --- | --- | --- |
+| 2026-10-14 16:10 | Import source added in the live database (no code change): TechCentral (Afrique du Sud), RSS feed, 10 articles imported | Yes (data only) |
 | 2026-10-14 16:05 | Import source added in the live database (no code change): ITWeb Africa, read from its homepage (its /rss feed is ITWeb South Africa), 10 articles imported | Yes (data only) |
 | 2026-10-14 15:55 | Import sources added in the live database (no code change): VC4A (feed, 6 articles imported), Lionesses of Africa (blog feed, 10 imported), Techpoint Africa through Google News `site:techpoint.africa` (the site blocks robots, 403). StartupList Africa not added: a startup directory, not news | Yes (data only) |
 | 2026-10-14 15:35 | Header: Admin, Mon espace, Mon profil and Déconnexion in a dropdown under the avatar; Publier always beside Connexion / the account menu; Sources moved out of the top menu (footer only); homepage sort pills icon-only with the label on hover; « En discussion » button renamed « Rejoindre les discussions » | Yes (392cf05) |
