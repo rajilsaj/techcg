@@ -66,10 +66,10 @@ export function MobileTabBar({
     { href: "/publier", label: t("nav.submit"), icon: SquarePen, match: (p) => p.startsWith("/publier") },
     username
       ? {
-          href: `/profil/${username}`,
-          label: t("nav.profile"),
+          href: "/mon-espace",
+          label: t("nav.mySpace"),
           icon: UserRound,
-          match: (p) => p === `/profil/${username}`,
+          match: (p) => p === "/mon-espace" || p === `/profil/${username}`,
         }
       : { href: "/connexion", label: t("nav.login"), icon: LogIn, match: (p) => p === "/connexion" },
   ];
@@ -96,7 +96,7 @@ export function MobileTabBar({
                 <span
                   className={`grid h-7 w-12 place-items-center rounded-full transition-colors ${active ? "bg-accent/10" : ""}`}
                 >
-                  {avatarUrl && username && href === `/profil/${username}` ? (
+                  {avatarUrl && username && href === "/mon-espace" ? (
                     <Avatar src={avatarUrl} size={24} className={active ? "ring-2 ring-accent" : ""} />
                   ) : (
                     <Icon size={21} strokeWidth={active ? 2.4 : 1.8} aria-hidden />

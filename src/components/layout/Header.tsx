@@ -37,6 +37,9 @@ export async function Header() {
                     {t("nav.admin")}
                   </Link>
                 )}
+                <Link href="/mon-espace" className="hidden text-text hover:text-accent transition-colors md:inline">
+                  {t("nav.mySpace")}
+                </Link>
                 <Link href="/publier" className="hidden text-text hover:text-accent transition-colors md:inline">
                   {t("nav.submit")}
                 </Link>

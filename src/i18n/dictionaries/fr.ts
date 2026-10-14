@@ -18,6 +18,7 @@ export const fr = {
   "nav.profilesShort": "Profils",
   "nav.comments": "Commentaires",
   "nav.sources": "Sources",
+  "nav.mySpace": "Mon espace",
   "sources.kicker": "Sources",
   "sources.title1": "(nos informations)",
   "sources.title2": "viennent d'eux",
