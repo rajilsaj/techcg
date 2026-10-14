@@ -20,3 +20,12 @@ describe("cleanTitle", () => {
     expect(cleanTitle("  RDC : la 5G en préparation  ")).toBe("RDC : la 5G en préparation");
   });
 });
+
+describe("decodeEntities", () => {
+  it("decodes text a site encoded twice", async () => {
+    const { decodeEntities } = await import("@/lib/link-preview");
+    expect(decodeEntities("afin d&amp;#39;accompagner l&#39;&eacute;quipe &amp; ses &amp;quot;amis&amp;quot;")).toBe(
+      "afin d'accompagner l'équipe & ses \"amis\""
+    );
+  });
+});

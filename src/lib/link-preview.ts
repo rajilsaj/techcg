@@ -212,15 +212,24 @@ function classifyError(err: unknown): PreviewFailure {
 
 /* ---------- Parsing ---------- */
 
-const ENTITIES: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " };
+const ENTITIES: Record<string, string> = {
+  amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ",
+  // French letters and typography, common in French-language feeds.
+  eacute: "é", egrave: "è", ecirc: "ê", euml: "ë", agrave: "à", acirc: "â", auml: "ä", ccedil: "ç",
+  icirc: "î", iuml: "ï", ocirc: "ô", ouml: "ö", ugrave: "ù", ucirc: "û", uuml: "ü", yuml: "ÿ", oelig: "œ", aelig: "æ",
+  Eacute: "É", Egrave: "È", Ecirc: "Ê", Agrave: "À", Acirc: "Â", Ccedil: "Ç", Icirc: "Î", Ocirc: "Ô", Ucirc: "Û", OElig: "Œ",
+  laquo: "«", raquo: "»", lsquo: "‘", rsquo: "’", ldquo: "“", rdquo: "”", hellip: "…", ndash: "–", mdash: "—",
+  euro: "€", deg: "°", copy: "©", reg: "®", trade: "™", middot: "·", bull: "•", times: "×", thinsp: " ", ensp: " ", emsp: " ",
+};
 
 export function decodeEntities(value: string): string {
-  return value.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (match, entity: string) => {
+  // Some sites encode twice ("d&amp;#39;accompagner"): undo the outer layer first.
+  return value.replace(/&amp;(#x[0-9a-f]+|#\d+|[a-z]+);/gi, "&$1;").replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (match, entity: string) => {
     if (entity[0] === "#") {
       const code = entity[1].toLowerCase() === "x" ? parseInt(entity.slice(2), 16) : parseInt(entity.slice(1), 10);
       return Number.isFinite(code) && code > 0 && code < 0x110000 ? String.fromCodePoint(code) : match;
     }
-    return ENTITIES[entity.toLowerCase()] ?? match;
+    return ENTITIES[entity] ?? ENTITIES[entity.toLowerCase()] ?? match;
   });
 }
 
