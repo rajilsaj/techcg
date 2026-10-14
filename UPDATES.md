@@ -6,6 +6,7 @@ Every change requested in a Claude Code session, newest first, with when it was 
 
 | Date & time (UTC-4) | Update | Pushed |
 | --- | --- | --- |
+| 2026-10-14 19:45 | Advanced scraper: every new article page is analysed (main text, better summary, reading time « x min de lecture », keywords). Every candidate picture (og, JSON-LD, largest srcset in the article) is measured from its first bytes; only a large picture becomes the cover. No picture or a small one (logo, icon, thumbnail) → an illustration of the topic with the same icons as the sign-in page: IA (BrainCircuit), Startups (Rocket), Entrepreneurs (Briefcase), Événements (PartyPopper), Tech (Cpu). Admin › Importation › « Analyser les articles » upgrades existing articles in batches. New columns `Item.readingMinutes`, `Item.analyzedAt`. | Yes (8f01fce) |
 | 2026-10-14 19:00 | Loading bar under the main menu removed (not well integrated); the header line is plain again. | Yes (fbd037d) |
 | 2026-10-14 18:50 | Article page, signed-out visitors: a locked comment box (faded preview + lock) says « Connectez-vous pour commenter » with a « Se connecter » button beside it and « Créer un compte »; both bring the reader back to the article's comments. | Yes (8052ec3) |
 | 2026-10-14 18:30 | Loading bar: the line under the header turns into a green-yellow-red bar sliding back and forth while a page loads (link click, filter change) or while more stories load on scroll; a soft pulse instead for reduced-motion users. Also fixed the Google News subject name display in the admin. | Yes (29e949f) |
