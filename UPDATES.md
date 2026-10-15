@@ -6,6 +6,7 @@ Every change requested in a Claude Code session, newest first, with when it was 
 
 | Date & time (UTC-4) | Update | Pushed |
 | --- | --- | --- |
+| 2026-10-15 03:06 | Homepage: a « N nouveaux articles » button appears when new stories arrive (cron imports, members’ posts; checked every minute while the tab is open); one click shows them in place without reloading and highlights them briefly; the count also shows in the tab title | Yes (354f4bc) |
 | 2026-10-15 02:03 | Importer skips shopping deals (« bons plans », promos, soldes) by feed category and address. Sources added in the live database: Frandroid (France, 10 articles) and Business Insider (États-Unis, all-topics feed with « Filtrer » on, 9 tech articles; its tech feed /sai/rss is closed to robots) | Yes (486c411) |
 | 2026-10-15 01:54 | Import source added in the live database (no code change): Journal du Geek (France), RSS feed, « Filtrer » on (it also covers series and science); 4 tech articles imported, 6 off-topic set aside | Yes (data only) |
 | 2026-10-14 17:12 | Footer: « API pour les développeurs » link hidden (the API and its documentation at /api still work) | Yes (1bc6b41) |
