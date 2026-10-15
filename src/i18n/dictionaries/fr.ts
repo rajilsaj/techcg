@@ -346,7 +346,6 @@ export const fr = {
   "auth.card.haveAccount": "Déjà membre ?",
   "auth.card.toSignin": "Se connecter",
   "footer.proudly": "Fièrement propulsé par",
-  "footer.api": "API pour les développeurs",
   "footer.rights": "Tous droits réservés",
   "auth.stage.subtitle": "Lisez, votez et discutez la tech d'Afrique centrale.",
   "auth.stage.subtitleSignup": "Rejoignez la communauté tech d'Afrique centrale.",

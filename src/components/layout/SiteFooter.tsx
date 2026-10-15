@@ -23,9 +23,6 @@ export function SiteFooter() {
           <Link href="/discussions" className="hover:text-accent">
             {t("home.inDiscussion")}
           </Link>
-          <Link href="/api" className="hover:text-accent">
-            {t("footer.api")}
-          </Link>
         </p>
         <p>
           {t("footer.proudly")} <span className="font-semibold text-text">IALab · BantuHub Foundation</span>
