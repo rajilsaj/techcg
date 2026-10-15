@@ -111,3 +111,13 @@ describe("article links", () => {
     ]);
   });
 });
+
+describe("shopping deals", () => {
+  it("recognises deal posts by their address", async () => {
+    const { isDeal } = await import("@/lib/importer/run");
+    expect(isDeal("https://www.frandroid.com/bons-plans/3284247_la-montre-huawei-en-promotion")).toBe(true);
+    expect(isDeal("https://site.fr/deals/ipad")).toBe(true);
+    expect(isDeal("https://www.frandroid.com/android/3285739_whatsapp-permet-desormais")).toBe(false);
+    expect(isDeal("https://site.fr/2026/10/promotion-du-numerique-au-congo")).toBe(false);
+  });
+});

@@ -46,7 +46,17 @@ const FAILURES: Record<PreviewFailure, string> = {
 };
 
 /** Feed categories that mark something other than a news article. */
-const NOT_NEWS = /^(newsletters?|podcasts?|sponsored|sponsoris[ée]e?s?|publi-?reportages?|publireportage|partner content|tc daily)$/i;
+const NOT_NEWS = /^(newsletters?|podcasts?|sponsored|sponsoris[ée]e?s?|publi-?reportages?|publireportage|partner content|tc daily|bons? plans?|deals?|promos?|soldes|black friday|codes? promo)$/i;
+/** Shopping deals (« bons plans ») by their address, for feeds that don't tag them. */
+const DEAL_PATH = /\/(bons?-plans?|deals?|promos?|soldes|codes?-promo)(\/|$)/i;
+
+export function isDeal(url: string): boolean {
+  try {
+    return DEAL_PATH.test(new URL(url).pathname);
+  } catch {
+    return false;
+  }
+}
 
 /** Decodes leftover HTML entities (some sites encode twice) and drops leading emoji. */
 export function cleanTitle(raw: string): string {
@@ -323,7 +333,7 @@ async function importFrom(source: {
   const unique: FoundArticle[] = [];
   const listed = found.articles
     .map((a) => ({ ...a, url: canonicalUrl(a.url), title: cleanTitle(a.title) }))
-    .filter((a) => a.title && !a.keywords.some((k) => NOT_NEWS.test(k.trim())))
+    .filter((a) => a.title && !a.keywords.some((k) => NOT_NEWS.test(k.trim())) && !isDeal(a.url))
     .sort((a, b) => (b.publishedAt?.getTime() ?? 0) - (a.publishedAt?.getTime() ?? 0));
   for (const a of listed) {
     const key = urlKey(a.url) ?? a.url;
