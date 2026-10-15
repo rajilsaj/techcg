@@ -6,10 +6,12 @@ import { Plus } from "lucide-react";
 import { AccountMenu } from "@/components/layout/AccountMenu";
 import { NavLinks } from "@/components/layout/NavLinks";
 import { MobileTabBar } from "@/components/layout/MobileTabBar";
+import { UpdateStrip } from "@/components/layout/UpdateStrip";
+import { importStatus } from "@/lib/import-status";
 import { t } from "@/i18n";
 
 export async function Header() {
-  const [session, { siteName, visibleMenus }] = await Promise.all([getSession(), getSettings()]);
+  const [session, { siteName, visibleMenus }, updates] = await Promise.all([getSession(), getSettings(), importStatus()]);
 
   // On phones the section links, Publier and the profile move to the bottom tab bar.
   return (
@@ -51,6 +53,8 @@ export async function Header() {
           </div>
         </div>
       </header>
+      {/* Under the menu: last and next news update, with a countdown. */}
+      <UpdateStrip initial={updates} />
       <MobileTabBar username={session?.username ?? null} avatarUrl={session?.avatarUrl ?? null} visible={visibleMenus} />
     </>
   );

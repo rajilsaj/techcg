@@ -6,6 +6,7 @@ import { stripLeadingTitle } from "../excerpt";
 import { calculateRankScore } from "../ranking";
 import { slugify } from "../taxonomy";
 import { frenchTitle, translateToFrench } from "../translate";
+import { isFrench } from "../language";
 import { detectTopics, setAutoTags } from "../topics";
 import { isTopic } from "../topic-list";
 import { isGoogleNewsSource, searchGoogleNews } from "./google-news";
@@ -388,7 +389,7 @@ async function importFrom(source: {
     const language = article.language ?? found.language ?? null;
     let excerpt = article.summary;
     let excerptLang: string | null = excerpt ? language : null;
-    if (excerpt && excerptLang !== "fr") {
+    if (excerpt && !isFrench(excerpt, excerptLang)) {
       const translation = await translateToFrench(excerpt, excerptLang);
       if (translation) {
         excerpt = translation.text;

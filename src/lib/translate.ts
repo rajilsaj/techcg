@@ -5,6 +5,8 @@
  * the original text and retry later.
  */
 
+import { detectLanguage, isFrench } from "./language";
+
 const ENDPOINT = "https://api.mymemory.translated.net/get";
 const TIMEOUT_MS = 8000;
 const MAX_QUERY_BYTES = 480; // MyMemory rejects queries over 500 bytes
@@ -46,9 +48,13 @@ function decodeEntities(value: string): string {
 export async function translateToFrench(text: string, sourceLang?: string | null): Promise<Translation | null> {
   const query = fitToBytes(text.trim());
   if (!query) return null;
-  if (sourceLang === "fr") return { text: query, sourceLang: "fr" };
+  // The text's own words decide first: a site may declare French for an English press release,
+  // and the translator's detection sometimes takes Portuguese for French.
+  const detected = detectLanguage(query);
+  if (detected === "fr" || (!detected && sourceLang === "fr")) return { text: query, sourceLang: "fr" };
+  const from = detected ?? (sourceLang && sourceLang !== "und" && sourceLang !== "fr" ? sourceLang : null);
 
-  const params = new URLSearchParams({ q: query, langpair: `${sourceLang || "autodetect"}|fr` });
+  const params = new URLSearchParams({ q: query, langpair: `${from || "autodetect"}|fr` });
   if (process.env.MYMEMORY_EMAIL) params.set("de", process.env.MYMEMORY_EMAIL);
 
   try {
@@ -67,9 +73,13 @@ export async function translateToFrench(text: string, sourceLang?: string | null
       return null;
     }
 
-    const detected = data.responseData?.detectedLanguage?.toLowerCase().split("-")[0] ?? sourceLang ?? null;
-    if (detected === "fr") return { text: query, sourceLang: "fr" };
-    return { text: decodeEntities(translated), sourceLang: detected };
+    const reported = data.responseData?.detectedLanguage?.toLowerCase().split("-")[0] ?? null;
+    // The translator thinks it's French: believe it only when our own detection couldn't tell.
+    if (reported === "fr" && !detected) return { text: query, sourceLang: "fr" };
+    const result = decodeEntities(translated);
+    // Not translated after all (same text, or still clearly another language): retried later.
+    if (result === query || (detectLanguage(result) ?? "fr") !== "fr") return null;
+    return { text: result, sourceLang: from ?? reported };
   } catch {
     return null;
   }
@@ -85,7 +95,7 @@ export interface FrenchTitle {
 
 /** A story title in French. Keeps the original when it's already French or translation fails. */
 export async function frenchTitle(title: string, lang: string | null | undefined): Promise<FrenchTitle> {
-  if (lang === "fr") return { title, titleLang: "fr", originalTitle: null };
+  if (isFrench(title, lang)) return { title, titleLang: "fr", originalTitle: null };
   const translation = await translateToFrench(title, lang);
   if (!translation) return { title, titleLang: lang || "und", originalTitle: null };
   if (translation.sourceLang === "fr" || translation.text === title) return { title, titleLang: "fr", originalTitle: null };

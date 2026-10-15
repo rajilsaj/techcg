@@ -2,6 +2,7 @@ import { prisma } from "./db";
 import { analyzeArticle } from "./scraper/article";
 import { worthKeeping } from "./scraper/image-size";
 import { frenchTitle, translateToFrench } from "./translate";
+import { isFrench } from "./language";
 import { detectTopics, setAutoTags } from "./topics";
 import { stripLeadingTitle } from "./excerpt";
 
@@ -25,8 +26,8 @@ export function needsEnrichment(item: PreviewState, now = Date.now()): boolean {
   if (!item.url) return false;
   if (!item.previewAt) return true;
   const age = now - item.previewAt.getTime();
-  if (item.excerpt && item.excerptLang !== "fr") return age > TRANSLATION_RETRY_MS;
-  if (item.title && item.titleLang !== undefined && item.titleLang !== "fr") return age > TRANSLATION_RETRY_MS;
+  if (item.excerpt && !isFrench(item.excerpt, item.excerptLang)) return age > TRANSLATION_RETRY_MS;
+  if (item.title && item.titleLang !== undefined && !isFrench(item.title, item.titleLang)) return age > TRANSLATION_RETRY_MS;
   if (!item.excerpt && !item.imageUrl) return age > FETCH_RETRY_MS;
   return false;
 }
@@ -86,7 +87,7 @@ export async function enrichStory(itemId: number): Promise<void> {
       }
     }
 
-    if (excerpt && excerptLang !== "fr") {
+    if (excerpt && !isFrench(excerpt, excerptLang)) {
       const translation = await translateToFrench(excerpt, excerptLang);
       if (translation) {
         excerpt = translation.text;
@@ -98,7 +99,7 @@ export async function enrichStory(itemId: number): Promise<void> {
 
     // The title: members may type it in any language; translate unless it's French.
     let title = { title: item.title, titleLang: item.titleLang, originalTitle: item.originalTitle };
-    if (item.title && item.titleLang !== "fr") {
+    if (item.title && !isFrench(item.title, item.titleLang)) {
       // A title that matches a French page is French; otherwise let the translator detect it.
       title = await frenchTitle(item.title, pageLang === "fr" ? null : item.titleLang && item.titleLang !== "und" ? item.titleLang : null);
     }
