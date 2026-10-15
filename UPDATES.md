@@ -6,6 +6,7 @@ Every change requested in a Claude Code session, newest first, with when it was 
 
 | Date & time (UTC-4) | Update | Pushed |
 | --- | --- | --- |
+| 2026-10-15 01:54 | Import source added in the live database (no code change): Journal du Geek (France), RSS feed, « Filtrer » on (it also covers series and science); 4 tech articles imported, 6 off-topic set aside | Yes (data only) |
 | 2026-10-14 17:12 | Footer: « API pour les développeurs » link hidden (the API and its documentation at /api still work) | Yes (1bc6b41) |
 | 2026-10-14 17:08 | ARPCE (Congo) switched to the « Navigateur » option in the live database (no code change): first browser import on Vercel worked, 1 article imported | Yes (data only) |
 | 2026-10-14 16:26 | Importer reliability: retries, unchanged feeds skipped (ETag/Last-Modified), one request per 0.5 s per site, TechCGBot user agent + /robot page, robots.txt respected, optional « Navigateur » (headless browser) per source, « En panne » alerts after 3 failures, one import per source at a time. Duplicates: same address (variants) or same headline within 14 days skipped on import and member submissions; Admin › Articles › Doublons to merge (18 existing duplicates merged to the trash). Admin › Importation › Guide de configuration. Ver Angola now via Google News (direct source disabled). Intégrations no longer deletes site: Google News sources | Yes (23d1bf3) |
