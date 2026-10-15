@@ -36,7 +36,7 @@ export function StoryItem({ rank, story, isLoggedIn }: StoryItemProps) {
 
   return (
     <HideableStory itemId={story.id}>
-      <li className="flex gap-3 border-b border-border py-5 sm:gap-4">
+      <li data-story-id={story.id} className="flex gap-3 border-b border-border py-5 sm:gap-4">
         <span className="w-6 shrink-0 text-right text-lg font-semibold leading-6 text-accent tabular-nums">
           {rank}
         </span>

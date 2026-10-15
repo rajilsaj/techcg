@@ -242,3 +242,22 @@ html {
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
+
+/* Stories that just arrived (« N nouveaux articles » clicked): a short accent wash that fades out. */
+@keyframes story-new {
+  from {
+    background-color: color-mix(in srgb, var(--accent) 12%, transparent);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+.story-new {
+  animation: story-new 6s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .story-new {
+    animation: none;
+    box-shadow: inset 3px 0 0 var(--accent);
+  }
+}

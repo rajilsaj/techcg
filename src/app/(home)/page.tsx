@@ -2,13 +2,15 @@ import { after } from "next/server";
 import { getSession } from "@/lib/auth";
 import { importOnVisit } from "@/lib/importer/schedule";
 import { listStories, STORIES_PER_PAGE } from "@/lib/stories";
-import { filtersQuery, filtersRecord, filtersWhere, hasFilters, HOME_STORIES, parseStoryFilters } from "@/lib/story-filters";
+import { DEFAULT_SORT, filtersQuery, filtersRecord, filtersWhere, hasFilters, HOME_STORIES, parseStoryFilters } from "@/lib/story-filters";
 import { Header } from "@/components/layout/Header";
 import { InfiniteStoryList } from "@/components/list/InfiniteStoryList";
 import { StoryFilterBar } from "@/components/list/StoryFilterBar";
 import { RegionSection, SectionTitle } from "@/components/list/RegionSection";
 import { HomeViews } from "@/components/list/HomeViews";
 import { liveDiscussionCount } from "@/lib/discussions";
+import { latestHomeStoryId } from "@/lib/home-latest";
+import { NewStoriesNotice } from "@/components/list/NewStoriesNotice";
 import { nextPageHref, pageNumber } from "@/components/list/StoryList";
 import { t } from "@/i18n";
 
@@ -45,7 +47,7 @@ export default async function Home({ searchParams }: PageProps) {
           })
         ).stories;
   // A story has one region tag, so the two sections can be fetched together.
-  const [congo, africa, live] = await Promise.all([lead("congo", []), lead("afrique", []), liveDiscussionCount()]);
+  const [congo, africa, live, latestId] = await Promise.all([lead("congo", []), lead("afrique", []), liveDiscussionCount(), latestHomeStoryId()]);
   const leadIds = [...congo, ...africa].map((story) => story.id);
   const leading = leadIds.length > 0 && !params.cursor;
 
@@ -57,6 +59,7 @@ export default async function Home({ searchParams }: PageProps) {
   });
 
   const query = filtersQuery(filters).toString();
+  const newestQuery = filtersQuery(filters, { sort: DEFAULT_SORT }).toString();
   const fallback = nextPageHref("/", nextCursor, page);
 
   return (
@@ -65,6 +68,10 @@ export default async function Home({ searchParams }: PageProps) {
       <div className="mx-auto max-w-5xl px-4 pt-4">
         <StoryFilterBar filters={filters} />
         <HomeViews filters={filters} liveCount={live} />
+        {/* New stories (cron imports, members' posts) announced without a reload, on the first page of the unfiltered list. */}
+        {!hasFilters(filters) && !params.cursor && (
+          <NewStoriesNotice latestId={latestId} sortIsNewest={filters.sort === DEFAULT_SORT} newestHref={newestQuery ? `/?${newestQuery}` : "/"} />
+        )}
         {leading && (
           <>
             <RegionSection
@@ -93,8 +100,8 @@ export default async function Home({ searchParams }: PageProps) {
           </>
         )}
         <InfiniteStoryList
-          // A new search starts a fresh list.
-          key={query}
+          // A new search starts a fresh list, and so do newly arrived stories (« N nouveaux articles »).
+          key={`${query}:${latestId}`}
           feed="top"
           initialStories={stories}
           initialCursor={nextCursor}
