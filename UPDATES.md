@@ -6,6 +6,7 @@ Every change requested in a Claude Code session, newest first, with when it was 
 
 | Date & time (UTC-4) | Update | Pushed |
 | --- | --- | --- |
+| 2026-10-20 22:41 | Running light on the latest stories now only in the Congo section (Afrique and the rest are plain again), in the Congo flag's colours: vert → jaune → rouge around the card, golden glow, « Nouveau » badge with a dot that turns green, yellow, red | Yes (d3442e4) |
 | 2026-10-20 22:34 | Latest stories redesigned: each of the 3 is now a rounded card with a comet of light (blue → cyan → violet) running around its border, a soft breathing glow and a « Nouveau » badge with a live dot; still when the device asks for reduced motion | Yes (b87f3a8) |
 | 2026-10-20 22:24 | Homepage: the 3 newest stories of the Congo and Afrique sections (by date, whatever the sort tab) have a rounded blue outline that blinks; steady outline when the device asks for reduced motion | Yes (fdcab27) |
 | 2026-10-15 04:25 | Import source added in the live database (no code change): TechCabal Startups (category feed /category/startups/feed/), 8 articles imported, 2 already present via the main TechCabal feed | Yes (data only) |
