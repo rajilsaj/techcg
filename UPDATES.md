@@ -6,6 +6,7 @@ Every change requested in a Claude Code session, newest first, with when it was 
 
 | Date & time (UTC-4) | Update | Pushed |
 | --- | --- | --- |
+| 2026-10-20 22:34 | Latest stories redesigned: each of the 3 is now a rounded card with a comet of light (blue → cyan → violet) running around its border, a soft breathing glow and a « Nouveau » badge with a live dot; still when the device asks for reduced motion | Yes (b87f3a8) |
 | 2026-10-20 22:24 | Homepage: the 3 newest stories of the Congo and Afrique sections (by date, whatever the sort tab) have a rounded blue outline that blinks; steady outline when the device asks for reduced motion | Yes (fdcab27) |
 | 2026-10-15 04:25 | Import source added in the live database (no code change): TechCabal Startups (category feed /category/startups/feed/), 8 articles imported, 2 already present via the main TechCabal feed | Yes (data only) |
 | 2026-10-15 04:14 | Translation into French made reliable: language detected from the text itself (Portuguese titles were taken for French, English press releases trusted as French), results still not French are rejected and retried, and the scheduled import now translates up to 15 waiting titles/excerpts per run (12 titles and 17 excerpts were waiting). New strip under the main menu: when the news was last updated, the next scheduled update (:00/:30) and a live countdown | Yes (7a10608) |
