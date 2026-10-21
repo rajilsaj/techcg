@@ -45,6 +45,12 @@ export function StoryItem({ rank, story, isLoggedIn, latest }: StoryItemProps) {
 
         <article className="min-w-0 flex-1">
           <h2 className="text-base font-semibold leading-6 text-text">
+            {latest && (
+              <span className="story-latest-badge">
+                <span className="story-latest-dot" aria-hidden />
+                {t("story.latest")}
+              </span>
+            )}
             <a
               href={href}
               {...(story.url ? { target: "_blank", rel: "noopener noreferrer", "data-open": story.id } : {})}

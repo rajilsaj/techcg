@@ -129,6 +129,7 @@ export const fr = {
   "story.hidden": "Publication masquée.",
   "story.undoHide": "Annuler",
   "story.history": "Historique",
+  "story.latest": "Nouveau",
   "story.discuss": "Discuter",
   "story.readingTime": "{minutes} min de lecture",
   "story.excerptLabel": "Extrait de l'article",
