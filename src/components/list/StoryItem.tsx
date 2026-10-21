@@ -15,12 +15,14 @@ export interface StoryItemProps {
   rank: number;
   story: ListedStory;
   isLoggedIn: boolean;
+  /** One of the latest stories of its homepage section: a blinking outline. */
+  latest?: boolean;
 }
 
 const actionClass =
   "inline-flex items-center gap-1 text-xs text-text-secondary hover:text-accent transition-colors";
 
-export function StoryItem({ rank, story, isLoggedIn }: StoryItemProps) {
+export function StoryItem({ rank, story, isLoggedIn, latest }: StoryItemProps) {
   const domain = story.url ? getDomain(story.url) : "";
   const title = story.title || t("common.untitled");
   const href = story.url || `/publication/${story.id}`;
@@ -36,7 +38,7 @@ export function StoryItem({ rank, story, isLoggedIn }: StoryItemProps) {
 
   return (
     <HideableStory itemId={story.id}>
-      <li data-story-id={story.id} className="flex gap-3 border-b border-border py-5 sm:gap-4">
+      <li data-story-id={story.id} className={`flex gap-3 border-b border-border py-5 sm:gap-4${latest ? " story-latest" : ""}`}>
         <span className="w-6 shrink-0 text-right text-lg font-semibold leading-6 text-accent tabular-nums">
           {rank}
         </span>

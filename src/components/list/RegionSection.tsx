@@ -3,6 +3,9 @@ import type { ReactNode } from "react";
 import type { ListedStory } from "@/lib/stories";
 import { StoryItem } from "./StoryItem";
 
+/** Newest stories of a section that get a blinking outline. */
+const LATEST_COUNT = 3;
+
 /** A titled group of stories on the homepage (Congo, Afrique). */
 export function RegionSection({
   id,
@@ -22,6 +25,13 @@ export function RegionSection({
   isLoggedIn: boolean;
 }) {
   if (stories.length === 0) return null;
+  // The section may be ordered by popularity or discussion: pick the newest by date.
+  const latest = new Set(
+    [...stories]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, LATEST_COUNT)
+      .map((story) => story.id),
+  );
   return (
     <section aria-labelledby={id} className="mt-10">
       <SectionTitle id={id} count={stories.length} more={{ href: moreHref, label: moreLabel }}>
@@ -29,7 +39,7 @@ export function RegionSection({
       </SectionTitle>
       <ol>
         {stories.map((story, i) => (
-          <StoryItem key={story.id} rank={firstRank + i} story={story} isLoggedIn={isLoggedIn} />
+          <StoryItem key={story.id} rank={firstRank + i} story={story} isLoggedIn={isLoggedIn} latest={latest.has(story.id)} />
         ))}
       </ol>
     </section>

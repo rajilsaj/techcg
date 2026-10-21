@@ -261,3 +261,22 @@ html {
     box-shadow: inset 3px 0 0 var(--accent);
   }
 }
+
+/* Latest stories of the Congo and Afrique sections: a rounded accent outline that blinks. */
+@keyframes story-latest {
+  50% {
+    outline-color: transparent;
+  }
+}
+.story-latest {
+  border-radius: 0.5rem;
+  padding-inline: 0.75rem;
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  animation: story-latest 1.6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .story-latest {
+    animation: none;
+  }
+}
