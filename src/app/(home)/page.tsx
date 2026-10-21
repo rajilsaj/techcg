@@ -82,6 +82,7 @@ export default async function Home({ searchParams }: PageProps) {
               stories={congo}
               firstRank={1}
               isLoggedIn={!!session}
+              highlightLatest
             />
             <RegionSection
               id="news-africa"

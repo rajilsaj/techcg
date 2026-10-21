@@ -263,9 +263,14 @@ html {
 }
 
 /*
- * Latest stories of the Congo and Afrique sections: a card whose border carries a comet of light
- * (blue → cyan → violet) running around it, a breathing glow, and a « Nouveau » badge with a live dot.
+ * Latest stories of the Congo section: a card whose border carries a light in the Congo flag's
+ * colours (vert, jaune, rouge) running around it, a breathing glow, and a « Nouveau » badge with a live dot.
  */
+:root {
+  --congo-green: #009543;
+  --congo-yellow: #fbde4a;
+  --congo-red: #dc241f;
+}
 @property --story-angle {
   syntax: "<angle>";
   inherits: false;
@@ -278,7 +283,7 @@ html {
 }
 @keyframes story-latest-glow {
   50% {
-    box-shadow: 0 0 28px -6px color-mix(in srgb, var(--accent) 55%, transparent);
+    box-shadow: 0 0 28px -6px color-mix(in srgb, var(--congo-yellow) 70%, transparent);
   }
 }
 .story-latest {
@@ -287,8 +292,8 @@ html {
   margin-block: 0.75rem;
   padding: 1.25rem 0.875rem;
   background:
-    linear-gradient(135deg, color-mix(in srgb, var(--accent) 7%, var(--bg)), var(--bg) 55%) padding-box,
-    conic-gradient(from var(--story-angle), transparent 0 50%, #00d4ff 68%, var(--accent) 80%, #8b5cf6 92%, transparent) border-box,
+    linear-gradient(135deg, color-mix(in srgb, var(--congo-green) 7%, var(--bg)), var(--bg) 55%) padding-box,
+    conic-gradient(from var(--story-angle), transparent 0 40%, var(--congo-green) 58%, var(--congo-yellow) 74%, var(--congo-red) 90%, transparent) border-box,
     linear-gradient(var(--border), var(--border)) border-box;
   box-shadow: 0 0 0 0 transparent;
   animation:
@@ -321,14 +326,20 @@ html {
   letter-spacing: 0.08em;
   line-height: 1rem;
   text-transform: uppercase;
-  color: #fff;
-  background: linear-gradient(90deg, var(--accent), #8b5cf6, #00b4e6, var(--accent));
-  background-size: 300% 100%;
-  animation: story-latest-sheen 4s linear infinite;
+  color: var(--bg);
+  background: var(--text);
 }
-@keyframes story-latest-sheen {
-  to {
-    background-position: 300% 0;
+/* The live dot turns vert → jaune → rouge. */
+@keyframes story-latest-flag {
+  0%,
+  100% {
+    background-color: var(--congo-green);
+  }
+  33% {
+    background-color: var(--congo-yellow);
+  }
+  66% {
+    background-color: var(--congo-red);
   }
 }
 .story-latest-dot {
@@ -336,14 +347,15 @@ html {
   width: 0.375rem;
   height: 0.375rem;
   border-radius: 9999px;
-  background: #fff;
+  background: var(--congo-green);
+  animation: story-latest-flag 3s steps(1) infinite;
 }
 .story-latest-dot::after {
   content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: #fff;
+  background: inherit;
   animation: story-latest-ping 1.4s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
 @keyframes story-latest-ping {
@@ -358,7 +370,7 @@ html {
     --story-angle: 200deg;
     animation: none;
   }
-  .story-latest-badge,
+  .story-latest-dot,
   .story-latest-dot::after {
     animation: none;
   }

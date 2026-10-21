@@ -15,6 +15,7 @@ export function RegionSection({
   stories,
   firstRank,
   isLoggedIn,
+  highlightLatest = false,
 }: {
   id: string;
   title: ReactNode;
@@ -23,11 +24,13 @@ export function RegionSection({
   stories: ListedStory[];
   firstRank: number;
   isLoggedIn: boolean;
+  /** Give the newest stories a running light in the Congo flag's colours. */
+  highlightLatest?: boolean;
 }) {
   if (stories.length === 0) return null;
   // The section may be ordered by popularity or discussion: pick the newest by date.
   const latest = new Set(
-    [...stories]
+    (highlightLatest ? [...stories] : [])
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, LATEST_COUNT)
       .map((story) => story.id),
