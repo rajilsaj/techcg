@@ -56,9 +56,19 @@ const RULES: Record<TopicSlug, { exact?: RegExp; words: RegExp; contextual?: Reg
   },
 };
 
-/** Both Congos: names, people, cities. */
-const CONGO_WORDS =
-  / (congo|congos|congolais|congolaise|congolaises|rdc|r d c|brazzaville|brazza|pointe noire|dolisie|nkayi|ouesso|owando|impfondo|kinshasa|lubumbashi|goma|bukavu|kisangani|mbuji mayi|kananga|matadi|kolwezi|mbandaka) /;
+/**
+ * Congo-Brazzaville, the « Congo » of this site. RD Congo counts as the rest of Africa.
+ * Names that only mean Brazzaville's Congo: enough on their own, even in a story that also mentions the RDC.
+ */
+const BRAZZAVILLE_WORDS =
+  / (congo brazzaville|congo brazza|republique du congo|republic of (the )?congo|brazzaville|brazza|brazzavillois(e|es)?|pointe noire|pontenegrin(e|es|s)?|dolisie|nkayi|ouesso|owando|impfondo|sibiti|madingou|kinkala|djambala|sassou nguesso|anatole collinet makosso) /;
+/** « Congo », « congolais »… without saying which one: Brazzaville's, unless the story is about the RDC. */
+const CONGO_WORDS = / (congo|congos|congolais|congolaise|congolaises) /;
+/** The river and its basin, shared by both Congos: they don't say which one. */
+const SHARED_CONGO = / (fleuve (du )?congo|bassin du congo|congo river|congo basin)(?= )/g;
+/** RD Congo: its names, cities, provinces and president. */
+const RDC_WORDS =
+  / (rdc|r d c|rd congo|r d congo|dr congo|drc|republique democratique du congo|democratic republic of (the )?congo|congo kinshasa|kinshasa|kinois(e|es)?|lubumbashi|goma|bukavu|kisangani|mbuji mayi|kananga|matadi|kolwezi|mbandaka|likasi|tshikapa|kikwit|uvira|butembo|bunia|kivu|nord kivu|sud kivu|katanga|haut katanga|kasai|ituri|kongo central|tshisekedi|gecamines|regideso)(?= )/g;
 
 /** The rest of Africa: the continent, its countries and main tech cities. */
 const AFRICA_WORDS =
@@ -78,18 +88,42 @@ function hostname(url: string | null | undefined): string {
   }
 }
 
-/** Whether a story is about Congo: the words above, or a .cg / .cd website. */
-export function isCongoStory(text: string, url?: string | null): boolean {
-  return /\.(cg|cd)$/i.test(hostname(url)) || CONGO_WORDS.test(normalize(text));
+/** Where a story stands between the two Congos, from its words, its website and its source. */
+function congoKind(text: string, url?: string | null, rdcSource = false): "brazzaville" | "rdc" | null {
+  const host = hostname(url);
+  if (/\.cg$/i.test(host)) return "brazzaville";
+  const normalized = normalize(text);
+  // The RDC's names contain « congo »: take them out before looking for Brazzaville's Congo.
+  const rest = normalized.replace(RDC_WORDS, " ");
+  if (BRAZZAVILLE_WORDS.test(rest)) return "brazzaville";
+  // « le Congo » next to the RDC's name is the other Congo (« le Cameroun, le Congo et la RDC »).
+  if (rest !== normalized && !rdcSource && / congo /.test(rest.replace(SHARED_CONGO, " "))) return "brazzaville";
+  if (/\.cd$/i.test(host) || rest !== normalized) return "rdc";
+  // An RDC website's « Congo » is the RDC.
+  if (CONGO_WORDS.test(rest)) return rdcSource ? "rdc" : "brazzaville";
+  return null;
 }
 
-/** Congo first, then the rest of Africa; null for the rest of the world. */
-export function detectRegion(text: string, url?: string | null): RegionSlug | null {
-  if (isCongoStory(text, url)) return "congo";
+/** Whether a story is about Congo-Brazzaville (stories about the RDC are not: they're Afrique). */
+export function isCongoStory(text: string, url?: string | null, rdcSource = false): boolean {
+  return congoKind(text, url, rdcSource) === "brazzaville";
+}
+
+/**
+ * Congo first, then the rest of Africa (RD Congo included); null for the rest of the world.
+ * `rdcSource`: the story comes from an RDC website (its « Congo » means the RDC).
+ */
+export function detectRegion(text: string, url?: string | null, rdcSource = false): RegionSlug | null {
+  const congo = congoKind(text, url, rdcSource);
+  if (congo === "brazzaville") return "congo";
+  if (congo === "rdc") return "afrique";
   const host = hostname(url);
   if (AFRICAN_SITES.test(host) || AFRICAN_TLDS.test(host) || AFRICA_WORDS.test(normalize(text))) return "afrique";
   return null;
 }
+
+/** `ImportSource.country` of RDC websites. */
+export const RDC_COUNTRY = "RD Congo";
 
 /** Number of different terms of `pattern` found in `text` ("startup", "levée de fonds"… count once each). */
 function distinctTerms(pattern: RegExp, text: string): number {
@@ -112,7 +146,7 @@ function distinctTerms(pattern: RegExp, text: string): number {
  */
 export function detectTopics(
   parts: { title?: string | null; excerpt?: string | null; keywords?: string[] | null; url?: string | null },
-  { strict = false }: { strict?: boolean } = {}
+  { strict = false, sourceCountry }: { strict?: boolean; sourceCountry?: string | null } = {}
 ): AutoTagSlug[] {
   const text = [parts.title, parts.excerpt, ...(parts.keywords ?? [])].filter(Boolean).join(" . ");
   // Section subdomains and paths ("intelligence-artificielle.developpez.com", "/startups/") count too.
@@ -140,7 +174,7 @@ export function detectTopics(
   // "Concours", "congrès", "forum"… are events for this site only around tech, startups or entrepreneurs.
   const ecosystem = found.has("tech") || found.has("startups") || found.has("entrepreneurs");
   if (!found.has("evenements") && ecosystem && RULES.evenements.contextual?.test(normalized)) found.add("evenements");
-  const region = detectRegion(text, parts.url);
+  const region = detectRegion(text, parts.url, sourceCountry === RDC_COUNTRY);
   // Événements: only events in Congo or elsewhere in Africa (a Las Vegas or Paris show is not one for this site).
   if (!region) found.delete("evenements");
   const topics: AutoTagSlug[] = TOPICS.map((topic) => topic.slug).filter((slug) => found.has(slug));

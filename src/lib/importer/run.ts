@@ -317,6 +317,8 @@ async function importFrom(source: {
   categoryId: number | null;
   topic: string | null;
   strict: boolean;
+  /** « RD Congo »: its stories about « Congo » go to Afrique. */
+  country: string | null;
   etag: string | null;
   lastModified: string | null;
 }, renderer?: Renderer): Promise<ImportResult> {
@@ -406,7 +408,7 @@ async function importFrom(source: {
         keywords: article.keywords,
         url: article.url,
       },
-      { strict: source.strict }
+      { strict: source.strict, sourceCountry: source.country }
     );
     // No meta topic found: use the source's own (e.g. a Google News search on "startups Congo").
     // Événements stays for Congo and Africa only, even as a fallback.

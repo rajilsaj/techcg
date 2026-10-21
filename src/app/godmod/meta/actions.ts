@@ -47,14 +47,17 @@ export async function resetMetaAction(itemId: number): Promise<MetaState | { err
   const item = Number.isInteger(itemId)
     ? await prisma.item.findUnique({
         where: { id: itemId },
-        select: { title: true, originalTitle: true, excerpt: true, keywords: true, url: true },
+        select: { title: true, originalTitle: true, excerpt: true, keywords: true, url: true, importSource: { select: { country: true } } },
       })
     : null;
   if (!item) return { error: "Article introuvable." };
   await prisma.item.update({ where: { id: itemId }, data: { metaManual: false } });
   await setAutoTags(
     itemId,
-    detectTopics({ title: `${item.title} . ${item.originalTitle ?? ""}`, excerpt: item.excerpt, keywords: item.keywords, url: item.url })
+    detectTopics(
+      { title: `${item.title} . ${item.originalTitle ?? ""}`, excerpt: item.excerpt, keywords: item.keywords, url: item.url },
+      { sourceCountry: item.importSource?.country }
+    )
   );
   revalidatePath("/");
   return metaOf(itemId);

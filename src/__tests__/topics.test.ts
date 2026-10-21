@@ -18,7 +18,7 @@ describe("detectTopics", () => {
 
   it("separates startups from entrepreneurs, and spots events", () => {
     expect(detectTopics({ title: "Une start-up congolaise lève 2 millions de dollars" })).toEqual(["startups", "tech", "congo"]);
-    expect(detectTopics({ title: "Rencontre avec la fondatrice de Kinshasa Digital" })).toEqual(["entrepreneurs", "tech", "congo"]);
+    expect(detectTopics({ title: "Rencontre avec la fondatrice de Kinshasa Digital" })).toEqual(["entrepreneurs", "tech", "afrique"]);
     expect(detectTopics({ title: "Le hackathon de Brazzaville ouvre ses inscriptions" })).toEqual(["evenements", "congo"]);
     expect(detectTopics({ title: "VivaTech 2026 : les startups africaines de l'IA à l'honneur" })).toEqual(["startups", "tech", "evenements", "afrique"]);
   });
@@ -29,7 +29,7 @@ describe("detectTopics", () => {
   });
 
   it("tells Congo, the rest of Africa and the world apart", () => {
-    expect(detectRegion("RDC : la 5G en préparation")).toBe("congo");
+    expect(detectRegion("RDC : la 5G en préparation")).toBe("afrique");
     expect(detectRegion("Kenya : Microsoft ferme son centre de Nairobi")).toBe("afrique");
     expect(detectRegion("NeoFleet Capital raises $4M to finance taxi fleets in Senegal")).toBe("afrique");
     expect(detectRegion("Un article sans pays", "https://techcabal.com/2026/10/13/x")).toBe("afrique");
@@ -65,13 +65,33 @@ describe("story filters", () => {
 });
 
 describe("isCongoStory", () => {
-  it("spots both Congos, their cities and .cg/.cd sites", () => {
-    expect(isCongoStory("RDC : la 5G en préparation")).toBe(true);
+  it("spots Congo-Brazzaville, its cities and .cg sites", () => {
     expect(isCongoStory("Fibre optique : après le Cameroun et le Congo, la Centrafrique veut s'interconnecter")).toBe(true);
     expect(isCongoStory("Pointe-Noire accueille un nouveau data center")).toBe(true);
     expect(isCongoStory("Les opérateurs congolais baissent leurs prix")).toBe(true);
     expect(isCongoStory("Une annonce", "https://www.adiac-congo.cg/article/1")).toBe(true);
-    expect(isCongoStory("Une annonce", "https://actualite.cd/2026/10/13/x")).toBe(true);
+  });
+  it("counts RD Congo as the rest of Africa", () => {
+    expect(isCongoStory("RDC : la 5G en préparation")).toBe(false);
+    expect(isCongoStory("Une annonce", "https://actualite.cd/2026/10/13/x")).toBe(false);
+    expect(detectRegion("Une annonce", "https://actualite.cd/2026/10/13/x")).toBe("afrique");
+    expect(detectRegion("La République démocratique du Congo lance son identité numérique")).toBe("afrique");
+    expect(detectRegion("Democratic Republic of the Congo: Vodacom expands 4G")).toBe("afrique");
+    expect(detectRegion("Congo-Kinshasa : les Congolais adoptent le mobile money")).toBe("afrique");
+    expect(detectRegion("Lubumbashi accueille un hub tech")).toBe("afrique");
+    // An RDC website's « Congo » is the RDC; its stories with no Congo in them are detected as usual.
+    expect(detectRegion("Les Congolais paient de plus en plus par mobile", null, true)).toBe("afrique");
+    expect(detectRegion("Apple dévoile un nouvel iPad", null, true)).toBeNull();
+    expect(detectTopics({ title: "Les startups congolaises lèvent des fonds" }, { sourceCountry: "RD Congo" })).toEqual(["startups", "afrique"]);
+  });
+  it("keeps Brazzaville's Congo when a story mentions both", () => {
+    expect(detectRegion("Brazzaville et Kinshasa relient leurs réseaux de fibre optique")).toBe("congo");
+    expect(detectRegion("RDC et Congo-Brazzaville : un pont route-rail")).toBe("congo");
+    expect(detectRegion("Un hackathon à Pointe-Noire", null, true)).toBe("congo");
+    expect(detectRegion("La République du Congo numérise l'état civil")).toBe("congo");
+    expect(detectRegion("Fibre optique : après le Cameroun et le Congo, la Centrafrique veut s'interconnecter avec la RDC")).toBe("congo");
+    expect(detectRegion("RDC : près de 7 Congolais sur 10 restent hors ligne")).toBe("afrique");
+    expect(detectRegion("L'Alliance Fleuve Congo, active dans l'est de la RD Congo, change de nom")).toBe("afrique");
   });
   it("leaves other countries alone", () => {
     expect(isCongoStory("Kenya : Microsoft ferme son centre de Nairobi")).toBe(false);

@@ -51,7 +51,7 @@ export async function enrichStory(itemId: number): Promise<void> {
   try {
     const item = await prisma.item.findUnique({
       where: { id: itemId },
-      select: { url: true, title: true, titleLang: true, originalTitle: true, keywords: true, excerpt: true, excerptLang: true, imageUrl: true, previewAt: true, metaManual: true },
+      select: { url: true, title: true, titleLang: true, originalTitle: true, keywords: true, excerpt: true, excerptLang: true, imageUrl: true, previewAt: true, metaManual: true, importSource: { select: { country: true } } },
     });
     if (!item?.url) return;
 
@@ -112,7 +112,10 @@ export async function enrichStory(itemId: number): Promise<void> {
     if (!item.metaManual) {
       await setAutoTags(
         itemId,
-        detectTopics({ title: `${title.title ?? ""} . ${title.originalTitle ?? ""}`, excerpt: `${excerpt ?? ""} . ${bodyText.slice(0, 600)}`, keywords, url: item.url })
+        detectTopics(
+          { title: `${title.title ?? ""} . ${title.originalTitle ?? ""}`, excerpt: `${excerpt ?? ""} . ${bodyText.slice(0, 600)}`, keywords, url: item.url },
+          { sourceCountry: item.importSource?.country }
+        )
       );
     }
   } catch (err) {
