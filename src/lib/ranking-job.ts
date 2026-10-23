@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import { calculateRankScore } from "./ranking";
 import { publiclyVisible } from "./content-status";
@@ -9,12 +10,13 @@ export async function refreshRankScores(): Promise<number> {
     where: { type: "story", createdAt: { gte: since }, ...publiclyVisible() },
     select: { id: true, points: true, createdAt: true },
   });
+  if (items.length === 0) return 0;
   const now = new Date();
-  for (const item of items) {
-    await prisma.item.update({
-      where: { id: item.id },
-      data: { rankScore: calculateRankScore(item.points, item.createdAt), rankedAt: now },
-    });
-  }
+  // One statement for all of them: one query per story took over a minute from Vercel.
+  const rows = items.map((item) => Prisma.sql`(${item.id}::int, ${calculateRankScore(item.points, item.createdAt)}::double precision)`);
+  await prisma.$executeRaw`
+    UPDATE "Item" AS i SET "rankScore" = v.score, "rankedAt" = ${now}
+    FROM (VALUES ${Prisma.join(rows)}) AS v(id, score)
+    WHERE i.id = v.id`;
   return items.length;
 }
