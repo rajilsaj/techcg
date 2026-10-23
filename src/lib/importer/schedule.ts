@@ -8,6 +8,19 @@ export const IMPORT_INTERVAL_MINUTES = 30;
 /** Visitors' page views check for due sources at most this often (per server instance). */
 const VISIT_CHECK_MS = 60_000;
 
+/** Resolves to `promise`'s value, or to undefined once `deadline` (epoch ms) has passed. */
+export async function beforeDeadline<T>(promise: Promise<T>, deadline: number): Promise<T | undefined> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const late = new Promise<undefined>((resolve) => {
+    timer = setTimeout(() => resolve(undefined), Math.max(0, deadline - Date.now()));
+  });
+  try {
+    return await Promise.race([promise, late]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export interface ImportTick {
   ran: { name: string; message: string }[];
   ranked: number;
@@ -21,10 +34,13 @@ export interface ImportTick {
  */
 export async function runDueImports({
   budgetMs,
+  deadline = Infinity,
   maxSources = Infinity,
   browser = true,
 }: {
   budgetMs: number;
+  /** Epoch ms: an import still running then is left behind (its claim expires after 10 min) and ranking skipped. */
+  deadline?: number;
   maxSources?: number;
   /** false: skip « Navigateur » sources (the homepage function doesn't ship the browser). */
   browser?: boolean;
@@ -48,11 +64,15 @@ export async function runDueImports({
       data: { lastRunAt: new Date() },
     });
     if (claimed.count === 0) continue; // another run took it
-    const result = await runImport(source.id);
+    const result = await beforeDeadline(runImport(source.id), deadline);
+    if (!result) {
+      ran.push({ name: source.name, message: "Interrompu : délai dépassé, reprise au prochain passage." });
+      break;
+    }
     ran.push({ name: source.name, message: result.message });
   }
 
-  const ranked = ran.length > 0 ? await refreshRankScores() : 0;
+  const ranked = ran.length > 0 ? ((await beforeDeadline(refreshRankScores(), deadline)) ?? 0) : 0;
   return { ran, ranked };
 }
 

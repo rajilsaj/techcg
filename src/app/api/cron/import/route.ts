@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { runDueImports } from "@/lib/importer/schedule";
+import { beforeDeadline, runDueImports } from "@/lib/importer/schedule";
 import { isCronAuthorized, recordAutoImport } from "@/lib/cron-auth";
 import { refreshDueProfiles } from "@/lib/source-profile";
 import { translateBacklog } from "@/lib/translate-backlog";
 
 // Imports can take a while (fetching feeds, analysing pages, translating titles).
 export const maxDuration = 300;
+/** Every step stops by then, leaving time to record the run and answer before Vercel stops the function. */
+const DEADLINE_MS = 275_000;
 
 /**
  * Automatic import: every enabled source that is due (see runDueImports), then
@@ -17,12 +19,20 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: { code: "UNAUTHORIZED", message: "Authentication required" } }, { status: 401 });
   }
   const trigger = request.nextUrl.searchParams.get("trigger") === "github" ? "GitHub Actions" : "Vercel Cron";
+  const deadline = Date.now() + DEADLINE_MS;
+  const left = () => deadline - Date.now();
   try {
-    const tick = await runDueImports({ budgetMs: 220_000 });
+    const tick = await runDueImports({ budgetMs: 180_000, deadline: deadline - 45_000 });
     // Titles and excerpts still not in French (translator quota, wrong language detected): a few each run.
-    await translateBacklog().catch((err) => console.error("[cron/import] translations:", err));
+    if (left() > 30_000) {
+      await beforeDeadline(translateBacklog({ budgetMs: Math.min(40_000, left() - 30_000) }), deadline - 15_000).catch((err) =>
+        console.error("[cron/import] translations:", err)
+      );
+    }
     // Fill the /sources cards (logo, description) of new sources, a few at a time.
-    await refreshDueProfiles(25_000).catch((err) => console.error("[cron/import] profiles:", err));
+    if (left() > 25_000) {
+      await beforeDeadline(refreshDueProfiles(Math.min(25_000, left() - 25_000)), deadline).catch((err) => console.error("[cron/import] profiles:", err));
+    }
     await recordAutoImport({ at: new Date().toISOString(), trigger, ...tick });
     return NextResponse.json({ ok: true, ...tick });
   } catch (err) {

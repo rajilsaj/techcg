@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { duplicateGroups, sameHeadline, titleKey, urlKey } from "@/lib/duplicates";
 import { robotsAllow, robotsRules } from "@/lib/importer/robots";
 import { scrapeArticleLinks } from "@/lib/importer/parse";
+import { beforeDeadline } from "@/lib/importer/schedule";
 
 describe("urlKey", () => {
   it("gives one key to the variants of an address", () => {
@@ -119,5 +120,16 @@ describe("shopping deals", () => {
     expect(isDeal("https://site.fr/deals/ipad")).toBe(true);
     expect(isDeal("https://www.frandroid.com/android/3285739_whatsapp-permet-desormais")).toBe(false);
     expect(isDeal("https://site.fr/2026/10/promotion-du-numerique-au-congo")).toBe(false);
+  });
+});
+
+describe("beforeDeadline", () => {
+  it("gives the result of work that ends in time", async () => {
+    expect(await beforeDeadline(Promise.resolve(3), Date.now() + 1_000)).toBe(3);
+  });
+
+  it("gives up on work still running at the deadline", async () => {
+    const slow = new Promise<number>((resolve) => setTimeout(() => resolve(3), 500));
+    expect(await beforeDeadline(slow, Date.now() + 20)).toBeUndefined();
   });
 });
